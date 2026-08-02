@@ -171,6 +171,29 @@ Three things, all deliberately left in English rather than machine-translated:
 `untranslated(lang)` in `extra-copy.ts` returns exactly what is missing for a
 language. Say the word and all three get a proper pass.
 
+## Deploying
+
+The repo ships a GitHub Pages workflow (`.github/workflows/pages.yml`). Push to
+`main`, then **Settings → Pages → Source: GitHub Actions**, and it builds and
+publishes itself on every push. It works out its own base path, so a project
+site at `/<repo>/` and a user site at the root both work untouched — every
+asset resolves through `BASE_URL` and the service worker scopes itself to
+wherever it lands.
+
+Put the three `VITE_*` values from `.env.example` in **Settings → Secrets and
+variables → Actions** to switch on accounts, price reporting and push. Without
+them the deploy still works, just local-only.
+
+Vercel or Netlify instead: import the repo, framework Vite, build `npm run
+build`, output `dist`, and set the same three variables. Leave `BASE_PATH`
+unset — both serve from the root.
+
+### One file, no server
+
+`npm run standalone` folds the whole app — bundle, styles, photographs, fonts —
+into a single HTML file that runs from a `file://` path with no network at all.
+Useful for handing someone the app to look at.
+
 ## Server bits
 
 None of this is needed to run the app; each piece switches on a feature.

@@ -12,7 +12,13 @@ const VERSION = 'pantry-v1';
 const SHELL = VERSION + '-shell';
 const MEDIA = VERSION + '-media';
 
-const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg'];
+// The worker is served from wherever the app is — root on a custom domain,
+// /<repo>/ on a GitHub Pages project site. Everything it caches is resolved
+// against its own location rather than assumed to be at /.
+const BASE = new URL('./', self.location).pathname;
+const at = (p) => BASE + p;
+
+const PRECACHE = [BASE, at('index.html'), at('manifest.webmanifest'), at('icon.svg')];
 
 /** Hosts whose answers are only worth having fresh. */
 const ALWAYS_NETWORK = /(supabase\.co|nominatim\.openstreetmap\.org|overpass-api\.de|prices\.openfoodfacts\.org|world\.openfoodfacts\.org)/;
@@ -50,17 +56,17 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(SHELL).then((c) => c.put('/index.html', copy));
+          caches.open(SHELL).then((c) => c.put(at('index.html'), copy));
           return response;
         })
-        .catch(() => caches.match('/index.html').then((r) => r || Response.error())),
+        .catch(() => caches.match(at('index.html')).then((r) => r || Response.error())),
     );
     return;
   }
 
   // Dish photographs and fonts: cache first, they never change under a name.
   const isMedia =
-    url.pathname.startsWith('/pix/') ||
+    url.pathname.includes('/pix/') ||
     /\.(webp|png|jpg|jpeg|svg|woff2?)$/.test(url.pathname) ||
     url.host.includes('fonts.g');
 
@@ -112,8 +118,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || 'Pantry', {
       body: payload.body || '',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: at('icon-192.png'),
+      badge: at('icon-192.png'),
       lang: payload.lang || 'en',
       dir: payload.lang === 'ar' || payload.lang === 'ur' ? 'rtl' : 'ltr',
       tag: payload.tag || 'pantry',
@@ -125,7 +131,7 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || '/';
+  const target = (event.notification.data && event.notification.data.url) || BASE;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const client of list) {

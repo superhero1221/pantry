@@ -97,7 +97,7 @@ export const I = (g, n, s, src, opt) => ({ g, n, s, src, opt: !!opt });
 export const RECIPES = [
   {
     id: 'pad_thai', name: 'Pad Thai', local: '\u0e1c\u0e31\u0e14\u0e44\u0e17\u0e22', cuisine: 'Thai', code: 'TH',
-    pic: '/pix/pad_thai.webp', servings: 2, active: 25, total: 55, diff: 3, diffLabel: 'A stretch',
+    pic: 'pix/pad_thai.webp', servings: 2, active: 25, total: 55, diff: 3, diffLabel: 'A stretch',
     restaurant: 12.5, tags: ['dairy_free'],
     per: { kcal: 642, protein: 38, carb: 79, fat: 19 },
     micro: [
@@ -139,7 +139,7 @@ export const RECIPES = [
   },
   {
     id: 'mango_wings', name: 'Mango Habanero Wings', local: 'Baked, not fried', cuisine: 'American', code: 'US',
-    pic: '/pix/buffalo_wings_baked.webp', servings: 2, active: 15, total: 95, diff: 2, diffLabel: 'Easy enough',
+    pic: 'pix/buffalo_wings_baked.webp', servings: 2, active: 15, total: 95, diff: 2, diffLabel: 'Easy enough',
     restaurant: 11.49, copycat: 'Wingstop', tags: ['gluten_free'],
     per: { kcal: 688, protein: 51, carb: 27, fat: 42 },
     micro: [
@@ -174,7 +174,7 @@ export const RECIPES = [
   },
   {
     id: 'stir_fry', name: 'Chicken and Veg Stir Fry', local: 'with rice', cuisine: 'Chinese', code: 'CN',
-    pic: '/pix/chicken_stir_fry.webp', servings: 2, active: 20, total: 25, diff: 1, diffLabel: 'Comfortable',
+    pic: 'pix/chicken_stir_fry.webp', servings: 2, active: 20, total: 25, diff: 1, diffLabel: 'Comfortable',
     restaurant: 9.5, tags: ['dairy_free'],
     per: { kcal: 578, protein: 42, carb: 68, fat: 14 },
     micro: [
@@ -207,7 +207,7 @@ export const RECIPES = [
   },
   {
     id: 'omelette', name: 'Cheese and Herb Omelette', local: 'on toast', cuisine: 'French', code: 'FR',
-    pic: '/pix/omelette_cheese_herb.webp', servings: 2, active: 10, total: 10, diff: 1, diffLabel: 'Comfortable',
+    pic: 'pix/omelette_cheese_herb.webp', servings: 2, active: 10, total: 10, diff: 1, diffLabel: 'Comfortable',
     restaurant: 7.5, tags: ['vegetarian'],
     per: { kcal: 494, protein: 28, carb: 31, fat: 28 },
     micro: [
@@ -237,7 +237,7 @@ export const RECIPES = [
   },
   {
     id: 'veg_curry', name: 'Sweet Potato and Chickpea Curry', local: 'with coconut', cuisine: 'Indian', code: 'IN',
-    pic: '/pix/veg_curry_coconut.webp', servings: 2, active: 20, total: 45, diff: 2, diffLabel: 'Easy enough',
+    pic: 'pix/veg_curry_coconut.webp', servings: 2, active: 20, total: 45, diff: 2, diffLabel: 'Easy enough',
     restaurant: 9.5, tags: ['vegan', 'vegetarian', 'gluten_free', 'dairy_free'],
     per: { kcal: 712, protein: 21, carb: 92, fat: 29 },
     micro: [
@@ -269,7 +269,7 @@ export const RECIPES = [
   },
   {
     id: 'tuna_bake', name: 'Tuna Pasta Bake', local: 'four tins and a bag', cuisine: 'British', code: 'GB',
-    pic: '/pix/tuna_pasta_bake.webp', servings: 2, active: 20, total: 45, diff: 1, diffLabel: 'Comfortable',
+    pic: 'pix/tuna_pasta_bake.webp', servings: 2, active: 20, total: 45, diff: 1, diffLabel: 'Comfortable',
     restaurant: 8.5, tags: [],
     per: { kcal: 664, protein: 44, carb: 82, fat: 17 },
     micro: [
@@ -300,7 +300,7 @@ export const RECIPES = [
   },
   {
     id: 'shakshuka', name: 'Shakshuka', local: '\u0634\u0643\u0634\u0648\u0642\u0629', cuisine: 'North African', code: 'MA',
-    pic: '/pix/shakshuka.webp', servings: 2, active: 15, total: 30, diff: 1, diffLabel: 'Very easy',
+    pic: 'pix/shakshuka.webp', servings: 2, active: 15, total: 30, diff: 1, diffLabel: 'Very easy',
     restaurant: 9.5, tags: ['vegetarian', 'gluten_free', 'halal', 'kosher'],
     per: { kcal: 412, protein: 22, carb: 24, fat: 26 },
     micro: [
@@ -335,7 +335,7 @@ export const RECIPES = [
   },
   {
     id: 'chicken_tacos', name: 'Chicken Tacos', local: 'Tacos de pollo', cuisine: 'Mexican', code: 'MX',
-    pic: '/pix/chicken_tacos.webp', servings: 2, active: 20, total: 35, diff: 1, diffLabel: 'Very easy',
+    pic: 'pix/chicken_tacos.webp', servings: 2, active: 20, total: 35, diff: 1, diffLabel: 'Very easy',
     restaurant: 11.0, tags: ['dairy_free', 'halal'],
     per: { kcal: 578, protein: 44, carb: 48, fat: 22 },
     micro: [
@@ -370,7 +370,7 @@ export const RECIPES = [
   },
   {
     id: 'beef_pho', name: 'Beef Pho', local: 'Ph\u1edf b\u00f2', cuisine: 'Vietnamese', code: 'VN',
-    pic: '/pix/beef_pho.webp', servings: 2, active: 25, total: 190, diff: 4, diffLabel: 'A proper project',
+    pic: 'pix/beef_pho.webp', servings: 2, active: 25, total: 190, diff: 4, diffLabel: 'A proper project',
     restaurant: 14.0, tags: ['dairy_free'],
     per: { kcal: 596, protein: 42, carb: 72, fat: 14 },
     micro: [
@@ -409,7 +409,7 @@ export const RECIPES = [
   },
   {
     id: 'jollof_rice', name: 'Jollof Rice', local: 'Jollof', cuisine: 'West African', code: 'NG',
-    pic: '/pix/jollof_rice.webp', servings: 4, active: 25, total: 70, diff: 2, diffLabel: 'Easy enough',
+    pic: 'pix/jollof_rice.webp', servings: 4, active: 25, total: 70, diff: 2, diffLabel: 'Easy enough',
     restaurant: 10.0, tags: ['vegan', 'vegetarian', 'gluten_free', 'dairy_free', 'halal'],
     per: { kcal: 486, protein: 9, carb: 84, fat: 13 },
     micro: [
@@ -445,7 +445,7 @@ export const RECIPES = [
   },
   {
     id: 'lentil_bolognese', name: 'Lentil Bolognese', local: 'Rag\u00f9 di lenticchie', cuisine: 'Italian', code: 'IT',
-    pic: '/pix/lentil_bolognese.webp', servings: 4, active: 15, total: 50, diff: 1, diffLabel: 'Very easy',
+    pic: 'pix/lentil_bolognese.webp', servings: 4, active: 15, total: 50, diff: 1, diffLabel: 'Very easy',
     restaurant: 9.0, tags: ['vegan', 'vegetarian', 'dairy_free', 'halal', 'kosher'],
     per: { kcal: 468, protein: 21, carb: 76, fat: 9 },
     micro: [
@@ -480,7 +480,7 @@ export const RECIPES = [
   },
   {
     id: 'butter_chicken', name: 'Butter Chicken', local: '\u092e\u0941\u0930\u094d\u0917 \u092e\u0916\u0928\u0940', cuisine: 'Indian', code: 'IN',
-    pic: '/pix/butter_chicken.webp', servings: 4, active: 30, total: 75, diff: 3, diffLabel: 'A stretch',
+    pic: 'pix/butter_chicken.webp', servings: 4, active: 30, total: 75, diff: 3, diffLabel: 'A stretch',
     restaurant: 13.5, tags: ['gluten_free', 'halal'],
     per: { kcal: 654, protein: 46, carb: 38, fat: 36 },
     micro: [
@@ -518,7 +518,7 @@ export const RECIPES = [
   },
   {
     id: 'dal_tadka', name: 'Dal Tadka', local: '\u0926\u093e\u0932 \u0924\u0921\u093c\u0915\u093e', cuisine: 'Indian', code: 'IN',
-    pic: '/pix/dal_tadka.webp', servings: 4, active: 15, total: 45, diff: 1, diffLabel: 'Very easy',
+    pic: 'pix/dal_tadka.webp', servings: 4, active: 15, total: 45, diff: 1, diffLabel: 'Very easy',
     restaurant: 7.5, tags: ['vegetarian', 'gluten_free', 'halal', 'kosher'],
     per: { kcal: 384, protein: 18, carb: 58, fat: 11 },
     micro: [
@@ -554,7 +554,7 @@ export const RECIPES = [
   },
   {
     id: 'carbonara', name: 'Spaghetti Carbonara', local: 'Carbonara', cuisine: 'Italian', code: 'IT',
-    pic: '/pix/spaghetti_carbonara.webp', servings: 2, active: 18, total: 22, diff: 3, diffLabel: 'A stretch',
+    pic: 'pix/spaghetti_carbonara.webp', servings: 2, active: 18, total: 22, diff: 3, diffLabel: 'A stretch',
     restaurant: 12.0, tags: [],
     per: { kcal: 712, protein: 34, carb: 82, fat: 27 },
     micro: [

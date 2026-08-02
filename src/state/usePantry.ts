@@ -18,7 +18,7 @@ import {
   PERISH,
   PILL_OFF,
   PILL_ON,
-  RECIPES,
+  RECIPES as RAW_RECIPES,
   SKILL_CARDS,
   SKILL_TIERS,
   SOURCES,
@@ -32,6 +32,7 @@ import * as food from '../data/pantry-food';
 import * as i18n from '../data/pantry-i18n';
 import type { Shop, Price } from '../data/pantry-live';
 import { cloudEnabled, db } from '../lib/supabase';
+import { asset } from '../lib/asset';
 import { xt } from '../data/extra-copy';
 import {
   pullCooks,
@@ -47,6 +48,10 @@ import {
   type LocalCook,
   type PriceMedian,
 } from './cloud';
+
+/** Photographs are resolved against BASE_URL once, here, rather than at each
+ *  of the five places a dish picture is rendered. */
+const RECIPES: Recipe[] = RAW_RECIPES.map((r) => ({ ...r, pic: asset(r.pic) }));
 
 export type Screen =
   | 'welcome'
