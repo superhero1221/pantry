@@ -1,0 +1,30 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>data check</title>
+<style>body{font:13px/1.5 ui-monospace,monospace;background:#17150f;color:#e8dfc9;padding:20px}
+table{border-collapse:collapse;font-size:12px}td,th{padding:3px 9px;border-bottom:1px solid #3a3428;text-align:right}th:first-child,td:first-child{text-align:left}
+.hi{color:#e8a35c}.lo{color:#9fbf7a}.bad{color:#d4695a}</style></head>
+<body><h2>Computed from Open Food Facts vs the numbers I made up</h2><div id="o">…</div>
+<script type="module">
+import { MAP } from './pantry-map.js';
+import { dishNutrition, priceRecipe } from './pantry-data.js';
+const recipes = await (await fetch('./pantry-recipes.json')).json();
+const rows = recipes.map(r => {
+  const d = dishNutrition(r.items, r.servings, MAP);
+  return { r, d };
+});
+const pc = (a, b) => b ? Math.round((a - b) / b * 100) : null;
+let h = '<table><tr><th>dish</th><th>kcal real</th><th>kcal mine</th><th>Δ</th><th>prot real</th><th>prot mine</th><th>cover</th><th>gaps</th></tr>';
+for (const { r, d } of rows) {
+  const k = d.per.kcal, p = d.per.protein;
+  const dk = pc(k, r.old.kcal);
+  h += `<tr><td>${r.name}</td><td class=hi>${k ? Math.round(k) : '—'}</td><td>${r.old.kcal}</td><td class="${Math.abs(dk) > 25 ? 'bad' : 'lo'}">${dk > 0 ? '+' : ''}${dk}%</td><td class=hi>${p ? Math.round(p) : '—'}</td><td>${r.old.protein}</td><td>${Math.round(d.coverage * 100)}%</td><td>${d.gaps.map(g => g.name + '(' + g.why + ')').join(', ') || '—'}</td></tr>`;
+}
+h += '</table>';
+document.getElementById('o').innerHTML = h;
+window.__ROWS = rows.map(({ r, d }) => ({ id: r.id, kcal: d.per.kcal, old: r.old.kcal, cov: d.coverage, gaps: d.gaps.length }));
+// price probe
+const gbp = await priceRecipe(recipes[0].items, MAP, 'GBP');
+const eur = await priceRecipe(recipes[0].items, MAP, 'EUR');
+window.__PRICE = { gbp, eur };
+document.getElementById('o').innerHTML += `<p>Pad thai priced in GBP: ${gbp.priced}/${gbp.of} ingredients → ${gbp.total ?? '—'}<br>in EUR: ${eur.priced}/${eur.of} → ${eur.total ?? '—'}</p>`;
+</script></body></html>

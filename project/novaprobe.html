@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>nova probe</title>
+<style>body{font:13px/1.6 ui-monospace,monospace;background:#17150f;color:#e8dfc9;padding:20px}
+td,th{padding:2px 10px;text-align:right;border-bottom:1px solid #332e24}td:first-child{text-align:left}
+.g{color:#9fbf7a}.o{color:#e8a35c}</style></head><body>
+<h3>OFF category median — all products vs NOVA-1 (raw / minimally processed)</h3>
+<div id="s">running…</div><table id="t"></table>
+<script type="module">
+const med = a => { const s=a.slice().sort((x,y)=>x-y); return s.length ? (s.length%2 ? s[s.length>>1] : (s[(s.length>>1)-1]+s[s.length>>1])/2) : null; };
+const CAP = { kcal:950, fat:100, prot:100, carb:100 };
+async function probe(tag, nova) {
+  const u = `https://world.openfoodfacts.net/api/v2/search?categories_tags=${encodeURIComponent(tag)}&fields=nutriments&page_size=50` + (nova ? '&nova_groups_tags=' + encodeURIComponent('en:1-unprocessed-or-minimally-processed-foods') : '');
+  for (let i=0;i<3;i++){
+    try { const r = await fetch(u); if (r.status===429||r.status===503){ await new Promise(x=>setTimeout(x,2000)); continue; } if(!r.ok) return null;
+      const j = await r.json(); if(!j.products||!j.products.length) return null;
+      const g=(k,cap)=>{const v=j.products.map(p=>p.nutriments&&p.nutriments[k]).filter(x=>typeof x==='number'&&x>=0&&x<=cap);return v.length>=3?+med(v).toFixed(1):null;};
+      return { n:j.products.length, kcal:g('energy-kcal_100g',CAP.kcal), fat:g('fat_100g',CAP.fat), prot:g('proteins_100g',CAP.prot), carb:g('carbohydrates_100g',CAP.carb),
+               fibre:g('fiber_100g',90), salt:g('salt_100g',100), iron:g('iron_100g',0.5), calcium:g('calcium_100g',2), b12:g('vitamin-b12_100g',0.001), vitc:g('vitamin-c_100g',0.05) };
+    } catch(e){ await new Promise(x=>setTimeout(x,1200)); }
+  }
+  return null;
+}
+const WHOLE = ['en:carrots','en:tomatoes','en:onions','en:red-onions','en:garlic','en:prawns','en:chicken-eggs','en:sweet-potatoes','en:beef','en:chicken-breasts','en:chicken-thighs','en:chicken-wings','en:spinachs','en:broccoli','en:red-bell-peppers','en:mangoes','en:avocados','en:limes','en:ginger','en:chili-peppers','en:coriander','en:parsley','en:basil','en:celery','en:spring-onion','en:bean-sprouts','en:turmeric','en:cumin','en:black-pepper','en:cinnamon','en:cloves','en:oregano','en:thyme','en:star-anise','en:red-lentils','en:roasted-peanuts','en:tofu','en:rice-noodles','en:long-grain-rices','en:basmati-rice'];
+const t = document.getElementById('t'); const s = document.getElementById('s');
+t.innerHTML = '<tr><th>tag</th><th>kcal all</th><th>kcal raw</th><th>fat all</th><th>fat raw</th><th>n raw</th></tr>';
+const RES = {};
+let i=0;
+for (const tag of WHOLE) {
+  i++; s.textContent = `${i}/${WHOLE.length} ${tag}`;
+  const a = await probe(tag,false), b = await probe(tag,true);
+  RES[tag] = { all:a, raw:b };
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${tag}</td><td>${a?a.kcal:'—'}</td><td class=o>${b?b.kcal:'—'}</td><td>${a?a.fat:'—'}</td><td class=o>${b?b.fat:'—'}</td><td class=g>${b?b.n:0}</td>`;
+  t.appendChild(row);
+  await new Promise(r=>setTimeout(r,200));
+}
+window.__NOVA = RES; window.__DONE = true; s.innerHTML = '<b>done</b>';
+</script></body></html>

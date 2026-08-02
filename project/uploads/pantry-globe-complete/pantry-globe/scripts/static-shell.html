@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#060d0a">
+<title>Pantry — what should I cook?</title>
+<meta name="description" content="Name a dish and a place. Real shops, live opening hours, honest basket costs, full macros and micros, and how to cook it.">
+<!-- Installable when served over http(s); all four lines 404 harmlessly when the
+     file is opened directly from disk, which must keep working. -->
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+/* ================= palette =================
+   Light by default, and that is a researched decision rather than a taste one.
+   HelloFresh ships #FAF8F3, Green Chef #FBF9F0, Mindful Chef #FCF8ED, Cherrypick
+   #F5F2F2 — four warm off-whites, and not one of the five biggest meal apps puts
+   a dark background behind food. What IS well evidenced is contrast between the
+   food and its ground, and warm light: dishes photographed under 3000K read as
+   more appealing than under daylight or cool light. So the surround is warm and
+   pale and the food carries the colour.
+
+   Worth being precise about the limit of the evidence, because the folklore here
+   is thick: a 448-person study found background colour did NOT significantly
+   change appetite. Warm light and food-to-ground contrast are supported. "Green
+   backgrounds suppress appetite" is not a thing. The dark theme is still one tap
+   away and nothing about it is wrong — it just is not what the category does. */
+:root{
+  --bg:#faf6ee; --surface:#ffffff; --surface2:#f4eee2; --line:#e8dfd0; --line2:#d6c9b4;
+  --text:#141815; --muted:#5c6a61; --dim:#7d8b83;
+  --accent:#0d8552; --accent-soft:rgba(13,133,82,.10); --accent-line:rgba(13,133,82,.34);
+  --warn:#a2650d; --bad:#bd3b2c;
+  --plate:#e4d9c4; --plate2:#efe7d6; --plate-rim:rgba(90,70,40,.16);
+  --shadow:0 1px 2px rgba(60,45,25,.05),0 12px 28px -18px rgba(60,45,25,.35);
+  --glow:rgba(255,214,140,.30);
+  --orb:radial-gradient(120% 110% at 32% 22%,rgba(255,250,238,1),rgba(243,235,220,1) 68%);
+  --glass:linear-gradient(160deg,#ffffff,#f7f1e6);
+  --r:20px;
+}
+[data-theme="dark"]{
+  --bg:#060d0a; --surface:#0c1712; --surface2:#112019; --line:#1b3227; --line2:#264537;
+  --text:#f0fbf5; --muted:#9bb5a6; --dim:#75907f;
+  --accent:#35d68f; --accent-soft:rgba(53,214,143,.12); --accent-line:rgba(53,214,143,.42);
+  --warn:#f5c451; --bad:#ff7a7a;
+  --plate:#16241d; --plate2:#1d3128; --plate-rim:rgba(0,0,0,.5);
+  --shadow:0 18px 40px -22px rgba(0,0,0,.95);
+  --glow:rgba(53,214,143,.09);
+  --orb:radial-gradient(120% 110% at 32% 22%,rgba(120,235,185,.20),rgba(10,24,18,.94) 62%);
+  --glass:linear-gradient(160deg,rgba(28,52,42,.72),rgba(9,20,15,.82));
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font:16.5px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 70% at 50% -10%, var(--glow), transparent 60%)}
+main{position:relative;z-index:1;touch-action:pan-y pinch-zoom;max-width:620px;margin:0 auto;padding:24px 18px calc(64px + env(safe-area-inset-bottom))}
+h1{font-size:34px;line-height:1.06;margin:0;letter-spacing:-.038em;font-weight:800}
+h2{font-size:26px;line-height:1.15;margin:0;letter-spacing:-.028em;font-weight:760}
+h3{font-size:18px;margin:0;font-weight:720;letter-spacing:-.018em}
+p{margin:0}
+.stack>*+*{margin-top:14px}
+.stack-sm>*+*{margin-top:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.card2{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.085em;color:var(--muted);font-weight:750}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+.grid{display:grid;gap:10px}
+button,select,input{font:inherit;color:inherit;border:0;background:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  border-radius:16px;padding:17px 18px;font-size:17px;font-weight:730;letter-spacing:-.015em;
+  border:1px solid var(--line2);background:var(--surface2);cursor:pointer;transition:.16s ease}
+.btn:active{transform:scale(.985)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.sm{padding:11px 15px;font-size:15px;font-weight:700;border-radius:13px;width:auto}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);padding:8px 4px;justify-content:flex-start;width:auto}
+/* --- onboarding option tiles --- */
+.opt{display:block;width:100%;text-align:left;padding:16px 18px;border-radius:16px;
+  background:var(--surface);border:1px solid var(--line);cursor:pointer;transition:.16s ease}
+.opt:hover{border-color:var(--line2)}
+.opt.on{background:var(--accent-soft);border-color:var(--accent-line)}
+.opt .t{font-size:17.5px;font-weight:740;letter-spacing:-.01em;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.opt.on .t{color:var(--accent)}
+.opt .s{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.45}
+.tick{width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line2);flex:0 0 19px;position:relative;transition:.16s}
+.opt.on .tick{border-color:var(--accent);background:var(--accent)}
+.opt.on .tick::after{content:"";position:absolute;inset:0;margin:auto;width:6px;height:10px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+/* --- progress --- */
+.prog{display:flex;gap:5px;margin-bottom:26px}
+.prog i{flex:1;height:3px;border-radius:2px;background:var(--line);transition:.3s}
+.prog i.done{background:var(--accent)}
+.chip{display:inline-flex;align-items:center;border-radius:999px;padding:10px 15px;font-size:14.5px;font-weight:660;
+  background:var(--surface2);border:1px solid var(--line);color:var(--muted);cursor:pointer;white-space:nowrap;transition:.16s}
+.chip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+.scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+select,input{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;width:100%;outline:none}
+select:focus,input:focus{border-color:var(--accent-line)}
+.bar{height:5px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;transition:width .3s}
+.note{border-radius:14px;padding:14px 15px;font-size:14px;line-height:1.5;font-weight:520}
+.note.good{background:var(--accent-soft);color:var(--accent)}
+.note.warn{background:rgba(245,196,81,.1);color:var(--warn)}
+.note.tip{background:rgba(53,214,143,.08);color:var(--accent)}
+.note.delta{background:rgba(245,196,81,.11);color:var(--warn)}
+.item{display:flex;align-items:center;gap:11px;padding:9px 6px;border-radius:10px;cursor:pointer;width:100%;text-align:left;transition:.13s}
+.item:hover{background:rgba(255,255,255,.035)}
+.item.own .nm{text-decoration:line-through;opacity:.4}
+.big{font-size:38px;font-weight:800;letter-spacing:-.042em;line-height:1;margin-top:5px}
+.step{display:flex;gap:13px;padding:16px 0;border-top:1px solid var(--line)}
+.step:first-child{border-top:0;padding-top:0}
+.n{flex:0 0 25px;height:25px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.fade{animation:f .32s ease}
+@keyframes f{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.src{width:7px;height:7px;border-radius:50%;flex:0 0 7px;margin-right:1px}
+.src.real-high{background:var(--accent)}
+.src.real-med{background:var(--accent);opacity:.55}
+.src.real-low{border:1.5px solid var(--accent);background:transparent}
+.src.est{border:1.5px solid var(--line2);background:transparent}
+.shop{display:flex;gap:12px;padding:13px 0;border-top:1px solid var(--line)}
+.shop:first-of-type{border-top:0}
+.dot{width:9px;height:9px;border-radius:50%;flex:0 0 9px;margin-top:6px;background:var(--accent)}
+.dot.open{background:var(--accent)}
+.dot.shut{background:var(--bad)}
+.dot.unk{background:var(--line2)}
+.cookstep{padding:26px 0}
+.cooknum{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.cooktext{font-size:25px;line-height:1.38;margin-top:14px;letter-spacing:-.02em;font-weight:560}
+.bottom{position:fixed;left:0;right:0;bottom:0;z-index:5;padding:12px 18px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--bg) 62%,transparent);display:flex;gap:10px;max-width:620px;margin:0 auto}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;max-width:620px;margin:0 auto;
+  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(18px);
+  border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;
+  border-radius:13px;cursor:pointer;color:var(--muted);font-size:12.5px;font-weight:730;transition:.18s var(--ease)}
+.nav button b{font-size:19px;line-height:1;font-weight:400}
+.nav button.on{color:var(--accent)}
+.nav button.on b{transform:translateY(-1px)}
+main{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+/* ======================= exploded view =======================
+   The McDonald's-advert effect: the dish holds together, then comes apart into
+   its real ingredients, each one a photograph floating above the plate. Built
+   in CSS 3D rather than WebGL because the whole app is one HTML file that has
+   to work offline, and a real perspective transform on twelve images does the
+   job that a 3D engine would do at a hundred times the weight. */
+.x3d{perspective:1100px;perspective-origin:50% 46%;width:78%;margin:0 auto;aspect-ratio:1/1;
+  position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.x3d .stack{position:absolute;inset:0;transform-style:preserve-3d;
+  transition:transform .8s var(--ease)}
+.x3d .lay{position:absolute;left:50%;top:50%;transform-style:preserve-3d;
+  transition:transform .85s var(--spring),opacity .4s var(--ease);will-change:transform}
+.x3d .lay img{display:block;width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 10px 14px rgba(50,35,15,.34))}
+.x3d .base{border-radius:50%;overflow:hidden;box-shadow:0 26px 46px -22px rgba(40,28,12,.6)}
+.x3d .base img{object-fit:cover;border-radius:50%}
+.x3d .tag{position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;max-width:44vw;
+  background:var(--surface);border:1px solid var(--accent-line);border-radius:999px;
+  padding:5px 11px;font-size:12px;font-weight:700;box-shadow:var(--shadow);
+  opacity:0;transition:opacity .35s var(--ease) .15s;pointer-events:none}
+.x3d .tag s{text-decoration:none;color:var(--muted);font-weight:600;margin-left:6px;font-size:11px}
+.x3d.open .tag{opacity:1}
+.x3d .hint{position:absolute;left:0;right:0;bottom:-2px;text-align:center;font-size:12px;color:var(--dim)}
+.hero{position:relative;width:100%;aspect-ratio:4/3;border-radius:20px;overflow:hidden;
+  background:var(--surface2);box-shadow:var(--shadow)}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.hero .cr{position:absolute;left:0;right:0;bottom:0;padding:22px 13px 9px;font-size:10px;
+  color:rgba(255,255,255,.9);background:linear-gradient(transparent,rgba(0,0,0,.62))}
+.hero .cr a{color:#fff}
+.heroswap{display:flex;gap:7px;margin-top:9px}
+.cam{width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#000;position:relative}
+.cam video{width:100%;height:100%;object-fit:cover}
+.cam .box{position:absolute;inset:22% 12%;border:2.5px solid var(--accent);border-radius:14px;
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.42)}
+.prod{display:flex;gap:14px;align-items:flex-start}
+.prod img{width:88px;height:88px;object-fit:contain;border-radius:12px;background:#fff;flex:0 0 88px;
+  border:1px solid var(--line)}
+.ings{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
+.ing{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:11px 9px 12px;text-align:center;cursor:pointer;transition:.18s var(--ease);box-shadow:var(--shadow)}
+.ing:hover{border-color:var(--accent-line)}
+.ing.on{border-color:var(--accent);background:var(--accent-soft)}
+.ing .pic{width:100%;aspect-ratio:1.25;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ing .pic svg,.ing .pic img{width:100%;height:100%;object-fit:contain}
+.ing .nm{font-size:12.5px;font-weight:680;line-height:1.2;margin-top:5px;letter-spacing:-.01em}
+.ing .qt{font-size:11.5px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.ing .sw{position:absolute;top:6px;right:6px;font-size:9.5px;font-weight:800;letter-spacing:.04em;
+  background:var(--accent);color:#fff;border-radius:999px;padding:2px 6px}
+.pill{display:inline-block;font-size:11px;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+
+/* ============================ depth ============================
+   The whole app sits in one perspective. Everything that lifts does so with the
+   same spring and the same shadow growth, because inconsistent depth reads as
+   cheap far faster than no depth at all. */
+:root{ --spring:cubic-bezier(.32,1.5,.5,1); --ease:cubic-bezier(.22,1,.36,1); }
+.scene{perspective:900px;perspective-origin:50% 42%}
+.lift{transition:transform .5s var(--spring),box-shadow .5s var(--ease)}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+/* meal bubble ------------------------------------------------------------ */
+.bub{position:relative;width:100%;border:0;padding:0;background:none;cursor:pointer;
+  transform-style:preserve-3d;transition:transform .55s var(--spring)}
+.bub:active{transform:scale(.965)}
+.bub .orb{position:relative;aspect-ratio:1;border-radius:50%;overflow:hidden;
+  background:var(--orb);
+  box-shadow:var(--shadow),0 0 0 1px var(--line) inset;
+  transition:box-shadow .5s var(--ease),transform .55s var(--spring)}
+.bub:hover .orb{box-shadow:var(--shadow),0 0 0 1px var(--accent-line) inset}
+/* the specular sweep is what sells glass; without it an orb reads as a flat circle */
+.bub .orb::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(58% 40% at 30% 14%,rgba(255,252,244,.55),transparent 62%)}
+.bub .cap{margin-top:9px;text-align:center}
+.bub .cap b{display:block;font-size:15px;font-weight:730;letter-spacing:-.015em;line-height:1.22}
+.bub .cap s{display:block;text-decoration:none;font-size:12px;color:var(--muted);margin-top:3px;font-weight:560}
+/* plate ------------------------------------------------------------------ */
+.plate{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y pinch-zoom}
+.plate .pl{transition:transform .62s var(--spring),opacity .38s var(--ease),filter .38s var(--ease);
+  transform-box:fill-box;transform-origin:50% 50%}
+.plate .pl.dim{opacity:.38;filter:saturate(.45) brightness(.8)}
+.plate .pl.pick{cursor:pointer}
+/* callout ---------------------------------------------------------------- */
+.call{position:absolute;z-index:3;pointer-events:none;animation:pop .42s var(--spring)}
+@keyframes pop{from{opacity:0;transform:translateY(8px) scale(.9)}to{opacity:1;transform:none}}
+.call .bx{max-width:min(62vw,240px);white-space:normal;background:var(--surface);border:1px solid var(--accent-line);border-radius:13px;
+  padding:8px 11px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+.call .bx u{display:block;text-decoration:none;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
+.call .bx b{font-size:15px;font-weight:680;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums}
+.call .bx i{font-style:normal;font-size:11.5px;color:var(--muted);margin-left:5px}
+.tapme{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);font-size:11.5px;color:var(--dim);
+  pointer-events:none;animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.45}50%{opacity:.95}}
+.seg{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface2);border:1px solid var(--line)}
+.seg button{flex:1;border-radius:11px;padding:11px 6px;font-size:14px;font-weight:720;color:var(--muted);cursor:pointer;transition:.2s var(--ease)}
+.seg button.on{background:var(--accent);color:#fff}
+/* ===================== living in a small frame =====================
+   The app is often first seen inside an embedded preview panel a few hundred
+   pixels tall. Two things go wrong there. A swipe that reaches the end of this
+   document chains into the host page, so the gesture is split and the app
+   appears to move a few millimetres; overscroll-behavior stops the chaining and
+   keeps the whole swipe here. And a layout tuned for a full phone screen leaves
+   very little content visible at a time, which makes any amount of scrolling
+   feel unproductive — so below 720 px of height everything tightens up. */
+html{overscroll-behavior-y:contain}
+body{overscroll-behavior-y:contain}
+@media (max-height:720px){
+  main{padding:14px 14px calc(40px + env(safe-area-inset-bottom))}
+  .card{padding:14px;border-radius:16px}
+  .stack>*+*{margin-top:10px}
+  h1{font-size:22px} h2{font-size:18px}
+  .big{font-size:23px}
+  .btn{padding:12px 15px;font-size:14.5px}
+  .bub .orb{max-width:118px;margin:0 auto}
+  .bub .cap b{font-size:12px}
+  .note{padding:10px 11px;font-size:12px}
+  .prog{margin-bottom:16px}
+  .opt{padding:12px 14px}
+}
+/* Scroll entrance. Cards settle in as they arrive rather than being there
+   already — the app should feel like it is assembling itself under the thumb.
+   Applied once and then forgotten, so scrolling back up does not re-run it. */
+.rise{opacity:0;transform:translateY(18px) scale(.985);
+  transition:opacity .5s var(--ease),transform .62s var(--spring)}
+.rise.in{opacity:1;transform:none}
+.swipehint{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:11.5px;color:var(--dim);margin-top:10px}
+.swipehint i{font-style:normal;animation:nudge 2.6s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(0);opacity:.4}50%{transform:translateX(4px);opacity:.9}}
+.daywrap{touch-action:pan-y}
+@media (prefers-reduced-motion:reduce){
+  .lift,.bub,.bub .orb,.plate .pl,.seg button,.rise{transition-duration:.01ms!important}
+  .rise{opacity:1;transform:none}
+  .call,.tapme{animation:none}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/dist/umd/supabase.js" crossorigin="anonymous"></script>
+<script>/*__ENGINE__*/</script>
+<script>
+(function(){
+const $=(s,r)=>(r||document).querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const app=$('#app');
+
+/** An <img> that survives having no pix/ folder next to it. */
+function photoImg(src, remote, alt){
+  const im=document.createElement('img');
+  im.alt=alt||''; im.loading='lazy'; im.decoding='async';
+  im.onerror=()=>{ if(remote && im.src!==remote){ im.onerror=null; im.src=remote; } };
+  im.src=src;
+  return im;
+}
+
+/* ------------------------------------------------------------- state ---- */
+const S={
+  screen:'welcome', q:0,
+  profile:{skill:0,budget:0,time:0,adventure:0,diets:[],people:2},
+  country:'GB', tier:1, days:5, kcal:2000, protein:120, seed:7, theme:'light',
+  tab:'days', dishId:null, variantId:null, servings:2, dishTab:'shop', cookStep:0,
+  pantry:new Set(), stores:null, shopMsg:null, place:null, placeBusy:false, off:new Set(), whyOpen:false, notesOpen:false, day:0, allDays:false, contribFor:null, query:'', cameFrom:'result', dishOpen:false, ingPick:null, view:'photo', exploded:false, scan:null, scanMsg:null, scanBusy:false, scanned:[], contribPick:false, tn:{protein:40,kcal:600,budget:8,minutes:30,skill:2,kit:['hob','oven','pan','pot','knife','board','kettle'],have:[]},
+};
+/* Theme is applied before first paint so the app never flashes the wrong
+   background on open. */
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',S.theme);
+  const m=document.querySelector('meta[name=theme-color]');
+  if(m) m.setAttribute('content',S.theme==='dark'?'#060d0a':'#faf6ee');
+}
+try{ const t=localStorage.getItem('pg_theme'); if(t) S.theme=t; }catch(e){}
+applyTheme();
+try{
+  const p=localStorage.getItem('pg_profile');
+  if(p){ Object.assign(S.profile,JSON.parse(p)); if(S.profile.skill) S.screen='result'; }
+  const c=localStorage.getItem('pg_country'); if(c) S.country=c;
+  const pa=localStorage.getItem('pg_pantry'); if(pa) S.pantry=new Set(JSON.parse(pa));
+  const pl=localStorage.getItem('pg_place'); if(pl) S.place=JSON.parse(pl);
+}catch(e){}
+const save=()=>{try{
+  localStorage.setItem('pg_profile',JSON.stringify(S.profile));
+  localStorage.setItem('pg_country',S.country);
+  if(S.place) localStorage.setItem('pg_place',JSON.stringify(S.place));
+  localStorage.setItem('pg_theme',S.theme);
+  localStorage.setItem('pg_pantry',JSON.stringify([...S.pantry]));
+}catch(e){}
+// fire-and-forget sync; local storage is always the source of truth on device
+if(user) pushRemote().catch(()=>{});
+};
+
+/* ---------------------------------------------------------------- auth ---- */
+/* The app is fully usable signed out. An account only adds sync across
+   devices, so every call here fails soft and never blocks the UI. */
+const SUPA_URL='https://iokudugeqfwjtifomyis.supabase.co';
+const SUPA_KEY='sb_publishable_Sqvi6CVG9Kr5zCi4Am1yOQ_iVbJG4dM';
+let sb=null, user=null, authMsg=null, authBusy=false;
+try{ if(window.supabase) sb=window.supabase.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+
+async function authInit(){
+  if(!sb) return;
+  try{
+    const {data}=await sb.auth.getSession();
+    user=data.session?data.session.user:null;
+    if(user) await pullRemote();
+    sb.auth.onAuthStateChange((_e,sess)=>{ user=sess?sess.user:null; render(); });
+  }catch(e){}
+  render();
+}
+async function pullRemote(){
+  if(!sb||!user) return;
+  try{
+    const {data:prof}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();
+    if(prof){
+      S.profile={skill:prof.skill,budget:prof.budget,time:prof.time_tier,adventure:prof.adventure,
+                 diets:prof.diets||[],people:prof.people};
+      S.country=prof.country||S.country;
+      if(S.profile.skill) S.screen= S.screen==='welcome'?'result':S.screen;
+    }
+    const {data:pan}=await sb.from('pantry_items').select('ref').eq('user_id',user.id);
+    if(pan) S.pantry=new Set(pan.map(x=>x.ref));
+    save();
+  }catch(e){}
+}
+async function pushRemote(){
+  if(!sb||!user) return;
+  try{
+    await sb.from('profiles').upsert({
+      id:user.id, skill:S.profile.skill||2, budget:S.profile.budget||2, time_tier:S.profile.time||2,
+      adventure:S.profile.adventure||2, diets:S.profile.diets, people:S.profile.people,
+      country:S.country, updated_at:new Date().toISOString(),
+    });
+    await sb.from('pantry_items').delete().eq('user_id',user.id);
+    const rows=[...S.pantry].map(ref=>({user_id:user.id,ref}));
+    if(rows.length) await sb.from('pantry_items').insert(rows);
+    authMsg='Saved to your account.';
+  }catch(e){ authMsg='Could not sync: '+e.message; }
+  render();
+}
+
+const country=()=>PG.getCountry(S.country);
+const money=v=>PG.fmtMoney(v,country());
+const byId=id=>PG.RECIPES.find(r=>r.id===id);
+
+/* --------------------------------------------------------- questions ---- */
+const Q=[
+ {key:'skill',title:'How much cooking have you done?',sub:'This decides what you get offered — nothing that needs technique you have not used.',
+  opts:[[1,'Barely any','Toast, pasta, things from a packet'],[2,'The basics','A few meals I make on repeat'],
+        [3,'Comfortable','I can follow most recipes without worrying'],[4,'I cook a lot','Nothing in a kitchen puts me off']]},
+ {key:'time',title:'How long will you actually spend?',sub:'On a normal evening, not a good one.',
+  opts:[[1,'15 minutes','In and out'],[2,'Half an hour','The usual'],
+        [3,'An hour or so','I do not mind the time'],[4,'As long as it takes','Cooking is the point']]},
+ {key:'budget',title:'What is your food budget like?',sub:'Becomes a hard ceiling on the shopping list, not a suggestion.',
+  opts:[[1,'Tight','Every pound counts'],[2,'Careful','I watch it without counting'],
+        [3,'Comfortable','I would rather eat well'],[4,'Not a concern','Cost is not the deciding factor']]},
+ {key:'adventure',title:'How adventurous is your taste?',sub:'Be honest — nobody cooks food they did not want.',
+  opts:[[1,'I know what I like','Familiar food, nothing surprising'],[2,'Mostly familiar','Open to a twist on something I know'],
+        [3,'Happy to explore','Show me things I have not made'],[4,'Anything','The stranger the better']]},
+];
+const DIETS=[['vegan','Vegan'],['vegetarian','Vegetarian'],['halal','Halal'],['gluten_free','Gluten-free'],['dairy_free','Dairy-free'],['nut_free','Nut-free']];
+const TOTAL_STEPS=Q.length+2; // + restrictions + household
+
+/* ---------------------------------------------------------- screens ---- */
+function welcome(){
+  const v=el('div','stack fade');
+  const h=el('div');
+  h.innerHTML='<h1>What should<br>I cook?</h1>'+
+    '<p class="muted" style="margin-top:14px;font-size:16px;line-height:1.55;max-width:26em">'+
+    'Tell it what you want to hit, what you can spend and what you have to cook with. It works out the rest.</p>';
+  v.appendChild(h);
+  // One front door. Four buttons of equal weight is not a choice, it is a
+  // decision handed back to someone who opened the app to avoid making one.
+  const now=el('button','btn primary','Find me dinner');
+  now.style.marginTop='30px';
+  now.onclick=()=>{S.screen='tonight';render()};
+  v.appendChild(now);
+  const alt=el('div'); alt.style.cssText='display:flex;gap:9px;margin-top:4px';
+  [['Plan a week','q'],['Browse dishes','find']].forEach(([l,k])=>{
+    const b=el('button','btn sm',l); b.style.flex='1';
+    b.onclick=()=>{ if(k==='q'){S.screen='q';S.q=0} else {S.screen='find';S.query=''} render(); };
+    alt.appendChild(b);
+  });
+  v.appendChild(alt);
+
+  // Where you are decides what things cost, so it belongs on the front door
+  // rather than buried at the end of a quiz.
+  const loc=el('button','btn sm', S.placeBusy?'Finding you…'
+    : S.place ? '📍 '+S.place.label+' · '+PG.COUNTRIES[S.country].currency
+    : '📍 Use my location for prices');
+  loc.disabled=S.placeBusy;
+  loc.style.cssText='margin-top:16px;width:100%;justify-content:center;font-size:13px';
+  loc.onclick=()=>locate();
+  v.appendChild(loc);
+  if(S.shopMsg) v.appendChild(el('p','note warn',S.shopMsg)).style.cssText='font-size:12px;margin-top:8px';
+
+  const f=el('p','muted');
+  f.style.cssText='font-size:12px;margin-top:34px;line-height:1.6';
+  f.innerHTML='No account, no connection needed. Prices say how they were worked out.';
+  v.appendChild(f);
+  return v;
+}
+
+function progress(i){
+  const p=el('div','prog');
+  for(let k=0;k<TOTAL_STEPS;k++){const b=el('i',k<=i?'done':'');p.appendChild(b)}
+  return p;
+}
+
+function question(){
+  const i=S.q, v=el('div','fade');
+  v.appendChild(progress(i));
+
+  if(i<Q.length){
+    const q=Q[i];
+    v.appendChild(el('h2',null,esc(q.title)));
+    v.appendChild(el('p','muted',esc(q.sub))).style.cssText='margin-top:8px;font-size:14px';
+    const g=el('div','grid'); g.style.marginTop='24px';
+    q.opts.forEach(([val,t,s])=>{
+      const o=el('button','opt'+(S.profile[q.key]===val?' on':''));
+      o.innerHTML='<div class="t"><span>'+esc(t)+'</span><span class="tick"></span></div><div class="s">'+esc(s)+'</div>';
+      o.onclick=()=>{S.profile[q.key]=val;save();next()};
+      g.appendChild(o);
+    });
+    v.appendChild(g);
+  } else if(i===Q.length){
+    v.appendChild(el('h2',null,'Anything you do not eat?'));
+    v.appendChild(el('p','muted','Pick as many as apply, or none.')).style.cssText='margin-top:8px;font-size:14px';
+    const g=el('div','grid'); g.style.cssText='margin-top:24px;grid-template-columns:1fr 1fr';
+    DIETS.forEach(([id,label])=>{
+      const on=S.profile.diets.includes(id);
+      const o=el('button','opt'+(on?' on':''));
+      o.style.padding='14px 16px';
+      o.innerHTML='<div class="t"><span style="font-size:15px">'+esc(label)+'</span><span class="tick"></span></div>';
+      o.onclick=()=>{S.profile.diets=on?S.profile.diets.filter(x=>x!==id):S.profile.diets.concat([id]);save();render()};
+      g.appendChild(o);
+    });
+    v.appendChild(g);
+    const c=el('button','btn primary',S.profile.diets.length?'Continue →':'Nothing to avoid →');
+    c.style.marginTop='20px'; c.onclick=next; v.appendChild(c);
+  } else {
+    v.appendChild(el('h2',null,'Last thing.'));
+    v.appendChild(el('p','muted','Who is eating, and where you shop.')).style.cssText='margin-top:8px;font-size:14px';
+    const c=el('div','card stack'); c.style.marginTop='24px';
+    c.appendChild(stepper('People eating','people',1,8,S.profile));
+    const dr=el('div','row'); dr.innerHTML='<span class="lbl">Days to plan</span>';
+    const db=el('div'); db.style.cssText='display:flex;gap:10px;align-items:center';
+    const dm=el('button','btn sm','−'),dv=el('span','num'),dp=el('button','btn sm','+');
+    dv.textContent=S.days; dv.style.cssText='min-width:24px;text-align:center;font-weight:700;font-size:17px';
+    dm.onclick=()=>{S.days=Math.max(1,S.days-1);render()}; dp.onclick=()=>{S.days=Math.min(14,S.days+1);render()};
+    db.append(dm,dv,dp); dr.appendChild(db); c.appendChild(dr);
+    const cr=el('div','row'); cr.innerHTML='<span class="lbl">Country</span>';
+    const cs=el('select'); cs.style.cssText='width:auto;min-width:180px';
+    Object.values(PG.COUNTRIES).sort((a,b)=>a.name.localeCompare(b.name)).forEach(x=>{
+      const o=el('option'); o.value=x.code; o.textContent=x.name+' ('+x.currency+')'; cs.appendChild(o);
+    });
+    cs.value=S.country; cs.onchange=e=>{S.country=e.target.value;S.place=null;save();render()};
+    cr.appendChild(cs); c.appendChild(cr);
+
+    // Rather than scroll a list of sixty countries.
+    const lr=el('div','row');
+    const lb=el('button','btn sm', S.placeBusy?'Finding you…':(S.place?'📍 '+S.place.label:'📍 Use my location'));
+    lb.disabled=S.placeBusy; lb.style.cssText='width:100%;justify-content:center';
+    lb.onclick=()=>locate();
+    lr.appendChild(lb); c.appendChild(lr);
+    if(S.shopMsg) c.appendChild(el('p','note warn',S.shopMsg)).style.fontSize='12.5px';
+    else if(S.place) c.appendChild(el('p','muted','Prices in '+PG.COUNTRIES[S.country].name+'. The position stayed on this device.')).style.cssText='font-size:12px;margin-top:2px';
+    v.appendChild(c);
+    const go=el('button','btn primary','Build my week →'); go.style.marginTop='20px';
+    go.onclick=()=>{S.servings=S.profile.people;save();S.screen='result';render()};
+    v.appendChild(go);
+  }
+
+  if(i>0){
+    const b=el('button','btn ghost','← Back'); b.style.marginTop='16px';
+    b.onclick=()=>{S.q--;render()}; v.appendChild(b);
+  }
+  return v;
+}
+function next(){ if(S.q<TOTAL_STEPS-1){S.q++;render()} else {S.screen='result';render()} }
+
+function stepper(label,key,min,max,obj){
+  const r=el('div','row'); r.innerHTML='<span class="lbl">'+esc(label)+'</span>';
+  const b=el('div'); b.style.cssText='display:flex;gap:10px;align-items:center';
+  const d=el('button','btn sm','−'),v=el('span','num'),i=el('button','btn sm','+');
+  v.textContent=obj[key]; v.style.cssText='min-width:24px;text-align:center;font-weight:700;font-size:17px';
+  d.onclick=()=>{obj[key]=Math.max(min,obj[key]-1);save();render()};
+  i.onclick=()=>{obj[key]=Math.min(max,obj[key]+1);save();render()};
+  b.append(d,v,i); r.appendChild(b); return r;
+}
+
+/* ----------------------------------------------------------- result ---- */
+function result(){
+  const v=el('div','stack fade');
+  const P=S.profile;
+  const res=PG.planForProfile(
+    {skill:P.skill||4,budget:P.budget||4,time:P.time||4,adventure:P.adventure||4,diets:P.diets,people:P.profile||P.people},
+    {days:S.days,kcalPerDay:S.kcal,proteinPerDay:S.protein,seed:S.seed},
+    country(),S.tier,S.pantry
+  );
+
+  // header
+  const head=el('div','row');
+  head.innerHTML='<div><h2>Your week</h2><p class="muted" style="font-size:13px;margin-top:3px">'+
+    S.days+' days · '+res.mealsPerDay+' meals a day · '+P.people+' eating</p></div>';
+  const acts=el('div'); acts.style.cssText='display:flex;gap:8px';
+  const th=el('button','btn sm', S.theme==='dark'?'☀':'☾');
+  th.title=S.theme==='dark'?'Switch to the light theme':'Switch to the dark theme';
+  th.setAttribute('aria-label',th.title);
+  th.onclick=()=>{S.theme=S.theme==='dark'?'light':'dark';applyTheme();save();render()};
+  const acct=el('button','btn sm', user?'👤' : 'Sign in');
+  acct.title = user ? (user.email||'Account') : 'Sign in to sync';
+  acct.onclick=()=>{S.screen='account';authMsg=null;render()};
+  const fnd=el('button','btn sm','🔍');
+  fnd.title='Find a single dish'; fnd.setAttribute('aria-label',fnd.title);
+  fnd.onclick=()=>{S.screen='find';S.query='';render()};
+  const edit=el('button','btn sm','Edit');
+  edit.onclick=()=>{S.screen='q';S.q=0;render()};
+  acts.appendChild(th); acts.appendChild(acct); acts.appendChild(edit);
+  head.appendChild(acts); v.appendChild(head);
+
+  // what the answers did
+  // Collapsed by default. This is reference material you read once; leaving it
+  // open put a full screen of explanation between opening the app and seeing any
+  // food, which is the wrong thing to make someone scroll past every time.
+  const why=el('div','card');
+  const lines=PG.explainProfile({skill:P.skill||4,budget:P.budget||4,time:P.time||4,adventure:P.adventure||4,diets:P.diets,people:P.people},res.allowed,res.total);
+  const head2=el('button','row'); head2.style.cssText='width:100%;text-align:left;cursor:pointer;background:none;border:0;padding:0';
+  head2.innerHTML='<span><span class="lbl">What your answers changed</span>'+
+    '<p class="muted" style="font-size:12.5px;margin-top:4px">'+res.allowed+' of '+res.total+' dishes fit'+(res.mealsPerDay>2?' · '+res.mealsPerDay+' meals a day':'')+'</p></span>'+
+    '<span style="color:var(--accent);font-size:13px">'+(S.whyOpen?'Hide':'Details')+'</span>';
+  head2.onclick=()=>{S.whyOpen=!S.whyOpen;render()};
+  why.appendChild(head2);
+  if(S.whyOpen){
+    const ul=el('div'); ul.style.marginTop='12px';
+    lines.forEach(t=>{ const q=el('p','muted'); q.style.cssText='font-size:13px;padding-left:15px;position:relative;margin-top:5px';
+      q.innerHTML='<span style="position:absolute;left:0;color:var(--accent)">·</span>'+esc(t); ul.appendChild(q); });
+    why.appendChild(ul);
+    if(res.mealsPerDay>2){ why.appendChild(el('p','note good',esc(res.reason))).style.marginTop='12px'; }
+  }
+  v.appendChild(why);
+
+  if(!res.plan){ v.appendChild(el('p','note warn',esc(res.reason||'Nothing fits those answers together. Loosen one and try again.'))); return v; }
+  const plan=res.plan;
+
+  // headline
+  const h=el('div','card');
+  h.appendChild(el('div','row','<div><span class="lbl">Whole shop</span><p class="big">'+money(plan.firstCook)+'</p></div>'+
+    '<div style="text-align:right"><span class="lbl">Per serving</span><p class="big" style="color:var(--accent)">'+money(plan.perMeal)+'</p></div>'));
+  const sm=el('div'); sm.style.cssText='border-top:1px solid var(--line);margin-top:15px;padding-top:13px;font-size:13.5px';
+  // Three figures, not six. The rest is a tap away in the tabs, where someone
+  // who wants it has gone looking for it.
+  sm.innerHTML=row('Average per day',Math.round(plan.avg.kcal)+' kcal · '+Math.round(plan.avg.protein)+' g protein','muted');
+  h.appendChild(sm);
+  // benchmark: what that per-serving figure is actually up against
+  const bl=PG.benchmark(plan.perMeal,country());
+  const hd=PG.headline(bl,plan.perMeal,money);
+  h.appendChild(el('p','note '+hd.kind,esc(hd.text))).style.marginTop='13px';
+  // Warnings first — a budget overrun matters more than a fibre compliment — and
+  // only the first one until asked. Five stacked notes is another screen of
+  // reading stacked on top of the thing you came here for.
+  const notes=[];
+  if(plan.overlapSaving>0.5) notes.push({kind:'good',text:'Shopping for these '+(plan.days.length*res.mealsPerDay)+' meals one at a time would cost '+money(plan.naiveFirstCook)+'. Planned together they share '+plan.sharedItems+' ingredients, so the same food comes to '+money(plan.firstCook)+'.'});
+  plan.notes.forEach(n=>notes.push(n));
+  notes.sort((a,b)=>(a.kind==='warn'?0:1)-(b.kind==='warn'?0:1));
+  const shown=S.notesOpen?notes:notes.slice(0,1);
+  shown.forEach(n=>h.appendChild(el('p','note '+(n.kind==='good'?'good':'warn'),esc(n.text))).style.marginTop='11px');
+  if(notes.length>1){
+    const more=el('button','btn ghost',S.notesOpen?'Fewer notes':'+ '+(notes.length-1)+' more note'+(notes.length===2?'':'s'));
+    more.style.cssText='font-size:12.5px;margin-top:6px;padding:6px 2px';
+    more.onclick=()=>{S.notesOpen=!S.notesOpen;render()};
+    h.appendChild(more);
+  }
+  v.appendChild(h);
+
+  const shuffle=el('button','btn','🎲 Different week, same answers');
+  shuffle.onclick=()=>{S.seed++;render()}; v.appendChild(shuffle);
+
+  const tabs=el('div','grid'); tabs.id='tabstrip'; tabs.style.gridTemplateColumns='repeat(5,1fr)'; tabs.style.gap='7px';
+  [['days','Days'],['shop','List'],['where','Where'],['left','Left'],['nutrition','Health']].forEach(([k,l])=>{
+    const b=el('button','btn sm'+(S.tab===k?' primary':'')); b.style.cssText='width:100%;padding:10px 4px;font-size:13px'; b.textContent=l;
+    b.onclick=()=>{S.tab=k;render()}; tabs.appendChild(b);
+  });
+  v.appendChild(tabs);
+
+  if(S.tab==='days'){
+    /**
+     * One day at a time, by default.
+     *
+     * Five stacked day cards is two thousand pixels of page, and in an embedded
+     * frame — where there is no flick momentum and a swipe covers very little —
+     * that is a long way to travel to reach Friday. The best answer to "I cannot
+     * scroll far" is to need less scrolling: a day selector turns the whole week
+     * into one tap instead of four swipes. Anyone who wants the old continuous
+     * view can still have it.
+     */
+    const sel=el('div','scroll'); sel.style.marginBottom='2px';
+    plan.days.forEach((d,i)=>{
+      const b=el('button','chip'+(!S.allDays&&S.day===i?' on':''));
+      b.innerHTML='Day '+(i+1)+'<span class="muted" style="margin-left:7px;font-size:11px">'+Math.round(d.totals.kcal)+'</span>';
+      b.onclick=()=>{S.allDays=false;S.day=i;render()};
+      sel.appendChild(b);
+    });
+    const all=el('button','chip'+(S.allDays?' on':''),'All '+plan.days.length+' days');
+    all.onclick=()=>{S.allDays=!S.allDays;render()};
+    sel.appendChild(all);
+    v.appendChild(sel);
+    if(S.day>=plan.days.length) S.day=0;
+
+    /**
+     * Swipe left and right to change day.
+     *
+     * Bound on a wrapper rather than on the cards, and only acted on when the
+     * gesture is decisively horizontal — a 2:1 ratio against the vertical
+     * movement, past a 45 px threshold. Anything looser steals the start of a
+     * scroll, which is far more annoying than a swipe that occasionally does not
+     * register. touch-action stays pan-y so the browser keeps owning vertical.
+     */
+    const wrap=el('div','daywrap stack-sm');
+    if(!S.allDays && plan.days.length>1){
+      let x0=0,y0=0,live=false;
+      wrap.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY;live=true});
+      wrap.addEventListener('pointerup',e=>{
+        if(!live) return; live=false;
+        const dx=e.clientX-x0, dy=e.clientY-y0;
+        if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*2) return;
+        const next=S.day+(dx<0?1:-1);
+        if(next<0||next>=plan.days.length) return;
+        S.day=next; render();
+      });
+      wrap.addEventListener('pointercancel',()=>{live=false});
+    }
+    v.appendChild(wrap);
+
+    plan.days.forEach((d,i)=>{
+      if(!S.allDays && i!==S.day) return;
+      const c=el('div','card stack-sm');
+      c.appendChild(el('div','row','<h3>Day '+(i+1)+'</h3><span class="num muted" style="font-size:12px">'+Math.round(d.totals.kcal)+' kcal · '+Math.round(d.totals.protein)+' g P</span>'));
+      // meals as bubbles: each one holds its own dish, drawn from its own
+      // ingredients, so the week reads as food rather than as a list of titles
+      const orbs=el('div','grid scene');
+      orbs.style.cssText='grid-template-columns:repeat('+Math.min(d.meals.length,3)+',1fr);gap:14px;margin-top:4px';
+      d.meals.forEach(m=>{
+        const r=byId(m.recipeId); if(!r) return;
+        const vr=m.variantId?r.variants.find(x=>x.id===m.variantId):null;
+        const b=el('button','bub');
+        const orb=el('div','orb');
+        const ph=PG.dishPhoto(r.id);
+        if(ph){ const im=photoImg(ph,PG.DISH_REMOTE[r.id],'');
+          im.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover'; orb.appendChild(im); }
+        else { const api=plate(PG.applyVariant(r,m.variantId),{spread:.86,flat:true});
+          api.node.style.cssText='position:absolute;inset:1%;width:98%'; orb.appendChild(api.node); attachTilt(b,api); }
+        b.appendChild(orb);
+        b.appendChild(el('div','cap','<b>'+esc(r.name)+'</b><s>'+(vr?esc(vr.label)+' · ':'')+
+          (r.totalMin>=120?Math.round(r.totalMin/60)+' h':r.totalMin+' min')+'</s>'));
+        b.onclick=()=>{S.dishId=r.id;S.variantId=m.variantId;S.dishTab='shop';S.off=new Set();S.cameFrom='result';S.screen='dish';render()};
+        orbs.appendChild(b);
+      });
+      c.appendChild(orbs);
+      wrap.appendChild(c);
+    });
+    if(!S.allDays && plan.days.length>1)
+      wrap.appendChild(el('div','swipehint','<i>‹</i> swipe to change day <i>›</i>'));
+    if(res.excluded.length){
+      const x=el('div','card');
+      x.innerHTML='<span class="lbl">Hidden by your answers ('+res.excluded.length+')</span>';
+      const w=el('div'); w.style.cssText='margin-top:10px;display:flex;flex-wrap:wrap;gap:6px';
+      res.excluded.slice(0,10).forEach(e=>w.appendChild(el('span','pill',esc(e.recipe.name)+' — '+esc(e.why))));
+      x.appendChild(w);
+      x.appendChild(el('p','muted','Hidden, not deleted. Change an answer above and they come back.')).style.cssText='font-size:11.5px;margin-top:10px';
+      v.appendChild(x);
+    }
+  }
+
+  if(S.tab==='shop'){
+    const c=el('div','card stack-sm');
+    c.appendChild(el('div','row','<h3>One shop, '+plan.shopping.length+' items</h3><span class="muted" style="font-size:12px">'+esc(country().name)+'</span>'));
+    c.appendChild(el('p','muted','Summed across every meal, so pack sizes are worked out once. Tap what you already own.')).style.cssText='font-size:12.5px';
+    const list=el('div'); list.style.marginTop='6px';
+    plan.shopping.forEach(it=>list.appendChild(shopRow(it)));
+    c.appendChild(list);
+    const cb=contributeBar(plan.shopping); if(cb) c.appendChild(cb);
+    const t=el('div'); t.style.cssText='border-top:1px solid var(--line);margin-top:12px;padding-top:12px;font-size:13.5px';
+    t.innerHTML=row('Packs to buy',money(plan.firstCook),'strong')+row('Value actually consumed',money(plan.marginal),'muted');
+    c.appendChild(t);
+    c.appendChild(provenance(plan.coverage));
+    v.appendChild(c);
+  }
+
+  if(S.tab==='where') v.appendChild(whereToBuy(plan));
+
+  if(S.tab==='left') v.appendChild(leftoversView(plan,bl,res.mealsPerDay*plan.days.length*P.people));
+
+  if(S.tab==='nutrition') v.appendChild(nutrition(plan.avg,'Daily average across '+plan.days.length+' days'));
+
+  if(PG.PHOTO_CREDITS.length){
+    const cr=el('div','card');
+    cr.innerHTML='<span class="lbl">Photograph credits</span>';
+    const l=el('div'); l.style.cssText='margin-top:9px;font-size:11.5px;line-height:1.6';
+    PG.PHOTO_CREDITS.forEach(c=>{
+      const d=el('p','muted');
+      d.innerHTML=esc(c.title)+' — '+esc(c.author||'unknown')+', '+esc(c.licence)+
+        (c.page?' · <a href="'+esc(c.page)+'" target="_blank" rel="noopener" style="color:var(--accent)">source</a>':'');
+      l.appendChild(d);
+    });
+    cr.appendChild(l);
+    cr.appendChild(el('p','muted','Cut out from the originals. Share-alike images pass their licence to the cut-out.')).style.cssText='font-size:11px;margin-top:9px';
+    v.appendChild(cr);
+  }
+
+  const foot=el('p','muted');
+  foot.style.cssText='font-size:11.5px;line-height:1.65;margin-top:30px';
+  foot.innerHTML='Recipes, nutrition and planning run entirely on this device. Prices are part real and part modelled — the dot beside each item says which, and the shopping tab breaks it down. Real prices come from '+PG.SOURCE_NAME+'.';
+  v.appendChild(foot);
+  return v;
+}
+
+function srcDot(it){
+  if(it.source==='estimate') return '<span class="src est" title="Estimated"></span>';
+  const c=it.confidence==='high'?'real-high':it.confidence==='medium'?'real-med':'real-low';
+  const t=it.source==='local'
+    ? 'Measured at markets in this country'+(it.note?' — '+it.note:'')
+    : 'Measured price, '+it.obs+' shopper reports';
+  return '<span class="src '+c+'" title="'+esc(t)+'">'+(it.source==='local'?'':'')+'</span>';
+}
+/* ============================================================== plate ====
+   Draws a dish as stacked layers of vector food. One <g> per ingredient, so
+   removing one genuinely removes it and every label still points at something
+   real. Geometry comes from lib/visual.ts; this file only paints it. */
+const NS='http://www.w3.org/2000/svg';
+const sv=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e};
+
+/* One hex per ingredient; the lit and shaded sides are derived from it so the
+   whole plate is lit from the same direction without storing three colours.
+
+   Derived in RGB, deliberately. Doing it in HSL looks right until a near-white
+   ingredient arrives: #fafaf4 is nominally hue 60 at 43% saturation, so dropping
+   its lightness by 13 turns semi-skimmed milk into butter yellow. Mixing toward
+   white and multiplying toward black keeps the hue where it was. */
+const rgb=h=>{const n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255]};
+const hex=c=>'#'+c.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+const shade=(c,d)=>{const p=rgb(c);
+  return d>=0 ? hex(p.map(v=>v+(255-v)*(d/100))) : hex(p.map(v=>v*(1+d/100)));};
+
+function shapeFor(form,p,fill){
+  const r=p.r, x=p.x, y=p.y, rot='rotate('+p.rot.toFixed(1)+' '+x.toFixed(2)+' '+y.toFixed(2)+')';
+  switch(form){
+    // Near-opaque: at .85 a pale sauce picked up the green of the plate beneath
+    // and read as an olive disc rather than as béchamel.
+    case 'pool':   return sv('ellipse',{cx:50,cy:53,rx:r,ry:r*0.6,fill:fill,opacity:.96});
+    case 'dome':   return sv('ellipse',{cx:x,cy:y,rx:r,ry:r*0.66,fill:fill});
+    case 'strand':{
+      const a=(p.k*360)*Math.PI/180, dx=Math.cos(a)*r, dy=Math.sin(a)*r*0.55;
+      return sv('path',{d:'M'+(x-dx)+' '+(y-dy)+' Q'+(x+dy*1.6)+' '+(y-dx*0.5)+' '+(x+dx)+' '+(y+dy),
+        stroke:fill,'stroke-width':(r*0.22).toFixed(2),'stroke-linecap':'round',fill:'none'});
+    }
+    case 'slab':   return sv('rect',{x:x-r,y:y-r*0.5,width:r*2,height:r,rx:r*0.26,fill:fill,transform:rot});
+    case 'chunk':  return sv('rect',{x:x-r,y:y-r*0.82,width:r*2,height:r*1.64,rx:r*0.42,fill:fill,transform:rot});
+    case 'round':  return sv('circle',{cx:x,cy:y,r:r,fill:fill});
+    case 'wedge':  return sv('path',{d:'M'+x+' '+(y-r)+' A'+r+' '+r+' 0 0 1 '+x+' '+(y+r)+' Q'+(x-r*0.35)+' '+y+' '+x+' '+(y-r)+'Z',fill:fill,transform:rot});
+    case 'bean':   return sv('ellipse',{cx:x,cy:y,rx:r,ry:r*0.72,fill:fill,transform:rot});
+    case 'leaf':   return sv('path',{d:'M'+(x-r)+' '+y+' Q'+x+' '+(y-r*0.85)+' '+(x+r)+' '+y+' Q'+x+' '+(y+r*0.85)+' '+(x-r)+' '+y+'Z',fill:fill,transform:rot});
+    case 'shred':  return sv('rect',{x:x-r,y:y-r*0.19,width:r*2,height:r*0.38,rx:r*0.19,fill:fill,transform:rot});
+    default:       return sv('circle',{cx:x,cy:y,r:Math.max(.5,r),fill:fill});
+  }
+}
+
+/**
+ * Build a plate.
+ *
+ * `explode` lifts each layer by its own index rather than a fixed step, so a
+ * dish with four ingredients separates as clearly as one with twenty. Focus
+ * dims everything else rather than hiding it — hiding the rest of the plate
+ * loses the sense of proportion that makes the number mean anything.
+ */
+let plateSeq=0;
+function plate(items,opts){
+  opts=opts||{};
+  const uid='p'+(plateSeq++)+'_';
+  const layers=PG.plateLayers(items,{spread:opts.spread||1});
+  const svg=sv('svg',{class:'plate',viewBox:'2 14 96 78',role:'img'});
+  svg.setAttribute('aria-label','Illustration of the dish, one layer per ingredient');
+  const defs=sv('defs',{});
+  const f=sv('filter',{id:uid+'shadow',x:'-40%',y:'-40%',width:'180%',height:'180%'});
+  f.appendChild(sv('feDropShadow',{dx:0,dy:2.4,stdDeviation:3.2,'flood-color':'#4a3418','flood-opacity':.20}));
+  defs.appendChild(f);
+  svg.appendChild(defs);
+
+  // the plate itself, in the same perspective as the scatter
+  const dish=sv('g',{});
+  if(opts.bare) dish.setAttribute('style','display:none');
+  dish.appendChild(sv('ellipse',{cx:50,cy:55,rx:46,ry:29,fill:'var(--plate)',filter:'url(#'+uid+'shadow)'}));
+  dish.appendChild(sv('ellipse',{cx:50,cy:53.5,rx:40,ry:24,fill:'var(--plate2)'}));
+  svg.appendChild(dish);
+
+  const groups=[];
+  layers.forEach((L,i)=>{
+    const id=uid+'lg'+i;
+    const gr=sv('linearGradient',{id:id,x1:'0',y1:'0',x2:'.35',y2:'1'});
+    gr.appendChild(sv('stop',{offset:'0','stop-color':shade(L.color,9)}));
+    gr.appendChild(sv('stop',{offset:'1','stop-color':shade(L.color,-9)}));
+    defs.appendChild(gr);
+    const g=sv('g',{class:'pl'+(opts.onPick?' pick':''),'data-ref':L.ref});
+
+    const pic=opts.photos?PG.PHOTOS[L.ref]:null;
+    if(pic){
+      // Photograph in place of the drawn form. Still one layer per ingredient,
+      // so lifting it off still lifts it off.
+      L.pieces.slice(0,Math.min(L.pieces.length,7)).forEach(p=>{
+        const s=p.r*2.4;
+        const im=sv('image',{href:pic,x:(p.x-s/2).toFixed(2),y:(p.y-s/2).toFixed(2),
+          width:s.toFixed(2),height:s.toFixed(2),preserveAspectRatio:'xMidYMid meet'});
+        im.setAttribute('transform','rotate('+(p.rot*0.15).toFixed(1)+' '+p.x.toFixed(2)+' '+p.y.toFixed(2)+')');
+        g.appendChild(im);
+      });
+      if(opts.onPick){ g.style.cursor='pointer'; g.addEventListener('click',ev=>{ev.stopPropagation();opts.onPick(L.ref)}); }
+      svg.appendChild(g); groups.push({L:L,g:g,i:i});
+      return;
+    }
+    L.pieces.forEach(p=>{
+      g.appendChild(shapeFor(L.form,p,'url(#'+id+')'));
+      // a single specular dot per piece is what stops vector food reading as flat
+
+    });
+    if(opts.onPick){
+      g.style.cursor='pointer';
+      g.addEventListener('click',ev=>{ev.stopPropagation();opts.onPick(L.ref)});
+    }
+    svg.appendChild(g); groups.push({L:L,g:g,i:i});
+  });
+
+  const api={node:svg,layers:layers,groups:groups,explode:0,focus:null,tilt:{x:0,y:0}};
+  api.paint=()=>{
+    const n=Math.max(groups.length,1);
+    groups.forEach(({L,g,i})=>{
+      const t=(i+1)/n;
+      // Two separate gestures, and conflating them was wrong. Exploding lifts and
+      // fans EVERY layer, for looking at the construction. Focusing plucks only
+      // the chosen layer out and leaves the rest of the dish where it is —
+      // lifting everything to highlight one thing just reads as debris, and it
+      // destroys the sense of proportion that makes the number worth showing.
+      const lift=api.explode*t*46;
+      const fan=api.explode*(i%2?1:-1)*t*13;
+      const on=api.focus===L.ref;
+      const px=api.tilt.x*(0.4+t*1.5)+fan, py=api.tilt.y*(0.4+t*1.5);
+      g.style.transform='translate('+px.toFixed(2)+'px,'+(-lift-(on?10:0)+py).toFixed(2)+'px)'+(on?' scale(1.07)':'');
+      g.classList.toggle('dim', !!api.focus && !on);
+    });
+  };
+  api.setExplode=v=>{api.explode=v;api.paint()};
+  api.setFocus=r=>{api.focus=r;api.paint()};
+  api.setTilt=(x,y)=>{api.tilt={x:x,y:y};api.paint()};
+  api.paint();
+  return api;
+}
+
+/* Pointer and device tilt drive the same two numbers, so the plate behaves the
+   same whether it is a phone being turned or a mouse being moved. */
+let tiltBound=false; let tiltSubs=[];
+function attachTilt(host,api){
+  let raf=0;
+  const set=(x,y)=>{ if(raf)return; raf=requestAnimationFrame(()=>{raf=0;api.setTilt(x,y)}); };
+  host.addEventListener('pointermove',e=>{
+    // Mouse only. On a touch screen this same event fires while the user is
+    // scrolling, so a drag down the page would repaint every plate it passed.
+    if(e.pointerType&&e.pointerType!=='mouse') return;
+    const b=host.getBoundingClientRect();
+    set(((e.clientX-b.left)/b.width-.5)*-7,((e.clientY-b.top)/b.height-.5)*-5);
+  });
+  host.addEventListener('pointerleave',()=>set(0,0));
+  if(window.DeviceOrientationEvent&&!tiltBound){
+    tiltBound=true;
+    window.addEventListener('deviceorientation',e=>{
+      if(e.gamma==null)return;
+      const x=Math.max(-9,Math.min(9,e.gamma/4)), y=Math.max(-6,Math.min(6,((e.beta||0)-42)/6));
+      tiltSubs.forEach(fn=>fn(-x,-y));
+    });
+  }
+  tiltSubs.push((x,y)=>api.setTilt(x,y));
+}
+
+/* -------------------------------------------------------- leftovers ---- */
+const g2=n=>n>=1000?(n/1000).toFixed(n%1000?1:0)+' kg':Math.round(n)+' g';
+
+function leftoversView(plan,bl,servings){
+  const w=el('div','stack');
+  const rep=PG.leftovers(plan.shopping,plan.firstCook);
+  const P=S.profile;
+
+  /* --- pack economics: the point of the tab --- */
+  const intro=el('div','card');
+  intro.innerHTML='<span class="lbl">What the shop actually buys</span>'+
+    '<p class="muted" style="font-size:13px;margin-top:8px;line-height:1.55">A meal kit ships the exact grams and leaves you nothing. A shop sells whole packs, '+
+    'so the first bill is higher and the second is not. This is that difference, split into the part you keep and the part that spoils.</p>';
+  const bar=el('div'); bar.style.cssText='margin-top:14px';
+  // the eaten share is the plan's own marginal figure, not firstCook minus the
+  // surplus — otherwise this bar and the shopping tab would quote two slightly
+  // different numbers for the same thing
+  const eaten=Math.min(plan.marginal,plan.firstCook);
+  const pc=n=>plan.firstCook>0?(n/plan.firstCook*100):0;
+  bar.innerHTML='<div style="display:flex;height:9px;border-radius:999px;overflow:hidden;background:var(--surface2)">'+
+    '<i style="width:'+pc(eaten)+'%;background:var(--accent)"></i>'+
+    '<i style="width:'+pc(rep.stockValue)+'%;background:var(--accent);opacity:.42"></i>'+
+    '<i style="width:'+pc(rep.perishableValue)+'%;background:var(--warn)"></i></div>'+
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;font-size:12px">'+
+    '<span style="display:flex;align-items:center;gap:6px"><span class="src real-high"></span>eaten this week '+money(eaten)+'</span>'+
+    '<span style="display:flex;align-items:center;gap:6px"><span class="src real-med"></span>cupboard stock '+money(rep.stockValue)+'</span>'+
+    '<span style="display:flex;align-items:center;gap:6px"><span class="src" style="background:var(--warn)"></span>fresh, unfinished '+money(rep.perishableValue)+'</span>'+
+    '</div>';
+  intro.appendChild(bar);
+  PG.packEconomics(plan.firstCook,plan.marginal,rep,money)
+    .forEach(n=>intro.appendChild(el('p','note '+n.kind,esc(n.text))).style.marginTop='11px');
+  w.appendChild(intro);
+
+  /* --- the benchmark ladder, in full --- */
+  const bm=el('div','card');
+  bm.innerHTML='<span class="lbl">Per serving, against the alternatives</span>';
+  const tbl=el('div'); tbl.style.marginTop='11px';
+  const mine=el('div'); mine.style.cssText='display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line2)';
+  mine.innerHTML='<span style="font-weight:620">Cooking this plan</span><span class="num" style="font-weight:680;color:var(--accent)">'+money(plan.perMeal)+'</span>';
+  tbl.appendChild(mine);
+  bl.forEach(l=>{
+    const d=el('div'); d.style.cssText='padding:11px 0;border-bottom:1px solid var(--line)';
+    d.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px">'+
+      '<span style="font-size:13.5px">'+esc(l.label)+'</span>'+
+      '<span class="num" style="font-size:13.5px;color:'+(l.beats?'var(--muted)':'var(--warn)')+'">'+
+        money(l.low)+(l.high>l.low?'–'+money(l.high):'')+'</span></div>'+
+      '<p class="muted" style="font-size:11.5px;margin-top:5px;line-height:1.45">'+esc(l.blurb)+'</p>'+
+      '<p style="font-size:11.5px;margin-top:5px;color:'+(l.beats?'var(--accent)':'var(--warn)')+'">'+
+        (l.beats?Math.round(l.share*100)+'% cheaper — '+money(l.saving)+' a serving, '+money(l.saving*servings)+' across this plan'
+               :money(-l.saving)+' a serving more expensive')+'</p>';
+    tbl.appendChild(d);
+  });
+  bm.appendChild(tbl);
+  bm.appendChild(el('p','muted','Compared on the value of food actually eaten, not the first bill — a kit leaves you no cupboard, so comparing its price against a shop that stocks one would flatter us. Benchmarks are published UK prices as of '+PG.BENCHMARK_DATE+', scaled to '+esc(country().name)+'.'))
+    .style.cssText='font-size:11.5px;margin-top:12px;line-height:1.55';
+  w.appendChild(bm);
+
+  /* --- what has to be used --- */
+  if(rep.perishableLines.length){
+    const c=el('div','card');
+    c.appendChild(el('div','row','<h3>Use these first</h3><span class="num" style="font-size:14px;font-weight:640;color:var(--warn)">'+money(rep.perishableValue)+'</span>'));
+    c.appendChild(el('p','muted','Fresh food the plan does not finish. Ordered by what is worth most, not by what is biggest.')).style.cssText='font-size:12.5px;margin-top:7px';
+    const l=el('div'); l.style.marginTop='9px';
+    rep.perishableLines.slice(0,10).forEach(x=>{
+      const d=el('div'); d.style.cssText='display:flex;align-items:center;gap:11px;padding:8px 0;border-top:1px solid var(--line)';
+      d.innerHTML='<span class="dot" style="background:var(--warn);margin:0"></span>'+
+        '<span style="flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x.name)+'</span>'+
+        '<span class="muted num" style="font-size:12px">'+g2(x.gramsLeft)+' of '+g2(x.gramsBought)+'</span>'+
+        '<span class="num" style="min-width:58px;text-align:right;font-size:13.5px;font-weight:600">'+money(x.value)+'</span>';
+      l.appendChild(d);
+    });
+    c.appendChild(l);
+    w.appendChild(c);
+  }
+
+  /* --- what carries forward --- */
+  if(rep.stockLines.length){
+    const c=el('div','card');
+    c.appendChild(el('div','row','<h3>Stays in the cupboard</h3><span class="num" style="font-size:14px;font-weight:640;color:var(--accent)">'+money(rep.stockValue)+'</span>'));
+    c.appendChild(el('p','muted','Rice, spices, oil and pulses keep for months. You paid for this once; every later plan that uses them is cheaper because of it.')).style.cssText='font-size:12.5px;margin-top:7px';
+    const box=el('div'); box.style.cssText='margin-top:11px;display:flex;flex-wrap:wrap;gap:6px';
+    rep.stockLines.slice(0,16).forEach(x=>box.appendChild(el('span','pill',esc(x.name)+' · '+g2(x.gramsLeft))));
+    if(rep.stockLines.length>16) box.appendChild(el('span','pill','+'+(rep.stockLines.length-16)+' more'));
+    c.appendChild(box);
+    const mark=el('button','btn sm','Mark all of this as stocked');
+    mark.style.cssText='width:100%;margin-top:13px';
+    mark.title='Adds them to your pantry so the next plan does not charge you for them again';
+    mark.onclick=()=>{rep.stockLines.forEach(x=>S.pantry.add(x.ref));save();render()};
+    c.appendChild(mark);
+    w.appendChild(c);
+  }
+
+  /* --- what the surplus could cook next --- */
+  const nx=PG.nextFromLeftovers(rep,country(),S.tier,P.people||2,P.diets,S.pantry);
+  const n=el('div','card');
+  n.appendChild(el('h3',null,'What this could make next'));
+  n.appendChild(el('p','muted','Ranked by how little more it costs, because that is the question — not which recipe happens to mention coriander.')).style.cssText='font-size:12.5px;margin-top:7px';
+  if(!nx.length){
+    n.appendChild(el('p','note warn','Nothing in the surplus gets far enough into another dish to be worth listing. That is usually a sign the plan is already using its packs well.')).style.marginTop='11px';
+  } else {
+    const l=el('div'); l.style.marginTop='10px';
+    nx.forEach(x=>{
+      const b=el('button','item'); b.style.cssText='background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:13px;margin-top:8px;align-items:flex-start';
+      b.innerHTML='<span style="flex:1;min-width:0">'+
+        '<span style="display:block;font-size:14.5px;font-weight:580">'+esc(x.name)+'</span>'+
+        '<span class="muted" style="font-size:12px">'+x.covered+' of '+x.total+' ingredients already in · '+
+          (x.totalMin>=120?Math.round(x.totalMin/60)+' h':x.totalMin+' min')+'</span>'+
+        (x.missing.length?'<span class="muted" style="display:block;font-size:11.5px;margin-top:5px">still need '+esc(x.missing.map(m=>m.name.toLowerCase()).join(', '))+'</span>':'')+
+        '</span>'+
+        '<span style="text-align:right;flex:0 0 auto"><span class="num" style="display:block;font-size:15px;font-weight:660;color:var(--accent)">'+
+          (x.extraCost<0.01?'free':'+'+money(x.extraCost))+'</span><span class="muted" style="font-size:11px">'+(P.people||2)+' servings</span></span>';
+      b.onclick=()=>{S.dishId=x.recipeId;S.variantId=null;S.dishTab='shop';S.off=new Set();S.screen='dish';render()};
+      l.appendChild(b);
+    });
+    n.appendChild(l);
+  }
+  w.appendChild(n);
+
+  return w;
+}
+
+/* ------------------------------------------------------ where to buy ---- */
+function whereToBuy(plan){
+  const w=el('div','stack');
+  const route=PG.shoppingRoute(plan.shopping.filter(i=>!S.pantry.has(i.ref)));
+
+  const intro=el('div','card');
+  intro.innerHTML='<span class="lbl">Where this list is best bought</span>'+
+    '<p class="muted" style="font-size:13px;margin-top:8px;line-height:1.5">Grouped by the kind of shop, biggest spend first — so you can see which single detour is actually worth making rather than being sent to five shops.</p>';
+  w.appendChild(intro);
+
+  route.forEach(g=>{
+    const c=el('div','card');
+    c.appendChild(el('div','row','<h3>'+esc(g.label)+'</h3><span class="num" style="font-size:14px;font-weight:640;color:var(--accent)">'+money(g.total)+'</span>'));
+    if(g.why) c.appendChild(el('p','note good',esc(g.why))).style.marginTop='10px';
+    const list=el('div'); list.style.cssText='margin-top:10px;display:flex;flex-wrap:wrap;gap:6px';
+    g.items.slice(0,14).forEach(i=>list.appendChild(el('span','pill',esc(i.name))));
+    if(g.items.length>14) list.appendChild(el('span','pill','+'+(g.items.length-14)+' more'));
+    c.appendChild(list);
+    w.appendChild(c);
+  });
+
+  // live shops
+  const live=el('div','card stack-sm');
+  live.appendChild(el('h3',null,'Real shops near you'));
+  const box=el('div');
+  if(S.stores===null && !S.shopMsg){
+    const b=el('button','btn','📍 Find shops near me');
+    b.onclick=()=>findShops(route);
+    box.appendChild(b);
+    box.appendChild(el('p','muted','Uses OpenStreetMap. Nothing is sent anywhere — your location stays on this device.'));
+    box.lastChild.style.cssText='font-size:11.5px;margin-top:9px';
+  } else if(S.shopMsg){
+    box.appendChild(el('p','note warn',esc(S.shopMsg)));
+  } else {
+    const wanted=new Set(route.map(g=>g.kind));
+    const matched=S.stores.filter(x=>wanted.has(x.kind));
+    const rest=S.stores.filter(x=>!wanted.has(x.kind));
+    const open=S.stores.filter(x=>x.open===true).length;
+    box.appendChild(el('p','lbl',S.stores.length+' within 3 km · '+open+' open now'));
+    [...matched,...rest].slice(0,14).forEach(x=>{
+      const d=el('div','shop');
+      d.innerHTML='<span class="dot '+(x.open===true?'open':x.open===false?'shut':'unk')+'"></span>'+
+        '<span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:560">'+esc(x.name)+'</span>'+
+        '<span class="muted" style="font-size:12px">'+esc(PG.SHOP_LABEL[x.kind]||x.kind)+' · '+x.dist.toFixed(1)+' km'+
+        (x.open===true&&x.closes?' · closes '+esc(x.closes):x.open===false?' · closed now':' · hours not mapped')+
+        (wanted.has(x.kind)?' · <span style="color:var(--accent)">on your list</span>':'')+'</span></span>'+
+        '<a href="https://www.openstreetmap.org/?mlat='+x.lat+'&mlon='+x.lon+'#map=18/'+x.lat+'/'+x.lon+'" target="_blank" rel="noreferrer" class="pill" style="align-self:center">map</a>';
+      box.appendChild(d);
+    });
+    if(!matched.length) box.appendChild(el('p','note warn','None of the shop types your list needs are mapped nearby — a general supermarket will cover everything, just not at the best price.')).style.marginTop='10px';
+  }
+  live.appendChild(box);
+  w.appendChild(live);
+  return w;
+}
+
+/* --------------------------------------------------------- where you are ---- */
+/* One position fix, turned into a place name and a country, so prices arrive in
+   the right currency without anyone picking their own country off a list of 60.
+   Nothing is sent anywhere: the coordinates go to OpenStreetMap's public
+   reverse-geocoder and the answer stays on the device.
+
+   Geolocation is refused outright by every browser on an insecure page, which
+   is the real reason this only works once the app is on an https address. */
+
+function position(opts){
+  return new Promise((ok,no)=>{
+    if(!navigator.geolocation) return no({code:0});
+    navigator.geolocation.getCurrentPosition(p=>ok(p), e=>no(e),
+      Object.assign({timeout:12000, maximumAge:300000, enableHighAccuracy:false}, opts||{}));
+  });
+}
+
+const GEO_FAIL={0:'This browser cannot do location.',
+  1:'Location permission was declined — you can still pick a country by hand.',
+  2:'No location fix. Usually means no signal indoors.',
+  3:'Location timed out.'};
+
+/** Coordinates -> {label, code}. Returns null rather than guessing. */
+async function placeOf(lat,lon){
+  const u='https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&addressdetails=1'
+        +'&lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon);
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),9000);
+  try{
+    const r=await fetch(u,{signal:c.signal,headers:{'Accept':'application/json'}});
+    if(!r.ok) return null;
+    const j=await r.json(), a=j.address||{};
+    const town=a.city||a.town||a.village||a.suburb||a.county||a.state||'';
+    const code=(a.country_code||'').toUpperCase();
+    return {label:[town,a.country].filter(Boolean).join(', ')||j.display_name||'somewhere',
+            code: PG.COUNTRIES[code]?code:null, lat, lon};
+  }catch(e){ return null; }
+  finally{ clearTimeout(t); }
+}
+
+/** The country the browser itself thinks it is in. No network, no permission. */
+function localeCountry(){
+  try{
+    for(const l of (navigator.languages||[navigator.language||''])){
+      const m=/[-_]([A-Za-z]{2})$/.exec(l);
+      if(m && PG.COUNTRIES[m[1].toUpperCase()]) return m[1].toUpperCase();
+    }
+  }catch(e){}
+  return null;
+}
+
+async function locate(){
+  S.placeBusy=true; S.shopMsg=null; render();
+  try{
+    const pos=await position();
+    const p=await placeOf(pos.coords.latitude,pos.coords.longitude);
+    if(!p){
+      // Position fix worked, the map lookup did not. The phone's own region
+      // setting is a worse answer than coordinates but a much better one than
+      // leaving the prices in the wrong currency.
+      const g=localeCountry();
+      if(g){ S.country=g; S.place={label:PG.COUNTRIES[g].name, code:g,
+                                   lat:pos.coords.latitude, lon:pos.coords.longitude, rough:true}; save(); }
+      else S.shopMsg='Found you, but the map lookup did not answer. Prices are unchanged.';
+    }
+    else{
+      S.place=p;
+      // Only switch currency for a country the price model actually covers.
+      if(p.code && p.code!==S.country) S.country=p.code;
+      save();
+    }
+  }catch(e){ S.shopMsg=GEO_FAIL[e&&e.code]||'Could not get a location.'; }
+  S.placeBusy=false; render();
+}
+
+async function findShops(route){
+  S.shopMsg='Locating…'; render();
+  if(!navigator.geolocation){ S.shopMsg='This browser has no location support.'; render(); return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat,longitude:lon}=pos.coords;
+    S.shopMsg='Reading the map…'; render();
+    // name the place too, so the shop list says where it is looking
+    placeOf(lat,lon).then(p=>{ if(p){ S.place=p; if(p.code&&p.code!==S.country) S.country=p.code; save(); render(); } });
+    const q='[out:json][timeout:20];(nwr["shop"~"^(supermarket|convenience|grocery|greengrocer|butcher|seafood|deli|health_food|wholesale)$"](around:3000,'+lat+','+lon+');nwr["amenity"="marketplace"](around:3000,'+lat+','+lon+'););out center tags 80;';
+    const mirrors=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+    for(const url of mirrors){
+      try{
+        const r=await fetch(url,{method:'POST',body:'data='+encodeURIComponent(q)});
+        if(!r.ok) continue;
+        const j=await r.json();
+        if(!j.elements||!j.elements.length) continue;
+        const now=new Date();
+        S.stores=j.elements.map(e=>{
+          const t=e.tags||{}, name=t.name||t.brand||t.operator; if(!name) return null;
+          const la=e.lat!=null?e.lat:(e.center&&e.center.lat), lo=e.lon!=null?e.lon:(e.center&&e.center.lon);
+          if(la==null||lo==null) return null;
+          const kind=t.shop||(t.amenity==='marketplace'?'marketplace':'grocery');
+          const st=PG.statusFrom(t.opening_hours,now);
+          return {name,kind,lat:la,lon:lo,dist:PG.haversineKm(lat,lon,la,lo),open:st.openNow,closes:st.closesAt,
+                  osmId:e.id,osmType:(e.type||'node').toUpperCase()};
+        }).filter(Boolean).sort((a,b)=>a.dist-b.dist);
+        S.shopMsg=null; render(); return;
+      }catch(e){}
+    }
+    S.shopMsg='Could not reach OpenStreetMap from here. Everything else still works.';
+    render();
+  }, err=>{
+    S.shopMsg = err.code===1 ? 'Location permission denied.' : 'No location fix.';
+    render();
+  }, {timeout:12000, maximumAge:300000});
+}
+
+function shopRow(it){
+  const own=S.pantry.has(it.ref);
+  const r=el('button','item'+(own?' own':''));
+  r.innerHTML='<span style="font-size:13px">'+(own?'✅':'⬜️')+'</span>'+srcDot(it)+
+    '<span class="nm" style="flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(it.name)+(it.optional?' (optional)':'')+'</span>'+
+    '<span class="muted num" style="font-size:12px">'+(it.grams<1?'<1':Math.round(it.grams))+' g</span>'+
+    '<span class="num" style="min-width:66px;text-align:right;font-size:13.5px;font-weight:600'+(own?';opacity:.4':'')+'">'+money(it.packPrice)+'</span>';
+  r.onclick=()=>{S.pantry.has(it.ref)?S.pantry.delete(it.ref):S.pantry.add(it.ref);save();render()};
+  // Only ingredients with a real Open Food Facts category are offered. Guessing
+  // a tag would file a submission under nothing and quietly pollute a dataset
+  // other people depend on — worse than not contributing.
+  if(S.contribFor!==it.ref) return r;
+  const wrap=el('div'); wrap.appendChild(r); wrap.appendChild(contributeSheet(it));
+  return wrap;
+}
+
+/** One control for the whole list, rather than one per line. */
+function contributeBar(items){
+  const can=items.filter(i=>PG.canContribute(i.ref));
+  if(!can.length) return null;
+  const d=el('div'); d.style.marginTop='10px';
+  if(!S.contribPick){
+    const b=el('button','btn ghost','＋ Report a real shelf price');
+    b.style.cssText='font-size:12.5px;width:100%;justify-content:center';
+    b.onclick=()=>{S.contribPick=true;opMsg=null;render()};
+    d.appendChild(b);
+    return d;
+  }
+  d.appendChild(el('p','muted','Which one did you see a price for?')).style.cssText='font-size:12.5px';
+  const sc=el('div','scroll'); sc.style.marginTop='7px';
+  can.slice(0,20).forEach(i=>{
+    const c=el('button','chip'+(S.contribFor===i.ref?' on':''),esc(i.name.split(',')[0]));
+    c.onclick=()=>{S.contribFor=(S.contribFor===i.ref?null:i.ref);opMsg=null;render()};
+    sc.appendChild(c);
+  });
+  d.appendChild(sc);
+  const x=el('button','btn ghost','Cancel'); x.style.cssText='font-size:12px';
+  x.onclick=()=>{S.contribPick=false;S.contribFor=null;render()};
+  d.appendChild(x);
+  return d;
+}
+
+function provenance(cov){
+  const d=el('div');
+  d.style.cssText='border-top:1px solid var(--line);margin-top:12px;padding-top:12px';
+  const pct=Math.round(cov.realValueShare*100);
+  d.innerHTML='<span class="lbl">Where these prices come from</span>'+
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:9px;font-size:12px">'+
+      '<span style="display:flex;align-items:center;gap:6px"><span class="src real-high"></span>real, well supported</span>'+
+      '<span style="display:flex;align-items:center;gap:6px"><span class="src real-low"></span>real, few reports</span>'+
+      '<span style="display:flex;align-items:center;gap:6px"><span class="src est"></span>estimated</span>'+
+    '</div>'+
+    '<p class="muted" style="font-size:12px;margin-top:10px;line-height:1.5">'+
+      cov.real+' of '+cov.total+' items are priced from something somebody actually measured'+
+      ' — that covers <strong style="color:var(--accent)">'+pct+
+      '% of what you\'d actually spend</strong>. The rest are modelled from a reference price scaled by country and shop type.'+
+    '</p>'+
+    (cov.local>0
+      ? '<p class="muted" style="font-size:12px;margin-top:8px;line-height:1.5"><strong style="color:var(--accent)">'+cov.local+
+        ' of them were measured here in '+esc(PG.COUNTRIES[country().code].name)+'</strong>, at real markets, by '+
+        PG.WFP_SOURCE+' (<a href="'+PG.WFP_URL+'" target="_blank" rel="noopener" style="color:var(--accent)">'+PG.WFP_LICENCE+
+        '</a>). Not converted from somewhere else — recorded on the ground.</p>'
+      : '<p class="muted" style="font-size:12px;margin-top:8px;line-height:1.5">None are measured in '+
+        esc(PG.COUNTRIES[country().code].name)+' itself. The measured ones come from '+PG.SOURCE_NAME+
+        ' (mostly Europe, snapshot '+PG.SNAPSHOT_DATE+') and are scaled to here, which is a good guess and not a local price.</p>')+
+    (pct<40?'<p class="note warn" style="margin-top:10px">Most of this total is still modelled, not measured. Treat it as a guide to the shape of the cost, not a quote. Spices and store-cupboard items are the worst covered, which is also where pack sizes distort the first shop most.</p>':'');
+  // "Modelled" on its own invites the reader to hear "invented". Saying which
+  // published series carried the figure forward, and by how much, turns it into
+  // something they can go and check.
+  const est=PG.ageing(PG.REFERENCE_MONTH,country().code);
+  const meas=PG.ageing(PG.SNAPSHOT_DATE.slice(0,7),country().code,new Date(),'measured');
+  const box=el('div'); box.style.cssText='margin-top:11px;border-top:1px solid var(--line);padding-top:11px';
+  box.innerHTML='<span class="lbl">How old these numbers are</span>'+
+    '<p class="muted" style="font-size:12px;margin-top:7px;line-height:1.5">Modelled: '+esc(est.basis)+'</p>'+
+    '<p class="muted" style="font-size:12px;margin-top:5px;line-height:1.5">Measured: '+esc(meas.basis)+'</p>'+
+    (est.series?'<p class="muted" style="font-size:11.5px;margin-top:7px">Series: <a href="'+esc(est.series.url)+'" target="_blank" rel="noopener" style="color:var(--accent)">'+esc(est.series.source)+'</a></p>':'');
+  d.appendChild(box);
+  return d;
+}
+
+/* ==================================================== contribute a price ===
+   The app reads Open Prices, which is ODbL and asks you to share back. It is
+   also the only route to the shops no commercial feed will ever cover. */
+let opSession=null, opMsg=null, opBusy=false;
+
+function contributeSheet(it){
+  const v=el('div','card stack-sm'); v.style.marginTop='10px';
+  v.appendChild(el('div','row','<h3>Report the price of '+esc(it.name.split(',')[0])+'</h3>'));
+  v.appendChild(el('p','muted','Goes to Open Prices, the open dataset this app reads from. Everyone gets it, including you — it is what makes the next basket less of a guess.')).style.cssText='font-size:12.5px';
+
+  if(!opSession){
+    v.appendChild(el('p','note tip','Sign in with an Open Food Facts account. Your password goes straight from this device to Open Food Facts and is never stored or sent anywhere else — there is no server in this app to send it to.')).style.marginTop='4px';
+    const u=el('input'); u.placeholder='Open Food Facts username'; u.autocapitalize='none'; u.autocomplete='username';
+    const pw=el('input'); pw.type='password'; pw.placeholder='Password'; pw.autocomplete='current-password';
+    const go=el('button','btn primary',opBusy?'Signing in…':'Sign in to Open Food Facts');
+    go.disabled=opBusy;
+    go.onclick=async()=>{
+      opBusy=true;opMsg=null;render();
+      try{ opSession=await PG.signIn(u.value.trim(),pw.value); opMsg=null; }
+      catch(e){ opMsg=e.message||String(e); }
+      opBusy=false;render();
+    };
+    v.appendChild(u); v.appendChild(pw); v.appendChild(go);
+    const mk=el('a',null,'Create a free account'); mk.href='https://world.openfoodfacts.org/cgi/user.pl';
+    mk.target='_blank'; mk.rel='noopener'; mk.style.cssText='font-size:12px;color:var(--accent);display:block;margin-top:4px';
+    v.appendChild(mk);
+    if(opMsg) v.appendChild(el('p','note warn',esc(opMsg)));
+    return v;
+  }
+
+  const shops=(S.stores||[]).filter(x=>x.osmId).slice(0,25);
+  if(!shops.length){
+    v.appendChild(el('p','note warn','Open Prices records which shop a price came from, so find the shops near you first — the Where tab has the button. A price with no shop attached is not much use to anyone.'));
+    return v;
+  }
+
+  const sel=el('select');
+  shops.forEach((x,i)=>{const o=document.createElement('option');o.value=String(i);
+    o.textContent=x.name+' · '+x.dist.toFixed(1)+' km';sel.appendChild(o)});
+  const price=el('input'); price.type='number'; price.step='0.01'; price.inputMode='decimal'; price.placeholder='Price you saw, in '+country().symbol;
+  const per=el('div','seg');
+  let perMode='KILOGRAM';
+  [['per kg','KILOGRAM'],['per pack','UNIT']].forEach(([l,m],i)=>{
+    const b=el('button',i===0?'on':''); b.textContent=l;
+    b.onclick=()=>{perMode=m;[...per.children].forEach((c,j)=>c.className=(j===i?'on':''))};
+    per.appendChild(b);
+  });
+  const photo=el('input'); photo.type='file'; photo.accept='image/*'; photo.capture='environment';
+  v.appendChild(el('span','lbl','Which shop')); v.appendChild(sel);
+  v.appendChild(price); v.appendChild(per);
+  v.appendChild(el('p','muted','Open Prices needs a photo of the shelf label or receipt. That requirement is the reason the data is worth reading — someone else can check it later.')).style.cssText='font-size:12px;margin-top:6px';
+  v.appendChild(photo);
+
+  const send=el('button','btn primary',opBusy?'Sending…':'Send to Open Prices');
+  send.disabled=opBusy;
+  send.onclick=async()=>{
+    const shop=shops[parseInt(sel.value,10)];
+    const val=parseFloat(price.value);
+    if(!(val>0)){opMsg='Enter the price you saw.';render();return}
+    if(!photo.files||!photo.files[0]){opMsg='A photo of the label or receipt is required.';render();return}
+    if(!shop||!shop.osmId){opMsg='That shop has no OpenStreetMap id, so Open Prices cannot place it.';render();return}
+    opBusy=true;opMsg=null;render();
+    try{
+      const proof=await PG.uploadProof(opSession,photo.files[0],'PRICE_TAG');
+      const d=new Date();
+      await PG.submitPrice(opSession,{
+        categoryTag:PG.OFF_CATEGORY[it.ref], price:val, currency:country().currency,
+        pricePer:perMode, date:d.toISOString().slice(0,10),
+        osmId:shop.osmId, osmType:shop.osmType||'NODE',
+        proofId:proof, comment:'via Pantry Globe',
+      });
+      opMsg='✓ Sent. Thank you — that one is now in the open dataset for everybody.';
+      S.contribFor=null;
+    }catch(e){ opMsg=e.message||String(e); }
+    opBusy=false;render();
+  };
+  v.appendChild(send);
+  if(opMsg) v.appendChild(el('p','note '+(opMsg[0]==='✓'?'good':'warn'),esc(opMsg)));
+  return v;
+}
+
+function row(l,r,kind){
+  const c=kind==='accent'?'var(--accent)':kind==='muted'?'var(--muted)':'var(--text)';
+  return '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:5px"><span style="color:'+(kind==='muted'?'var(--muted)':'var(--text)')+'">'+esc(l)+'</span>'+
+    '<span class="num" style="color:'+c+';font-weight:'+(kind==='strong'||kind==='accent'?'640':'400')+'">'+r+'</span></div>';
+}
+
+/* --------------------------------------------------------- tonight ----- */
+/**
+ * One meal, now.
+ *
+ * The planner assumes you can think about Thursday. This assumes you walked in
+ * at six with a number in your head and no patience, and it answers with three
+ * dinners and the reason for each. Every control has a working default so it
+ * gives an answer before you touch anything — a screen of empty fields is the
+ * same wall as a blank week.
+ */
+function tonightScreen(){
+  const v=el('div','stack fade');
+  const back=el('button','btn ghost','← Back');
+  back.onclick=()=>{S.screen=S.profile.skill?'result':'welcome';render()};
+  v.appendChild(back);
+  v.appendChild(el('h2',null,'What can I cook right now?'));
+
+  const T=S.tn;
+  const card=el('div','card stack-sm');
+  const num=(label,key,step,min,max,fmt)=>{
+    const row=el('div','row'); row.style.padding='7px 0';
+    const val=el('span','num'); val.style.cssText='font-size:16px;font-weight:680;min-width:78px;text-align:right';
+    const paint=()=>{val.textContent=fmt(T[key])};
+    const dec=el('button','btn sm','−'), inc=el('button','btn sm','+');
+    dec.onclick=()=>{T[key]=Math.max(min,T[key]-step);paint();run()};
+    inc.onclick=()=>{T[key]=Math.min(max,T[key]+step);paint();run()};
+    const g=el('div'); g.style.cssText='display:flex;gap:7px;align-items:center';
+    g.appendChild(dec); g.appendChild(val); g.appendChild(inc);
+    row.innerHTML='<span style="font-size:14px">'+esc(label)+'</span>'; row.appendChild(g); paint();
+    return row;
+  };
+  card.appendChild(num('Protein','protein',5,0,120,n=>n?n+' g':'any'));
+  card.appendChild(num('Calories','kcal',50,0,1500,n=>n?n+' kcal':'any'));
+  card.appendChild(num('Budget','budget',1,0,40,n=>n?money(n):'any'));
+  card.appendChild(num('Ready in','minutes',5,10,180,n=>n+' min'));
+  v.appendChild(card);
+
+  const kitCard=el('div','card');
+  kitCard.innerHTML='<span class="lbl">What have you got to cook with?</span>';
+  const ks=el('div'); ks.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-top:10px';
+  Object.keys(PG.KIT_LABEL).forEach(k=>{
+    const on=T.kit.includes(k);
+    const b=el('button','chip'+(on?' on':''),esc(PG.KIT_LABEL[k].replace(/^An? /,'')));
+    b.onclick=()=>{T.kit=on?T.kit.filter(x=>x!==k):T.kit.concat([k]);render()};
+    ks.appendChild(b);
+  });
+  kitCard.appendChild(ks);
+  const presets=el('div'); presets.style.cssText='display:flex;gap:7px;margin-top:11px';
+  [['Full kitchen',PG.FULL_KITCHEN],['One ring',PG.ONE_RING],['Hotel room',PG.HOTEL_ROOM]].forEach(([l,k])=>{
+    const b=el('button','btn sm',l); b.style.flex='1';
+    b.onclick=()=>{T.kit=k.slice();render()}; presets.appendChild(b);
+  });
+  kitCard.appendChild(presets);
+  v.appendChild(kitCard);
+
+  const out=el('div','stack-sm'); v.appendChild(out);
+
+  function run(){
+    out.innerHTML='';
+    const have=new Set(PG.ASSUMED_STAPLES.concat(T.have,[...S.pantry]));
+    const res=PG.suggest({kcal:T.kcal||undefined,protein:T.protein||undefined,
+      budget:T.budget||undefined,minutes:T.minutes,skill:T.skill,diets:S.profile.diets||[],
+      kit:T.kit,have:have,servings:1},country(),S.tier,3);
+    if(!res.picks.length){ out.appendChild(el('p','note warn',esc(res.note||'Nothing fits.'))); return; }
+    out.appendChild(el('p','muted','Assumes you already have salt, oil and the usual spices. '+res.considered+' options checked.')).style.cssText='font-size:12px';
+    res.picks.forEach((p,i)=>{
+      const c=el('div','card');
+      c.appendChild(el('div','row','<h3>'+esc(p.recipe.name)+'</h3><span class="num" style="font-weight:680;color:var(--accent)">'+money(p.toBuy)+'</span>'));
+      if(p.variant) c.appendChild(el('p','muted',esc(p.variant.label))).style.cssText='font-size:12.5px;margin-top:2px';
+      const st=el('div'); st.style.cssText='display:flex;gap:8px;margin-top:11px';
+      [['kcal',Math.round(p.per.kcal),''],['protein',Math.round(p.per.protein),'g'],
+       ['carbs',Math.round(p.per.carb),'g'],['ready',p.minutes,' min']].forEach(([l,val,u])=>
+        st.appendChild(el('div','card2','<span class="lbl">'+l+'</span><p class="num" style="font-weight:680;margin-top:2px">'+val+u+'</p>')).style.cssText='flex:1;text-align:center;padding:9px 4px');
+      c.appendChild(st);
+      c.appendChild(el('p','note good',esc(p.why.join(' · '))));
+      c.appendChild(el('p','muted','Only about '+money(p.eaten)+' of that is eaten tonight — the rest stays in your cupboard.')).style.cssText='font-size:11.5px;margin-top:8px';
+      if(p.uses.length) c.appendChild(el('p','muted','Uses what you already have: '+esc(p.uses.slice(0,5).join(', ')))).style.cssText='font-size:11.5px;margin-top:4px';
+      if(p.tradeUp){
+        const t=el('p','note tip','💷 '+esc(p.tradeUp.note)+' → '+esc(p.tradeUp.label)+' for '+money(p.tradeUp.extra)+' more.');
+        t.style.marginTop='9px'; c.appendChild(t);
+      }
+      const go=el('button','btn'+(i===0?' primary':''),i===0?'Cook this →':'See it');
+      go.style.cssText='width:100%;margin-top:12px';
+      go.onclick=()=>{S.dishId=p.recipe.id;S.variantId=p.variant?p.variant.id:null;
+        S.servings=1;S.dishTab='cook';S.off=new Set();S.cameFrom='tonight';S.screen='dish';render()};
+      c.appendChild(go);
+      out.appendChild(c);
+    });
+  }
+  run();
+  return v;
+}
+
+/* ------------------------------------------------------------ scan ----- */
+/**
+ * Scan a barcode, get the real thing.
+ *
+ * Every previous attempt at real food imagery went looking for a stock
+ * photograph of a generic tomato and came back with a Victorian engraving. The
+ * premise was wrong: the realest image of the food someone is about to buy is
+ * the photograph of the exact product in their hand, and Open Food Facts has
+ * millions of them, taken by the people who bought them.
+ *
+ * The camera path uses the browser's own barcode detector where it exists —
+ * modern phone browsers have it — and falls back to typing the numbers, which
+ * works everywhere and is the only thing that works when the light is bad.
+ */
+let scanStream=null, scanTimer=null;
+function stopScan(){
+  if(scanTimer){clearInterval(scanTimer);scanTimer=null}
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
+}
+
+function scanScreen(){
+  const v=el('div','stack fade');
+  const back=el('button','btn ghost','← Back');
+  back.onclick=()=>{stopScan();S.screen='tonight';render()};
+  v.appendChild(back);
+  v.appendChild(el('h2',null,'Scan what you are holding'));
+  v.appendChild(el('p','muted','You get that product\u2019s own photograph, the nutrition off its label, and what other people have paid for it. Nothing modelled.'))
+    .style.cssText='font-size:14px';
+
+  const hasDet = typeof window.BarcodeDetector === 'function';
+  const cam=el('div','cam');
+  const vid=document.createElement('video'); vid.setAttribute('playsinline',''); vid.muted=true;
+  cam.appendChild(vid); cam.appendChild(el('div','box'));
+
+  if(hasDet){
+    v.appendChild(cam);
+    (async()=>{
+      try{
+        scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+        vid.srcObject=scanStream; await vid.play();
+        const det=new window.BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});
+        scanTimer=setInterval(async()=>{
+          try{
+            const hits=await det.detect(vid);
+            if(hits&&hits.length){ stopScan(); doLookup(hits[0].rawValue); }
+          }catch(e){}
+        },400);
+      }catch(e){
+        cam.remove();
+        v.insertBefore(el('p','note warn','No camera available here, so type the numbers under the barcode instead.'),v.children[3]);
+      }
+    })();
+  } else {
+    v.appendChild(el('p','note tip','This browser cannot read a barcode from the camera. Type the numbers printed under it — it works just as well and never fails in bad light.'));
+  }
+
+  const row=el('div'); row.style.cssText='display:flex;gap:9px;align-items:center';
+  const inp=el('input'); inp.placeholder='or type the barcode'; inp.inputMode='numeric';
+  inp.onkeydown=e=>{if(e.key==='Enter')doLookup(inp.value)};
+  const go=el('button','btn sm','Look up'); go.onclick=()=>doLookup(inp.value);
+  row.appendChild(inp); row.appendChild(go);
+  v.appendChild(row);
+
+  async function doLookup(code){
+    S.scanBusy=true;S.scanMsg=null;render();
+    try{
+      const p=await PG.lookup(String(code||'').trim());
+      if(!p){ S.scanMsg='Open Food Facts has never seen that barcode. You could be the first to add it.'; S.scan=null; }
+      else {
+        p.prices=await PG.pricesFor(p.code,country().currency).catch(()=>[]);
+        S.scan=p;
+        if(!S.scanned.some(x=>x.code===p.code)) S.scanned.unshift(p);
+      }
+    }catch(e){ S.scanMsg=e.message||String(e); }
+    S.scanBusy=false; render();
+  }
+
+  if(S.scanBusy) v.appendChild(el('p','note tip','Looking it up…'));
+  if(S.scanMsg) v.appendChild(el('p','note warn',esc(S.scanMsg)));
+
+  if(S.scan){
+    const p=S.scan;
+    const c=el('div','card');
+    const head=el('div','prod');
+    if(p.image){ const im=document.createElement('img'); im.src=p.image; im.alt=esc(p.name); head.appendChild(im); }
+    head.appendChild(el('div',null,'<h3>'+esc(p.name)+'</h3>'+
+      (p.brand?'<p class="muted" style="font-size:13px;margin-top:2px">'+esc(p.brand)+'</p>':'')+
+      (p.quantity?'<p class="muted" style="font-size:13px">'+esc(p.quantity)+'</p>':'')));
+    c.appendChild(head);
+
+    const n=p.per100;
+    if(n.kcal!=null){
+      const st=el('div'); st.style.cssText='display:flex;gap:8px;margin-top:14px';
+      [['kcal',n.kcal,''],['protein',n.protein,'g'],['carbs',n.carb,'g'],['fat',n.fat,'g'],['salt',n.salt,'g']].forEach(([l,val,u])=>
+        st.appendChild(el('div',null,'<span class="lbl">'+l+'</span><p class="num" style="font-weight:720;margin-top:2px">'+
+          (val==null?'—':(u==='g'&&val<10?val.toFixed(1):Math.round(val))+u)+'</p>'))
+          .style.cssText='flex:1;text-align:center;background:var(--surface2);border-radius:11px;padding:9px 3px');
+      c.appendChild(st);
+      c.appendChild(el('p','muted','Per 100 g, straight off the label — not modelled by us.')).style.cssText='font-size:11.5px;margin-top:8px';
+    } else c.appendChild(el('p','note warn','Nobody has added the nutrition panel for this one yet.')).style.marginTop='12px';
+
+    if(p.prices&&p.prices.length){
+      const pr=el('div'); pr.style.cssText='border-top:1px solid var(--line);margin-top:13px;padding-top:12px';
+      pr.innerHTML='<span class="lbl">What people have paid</span>';
+      p.prices.slice(0,4).forEach(x=>pr.appendChild(el('p','muted',
+        money(x.price)+' · '+esc(x.date)+(x.where?' · '+esc(x.where):''))).style.cssText='font-size:12.5px;margin-top:5px');
+      c.appendChild(pr);
+    } else {
+      c.appendChild(el('p','muted','No price recorded for this barcode yet. If you can see one, the shopping list has a button to add it.'))
+        .style.cssText='font-size:12px;margin-top:12px';
+    }
+
+    const add=el('button','btn primary','Add to what I have');
+    add.style.marginTop='14px';
+    add.onclick=()=>{
+      const ref=PG.guessIngredient(p,PG.OFF_CATEGORY);
+      if(ref){ S.pantry.add(ref); save(); S.scanMsg='Added — '+esc(p.name)+' counts as '+ref.replace(/_/g,' ')+', so tonight will not charge you for it.'; }
+      else S.scanMsg='Kept it on the list, but it does not match one of the ingredients used in these recipes, so it will not change any prices.';
+      render();
+    };
+    c.appendChild(add);
+    v.appendChild(c);
+  }
+
+  if(S.scanned.length>1){
+    const h=el('div','card');
+    h.innerHTML='<span class="lbl">Scanned today</span>';
+    const g=el('div'); g.style.cssText='display:flex;gap:9px;overflow-x:auto;margin-top:10px;padding-bottom:4px';
+    S.scanned.slice(0,12).forEach(x=>{
+      const b=el('button',null); b.style.cssText='flex:0 0 78px;text-align:center;cursor:pointer;background:none;border:0';
+      b.innerHTML=(x.image?'<img src="'+esc(x.image)+'" alt="" style="width:70px;height:70px;object-fit:contain;background:#fff;border-radius:11px;border:1px solid var(--line)">':'')+
+        '<span style="display:block;font-size:11px;margin-top:5px;line-height:1.2">'+esc((x.name||'').slice(0,26))+'</span>';
+      b.onclick=()=>{S.scan=x;S.scanMsg=null;render()};
+      g.appendChild(b);
+    });
+    h.appendChild(g); v.appendChild(h);
+  }
+  return v;
+}
+
+/* ----------------------------------------------------------- find ------ */
+/**
+ * Search by dish.
+ *
+ * Matches the name, the name in its own language, the cuisine and the
+ * ingredients, because people arrive with all four — "butter chicken", "murgh
+ * makhani", "thai", and "I have a tin of chickpeas" are the same question asked
+ * differently. Ingredient matches rank below name matches so typing "chicken"
+ * does not bury the chicken dishes under everything containing a stock cube.
+ */
+function findScreen(){
+  const v=el('div','stack fade');
+  const back=el('button','btn ghost','← Back');
+  back.onclick=()=>{S.screen=S.profile.skill?'result':'welcome';render()};
+  v.appendChild(back);
+  v.appendChild(el('h2',null,'What do you want to cook?'));
+
+  const box=el('input');
+  box.placeholder='butter chicken, biryani, something with lentils…';
+  box.value=S.query; box.autocapitalize='none'; box.autocorrect='off';
+  box.oninput=()=>{S.query=box.value;paint()};
+  v.appendChild(box);
+
+  const out=el('div','stack-sm');
+  v.appendChild(out);
+
+  function score(r,q){
+    const n=r.name.toLowerCase(), ln=(r.localName||'').toLowerCase(), c=r.cuisine.toLowerCase();
+    if(n===q) return 100;
+    if(n.startsWith(q)) return 90;
+    if(n.includes(q)) return 80;
+    if(ln.includes(q)) return 75;
+    if(c.includes(q)) return 60;
+    // ingredient match ranks last so a common ingredient cannot outrank a title
+    const hit=r.items.some(i=>{const L=PG.plateLayers([{ref:i.ref,grams:100}])[0];
+      return L&&L.name.toLowerCase().includes(q)});
+    return hit?40:0;
+  }
+
+  function paint(){
+    out.innerHTML='';
+    const q=S.query.trim().toLowerCase();
+    const list=q
+      ? PG.RECIPES.map(r=>({r,s:score(r,q)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,12).map(x=>x.r)
+      : PG.RECIPES.slice(0,8);
+    if(!q) out.appendChild(el('p','muted','Or just browse — everything here is written out in full, including what goes wrong.')).style.cssText='font-size:12.5px';
+    if(q&&!list.length){
+      out.appendChild(el('p','note warn','Nothing here matches "'+esc(S.query)+'". There are '+PG.RECIPES.length+' dishes so far — the collection is small and honest about it rather than padded out.'));
+      return;
+    }
+    const grid=el('div','grid scene'); grid.style.cssText='grid-template-columns:1fr 1fr;gap:14px';
+    list.forEach(r=>{
+      const b=el('button','bub');
+      const orb=el('div','orb');
+      const ph=PG.dishPhoto(r.id);
+      if(ph){ const im=photoImg(ph,PG.DISH_REMOTE[r.id],'');
+        im.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover'; orb.appendChild(im); }
+      else { const api=plate(r.items,{spread:.86,flat:true});
+        api.node.style.cssText='position:absolute;inset:1%;width:98%'; orb.appendChild(api.node); attachTilt(b,api); }
+      b.appendChild(orb);
+      b.appendChild(el('div','cap','<b>'+esc(r.name)+'</b><s>'+esc(r.cuisine)+' · '+
+        (r.totalMin>=120?Math.round(r.totalMin/60)+' h':r.totalMin+' min')+'</s>'));
+      b.onclick=()=>{S.dishId=r.id;S.variantId=null;S.dishTab='shop';S.off=new Set();
+        S.cameFrom='find';S.screen='dish';render()};
+      grid.appendChild(b);
+    });
+    out.appendChild(grid);
+  }
+  paint();
+  requestAnimationFrame(()=>{try{box.focus()}catch(e){}});
+  return v;
+}
+
+/**
+ * The dish, taken apart in three dimensions.
+ *
+ * A photograph of a finished plate cannot come apart — but a photograph of the
+ * plate with photographs of its ingredients floating above it can, and that is
+ * the effect people know from a burger advert. The base is the real dish; each
+ * layer above it is a real photograph of one real ingredient, cut out.
+ *
+ * Only ingredients that HAVE a photograph are floated. Drawing a substitute for
+ * the ones that do not would put an illustration in the middle of a stack of
+ * photographs, which is the mistake made earlier with the plate and is worse
+ * than showing fewer layers.
+ *
+ * Drag rotates it. Ingredients without a picture are still listed underneath —
+ * they are in the dish, they just have nothing to show.
+ */
+function exploded(r,items){
+  const withPix=items.filter(i=>i.ref!=='water'&&PG.ingPhoto(i.ref)).slice(0,8);
+  if(!withPix.length) return null;
+
+  const host=el('div','x3d'+(S.exploded?' open':''));
+  const stack=el('div','stack');
+  host.appendChild(stack);
+
+  const dish=PG.dishPhoto(r.id);
+  if(dish){
+    const b=el('div','lay base');
+    b.style.cssText='width:74%;height:74%;margin:-37% 0 0 -37%';
+    b.appendChild(photoImg(dish,PG.DISH_REMOTE[r.id],r.name));
+    stack.appendChild(b);
+  }
+
+  // heaviest at the bottom, garnish on top — the order things actually go on
+  const sorted=[...withPix].sort((a,b)=>b.grams-a.grams);
+  sorted.forEach((it,i)=>{
+    const L=PG.plateLayers([{ref:it.ref,grams:100}])[0];
+    const lay=el('div','lay');
+    const size=Math.max(20,Math.min(42,20+Math.log10(Math.max(it.grams,1))*13));
+    const ang=(i/sorted.length)*Math.PI*2+0.7;
+    const rad=S.exploded?20:6;
+    const x=Math.cos(ang)*rad, y=Math.sin(ang)*rad*0.55;
+    const z=S.exploded?(i+1)*46:(i+1)*5;
+    lay.style.cssText='width:'+size+'%;height:'+size+'%;margin:'+(-size/2)+'% 0 0 '+(-size/2)+'%;'+
+      'transform:translate3d('+x.toFixed(1)+'%,'+y.toFixed(1)+'%,'+z+'px)';
+    lay.appendChild(photoImg(PG.ingPhoto(it.ref),PG.ING_REMOTE[it.ref],L?L.name:it.ref));
+    const g=it.grams*(S.servings/Math.max(r.servings,1));
+    const tag=el('div','tag','<b>'+esc((L?L.name:it.ref).split(',')[0])+'</b><s>'+
+      (g<1?'a pinch':Math.round(g)+' g')+'</s>');
+    // alternate sides so nine labels do not stack on one edge and run off it
+    if(i%2) tag.style.cssText='right:104%;left:auto'; else tag.style.cssText='left:104%;right:auto';
+    lay.appendChild(tag);
+    lay.onclick=e=>{e.stopPropagation();S.ingPick=it.ref;render();
+      const grid=document.querySelector('.ings'); if(grid)grid.scrollIntoView({block:'center',behavior:'smooth'})};
+    stack.appendChild(lay);
+  });
+
+  // drag to turn it over
+  let rx=S.exploded?58:16, rz=S.exploded?-14:0, down=null;
+  const paint=()=>{stack.style.transform='rotateX('+rx.toFixed(1)+'deg) rotateZ('+rz.toFixed(1)+'deg)'};
+  paint();
+  host.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,rx:rx,rz:rz};host.setPointerCapture(e.pointerId)});
+  host.addEventListener('pointermove',e=>{
+    if(!down) return;
+    rx=Math.max(0,Math.min(80,down.rx+(e.clientY-down.y)*0.28));
+    rz=down.rz+(e.clientX-down.x)*0.3;
+    stack.style.transition='none'; paint();
+  });
+  const up=()=>{down=null;stack.style.transition=''};
+  host.addEventListener('pointerup',up); host.addEventListener('pointercancel',up);
+
+  host.appendChild(el('div','hint',S.exploded?'drag to turn it · tap a piece':'drag to turn it'));
+  return host;
+}
+
+function macrosOnly(items,r){
+  const cur=PG.nutrition(items,r.servings);
+  const m=el('div','glass'); m.style.cssText='padding:13px 15px;margin-top:10px';
+  m.innerHTML='<div style="display:flex;gap:4px;justify-content:space-between">'+
+    [['kcal',cur.kcal,''],['Protein',cur.protein,'g'],['Carbs',cur.carb,'g'],['Fat',cur.fat,'g'],['Fibre',cur.fibre,'g']]
+    .map(([l,v,u])=>'<div style="text-align:center;flex:1"><span class="lbl">'+l+'</span>'+
+      '<p class="num" style="margin-top:3px;font-size:16px;font-weight:700;letter-spacing:-.02em">'+Math.round(v)+u+'</p></div>').join('')+'</div>';
+  return m;
+}
+
+/* ------------------------------------------------------- dish stage ---- */
+/**
+ * The dish, drawn and taken apart.
+ *
+ * Lifting an ingredient off has to change real numbers or the whole gesture is
+ * decoration. So removals feed straight back into the same nutrition function
+ * the planner uses — pull the pasta and the carb figure that drops is the one
+ * the rest of the app would have reported.
+ */
+function dishStage(r,items,fullN){
+  const wrap=el('div','stack-sm');
+
+  // A real photograph of the real dish, from its own Wikipedia article. The
+  // illustration underneath is not a failed attempt at this — it is the part
+  // you can pull apart, which a photograph can never be.
+  const photo=PG.dishPhoto(r.id);
+  if(photo && S.view==='photo'){
+    const h=el('div','hero');
+    h.appendChild(photoImg(photo,PG.DISH_REMOTE[r.id],r.name));
+    const c=PG.DISH_CREDITS.find(x=>x.id===r.id);
+    if(c) h.appendChild(el('div','cr','Photo: '+esc(c.author)+' · '+esc(c.licence)+
+      (c.page?' · <a href="'+esc(c.page)+'" target="_blank" rel="noopener">source</a>':'')));
+    wrap.appendChild(h);
+  }
+  if(photo){
+    const sw=el('div','heroswap');
+    [['Photo','photo'],['Take apart','3d'],['Diagram','plate']].forEach(([l,v])=>{
+      const b=el('button','btn sm'+(S.view===v?' primary':'')); b.style.cssText='flex:1;padding:11px 4px';
+      b.textContent=l;
+      b.onclick=()=>{S.view=v;S.exploded=(v==='3d');render()}; sw.appendChild(b);
+    });
+    wrap.appendChild(sw);
+  }
+  if(photo && S.view!=='plate'){
+    if(S.view==='3d'){
+      const x=exploded(r,items);
+      if(x){ wrap.insertBefore(x,wrap.firstChild); if(wrap.querySelector('.hero')) wrap.querySelector('.hero').remove(); }
+    }
+    wrap.appendChild(macrosOnly(items,r));
+    return wrap;
+  }
+  const stage=el('div','scene'); stage.style.cssText='position:relative;margin:2px 0 4px';
+
+  const live=()=>items.filter(i=>!S.off.has(i.ref));
+  let api=null, focus=null;
+
+  const macros=el('div','glass'); macros.style.cssText='padding:13px 15px;position:relative;z-index:4';
+  const ghosts=el('div'); ghosts.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+
+  function paintMacros(){
+    const cur=PG.nutrition(live(),r.servings);
+    const d=(a,b)=>{const x=Math.round(a)-Math.round(b);return x===0?'':'<i style="font-style:normal;font-size:11px;color:'+(x<0?'var(--warn)':'var(--accent)')+';margin-left:4px">'+(x>0?'+':'')+x+'</i>';};
+    macros.innerHTML='<div style="display:flex;gap:4px;justify-content:space-between">'+
+      [['kcal',cur.kcal,fullN.kcal,''],['Protein',cur.protein,fullN.protein,'g'],
+       ['Carbs',cur.carb,fullN.carb,'g'],['Fat',cur.fat,fullN.fat,'g'],['Fibre',cur.fibre,fullN.fibre,'g']]
+      .map(([l,c,f,u])=>'<div style="text-align:center;flex:1"><span class="lbl">'+l+'</span>'+
+        '<p class="num" style="margin-top:3px;font-size:16px;font-weight:700;letter-spacing:-.02em">'+Math.round(c)+u+d(c,f)+'</p></div>').join('')+
+      '</div>';
+    ghosts.innerHTML='';
+    if(S.off.size){
+      [...S.off].forEach(ref=>{
+        const chip=el('button','chip','↩ '+esc(nameOf(ref)));
+        chip.title='Put it back';
+        chip.onclick=()=>{S.off.delete(ref);rebuild()};
+        ghosts.appendChild(chip);
+      });
+      const all=el('button','chip','Put everything back');
+      all.onclick=()=>{S.off.clear();rebuild()};
+      ghosts.appendChild(all);
+    }
+  }
+
+  function callout(ref){
+    stage.querySelectorAll('.call').forEach(x=>x.remove());
+    if(!ref) return;
+    const L=api.layers.find(x=>x.ref===ref); if(!L) return;
+    const c=PG.contribution(live(),ref,r.servings); if(!c) return;
+    const unit=c.headline==='kcal'?'':'g';
+    const val=Math.round(c[c.headline]);
+    const box=el('div','call');
+    // Sit the label on the emptier side and above the piece, so the thing being
+    // measured is never hidden by the number describing it.
+    const lx=(L.anchor.x-2)/96*100, ly=(L.anchor.y-14)/78*100;
+    if(lx<50){ box.style.left=Math.min(56,lx+13)+'%'; box.style.right='auto'; }
+    else { box.style.right=Math.min(56,(100-lx)+13)+'%'; box.style.left='auto'; }
+    box.style.top=Math.max(0,ly-24)+'%';
+    box.innerHTML='<div class="bx"><u>'+esc(c.name.split(',')[0])+'</u>'+
+      '<b>'+val+unit+' '+esc(c.headline==='kcal'?'kcal':c.headline)+'</b>'+
+      '<i>'+Math.round(c.share*100)+'% of the dish</i></div>';
+    stage.appendChild(box);
+  }
+
+  function pick(ref){
+    focus=(focus===ref?null:ref);
+    api.setFocus(focus);
+    callout(focus);
+    detail(focus);
+  }
+
+  const det=el('div');
+  function detail(ref){
+    det.innerHTML='';
+    if(!ref){ det.appendChild(el('p','muted','Tap anything on the plate to see what it is doing. Tap it again to put it down.')).style.cssText='font-size:12.5px;text-align:center'; return; }
+    const c=PG.contribution(live(),ref,r.servings); if(!c) return;
+    const card=el('div','card2');
+    card.innerHTML='<div class="row"><h3>'+esc(c.name)+'</h3><span class="num muted" style="font-size:12px">'+Math.round(c.grams)+' g a serving</span></div>'+
+      '<div style="display:flex;gap:10px;margin-top:11px">'+
+      [['kcal',c.kcal,''],['P',c.protein,'g'],['C',c.carb,'g'],['F',c.fat,'g']]
+        .map(([l,val,u])=>'<div style="flex:1;text-align:center;background:var(--surface);border-radius:11px;padding:8px 4px">'+
+          '<span class="lbl">'+l+'</span><p class="num" style="font-weight:680;margin-top:2px">'+Math.round(val)+u+'</p></div>').join('')+
+      '</div>'+
+      (c.note?'<p class="note tip" style="margin-top:11px">'+esc(c.note)+'</p>':'');
+    const off=el('button','btn sm',S.off.has(ref)?'Put it back':'Take it off and see');
+    off.style.cssText='width:100%;margin-top:11px';
+    off.onclick=()=>{ S.off.has(ref)?S.off.delete(ref):S.off.add(ref); focus=null; rebuild(); };
+    card.appendChild(off);
+    det.appendChild(card);
+  }
+
+  /**
+   * The chip rail.
+   *
+   * Tapping the plate directly only ever reaches whatever is drawn on top —
+   * the rice under the chicken is unhittable, which is precisely the ingredient
+   * someone wants to interrogate. So every ingredient also gets a chip, always
+   * reachable regardless of stacking, and that is what makes the view usable
+   * with a keyboard or a screen reader as well.
+   */
+  const rail=el('div','scroll rail'); rail.style.marginTop='2px';
+  function paintRail(){
+    rail.innerHTML='';
+    api.layers.forEach(L=>{
+      const b=el('button','chip'+(focus===L.ref?' on':''));
+      const pic=PG.PHOTOS[L.ref];
+      b.innerHTML=(pic
+        ? '<img src="'+pic+'" alt="" style="width:20px;height:20px;object-fit:contain;margin-right:7px">'
+        : '<span style="width:9px;height:9px;border-radius:3px;flex:0 0 9px;margin-right:7px;'+
+          'background:'+esc(L.color)+';box-shadow:0 0 0 1px rgba(0,0,0,.35) inset"></span>')+esc(L.name.split(',')[0]);
+      b.onclick=()=>pick(L.ref);
+      rail.appendChild(b);
+      if(focus===L.ref) requestAnimationFrame(()=>{try{b.scrollIntoView({block:'nearest',inline:'center'})}catch(e){}});
+    });
+  }
+
+  let mode=0; // 0 plated, 1 taken apart
+  const seg=el('div','seg'); seg.style.marginTop='2px';
+  [['Plated',0],['Take it apart',1]].forEach(([l,m])=>{
+    const b=el('button',mode===m?'on':''); b.textContent=l;
+    b.onclick=()=>{mode=m;[...seg.children].forEach((c,i)=>c.className=i===m?'on':'');
+      api.setExplode(mode);};
+    seg.appendChild(b);
+  });
+
+  function rebuild(){
+    stage.innerHTML='';
+    api=plate(live(),{onPick:pick});
+    stage.appendChild(api.node);
+    if(!focus){ stage.appendChild(el('div','tapme','tap anything on the plate')); }
+    attachTilt(stage,api);
+    api.setFocus(focus); api.setExplode(mode);
+    callout(focus); detail(focus); paintMacros(); paintRail();
+  }
+
+  const _pick=pick;
+  pick=function(ref){ _pick(ref); paintRail(); };
+
+  rebuild();
+  wrap.appendChild(stage);
+  wrap.appendChild(macros);
+  const more=el('button','btn ghost',S.dishOpen?'Hide ingredients':'Take it apart · '+api.layers.length+' ingredients');
+  more.style.cssText='font-size:12.5px;justify-content:center;width:100%;margin-top:2px';
+  more.onclick=()=>{S.dishOpen=!S.dishOpen;render()};
+  wrap.appendChild(more);
+  if(S.dishOpen){ wrap.appendChild(seg); wrap.appendChild(rail); wrap.appendChild(det); wrap.appendChild(ghosts); }
+  return wrap;
+}
+const nameOf=ref=>((PG.plateLayers([{ref:ref,grams:100}])[0]||{}).name||ref).split(',')[0];
+
+/**
+ * The ingredients, laid out.
+ *
+ * Asked for the HelloFresh pattern: scroll down and every ingredient is there
+ * to look at, with the option to change one. Until now they were behind a
+ * "take it apart" toggle and then a scrolling rail of chips, which is a list of
+ * words, not a look at what you are cooking.
+ *
+ * Swapping is per ingredient rather than per variant. The data is shaped as
+ * variants with names like "Leaner, more beans", but nobody wants a variant —
+ * they want the chicken to be salmon. So the question is asked on the thing
+ * being replaced, and whatever else that variant changes is stated rather than
+ * happening quietly.
+ */
+function ingredientGrid(r, items, servings){
+  const box=el('div','card');
+  box.appendChild(el('div','row','<h3>What goes in</h3><span class="muted" style="font-size:12.5px">'+
+    items.length+' things · for '+servings+'</span>'));
+  const scale=servings/Math.max(r.servings,1);
+  const grid=el('div','ings');
+
+  items.forEach(it=>{
+    const L=PG.plateLayers([{ref:it.ref,grams:100}])[0];
+    if(!L) return;
+    const g=(it.grams*scale);
+    const opts=PG.swapsFor(r,it.ref);
+    const card=el('button','ing'+(S.ingPick===it.ref?' on':''));
+    const pic=el('div','pic');
+    const pic2=PG.ingPhoto(it.ref)||PG.PHOTOS[it.ref];
+    if(pic2){ pic.appendChild(photoImg(pic2,PG.ING_REMOTE[it.ref],'')); }
+    else { const api=plate([{ref:it.ref,grams:100}],{bare:true,flat:true,spread:.5}); pic.appendChild(api.node); }
+    card.appendChild(pic);
+    card.appendChild(el('div','nm',esc(L.name.split(',')[0])));
+    card.appendChild(el('div','qt',(g<1?'a pinch':g<10?g.toFixed(1)+' g':Math.round(g)+' g')));
+    if(opts.length) card.appendChild(el('div','sw','SWAP'));
+    card.onclick=()=>{S.ingPick=(S.ingPick===it.ref?null:it.ref);render()};
+    grid.appendChild(card);
+  });
+  box.appendChild(grid);
+
+  if(S.ingPick){
+    const it=items.find(x=>x.ref===S.ingPick);
+    if(it){
+      const c=PG.contribution(items,it.ref,r.servings);
+      const opts=PG.swapsFor(r,it.ref);
+      const d=el('div','card2'); d.style.marginTop='13px';
+      d.innerHTML='<div class="row"><h3>'+esc(c?c.name:it.ref)+'</h3>'+
+        '<span class="muted num" style="font-size:12.5px">'+Math.round((it.grams*scale))+' g</span></div>';
+      if(c){
+        const st=el('div'); st.style.cssText='display:flex;gap:8px;margin-top:11px';
+        [['kcal',c.kcal,''],['protein',c.protein,'g'],['carbs',c.carb,'g'],['fat',c.fat,'g']].forEach(([l,v,u])=>
+          st.appendChild(el('div',null,'<span class="lbl">'+l+'</span><p class="num" style="font-weight:720;margin-top:2px">'+Math.round(v)+u+'</p>'))
+            .style.cssText='flex:1;text-align:center;background:var(--surface);border-radius:11px;padding:9px 4px');
+        d.appendChild(st);
+        if(c.note) d.appendChild(el('p','note tip',esc(c.note))).style.marginTop='11px';
+      }
+      if(!opts.length) d.appendChild(el('p','muted','No swap written for this one yet.')).style.cssText='font-size:12.5px;margin-top:11px';
+      else {
+        d.appendChild(el('span','lbl','Swap it for')).style.cssText='display:block;margin-top:14px';
+        opts.forEach(o=>{
+          const b=el('button','btn sm'); b.style.cssText='width:100%;margin-top:8px;justify-content:space-between;text-align:left';
+          b.innerHTML='<span><span style="display:block;font-weight:720">'+esc(o.toName.split(",")[0])+
+            (o.grams?' · '+Math.round(o.grams*scale)+' g':'')+'</span>'+
+            (o.alsoChanges.length?'<span class="muted" style="font-size:11.5px;font-weight:500">also '+esc(o.alsoChanges.slice(0,2).join(', '))+'</span>':'')+
+            '</span><span style="color:var(--accent)">›</span>';
+          b.onclick=e=>{e.stopPropagation();S.variantId=o.variantId;S.ingPick=null;S.off=new Set();render()};
+          d.appendChild(b);
+        });
+        if(S.variantId){
+          const back=el('button','btn ghost','↩ Back to the original');
+          back.style.cssText='width:100%;margin-top:9px;justify-content:center;font-size:12.5px';
+          back.onclick=e=>{e.stopPropagation();S.variantId=null;S.ingPick=null;S.off=new Set();render()};
+          d.appendChild(back);
+        }
+      }
+      box.appendChild(d);
+    }
+  }
+  return box;
+}
+
+/* ------------------------------------------------------------- dish ---- */
+function dish(){
+  const r=byId(S.dishId); if(!r){S.screen='result';return result()}
+  const v=el('div','stack fade');
+  const back=el('button','btn ghost',S.cameFrom==='find'?'← Back to search':S.cameFrom==='tonight'?'← Back to tonight':'← Back to the week');
+  back.onclick=()=>{S.screen=(S.cameFrom==='find'||S.cameFrom==='tonight')?S.cameFrom:'result';render()}; v.appendChild(back);
+
+  const head=el('div','card stack-sm');
+  head.appendChild(el('h2',null,esc(r.name)));
+  if(r.localName) head.appendChild(el('p',null,'<span style="color:var(--accent);font-size:13.5px">'+esc(r.localName)+'</span>'));
+  head.appendChild(el('p','muted',esc(r.blurb))).style.cssText='font-size:13.5px;margin-top:6px';
+  head.appendChild(stepper('Servings','servings',1,12,S));
+  if(r.variants.length){
+    head.appendChild(el('span','lbl','Version'));
+    const sc=el('div','scroll');
+    const o=el('button','chip'+(S.variantId?'':' on'),'Original'); o.onclick=()=>{S.variantId=null;S.off=new Set();render()}; sc.appendChild(o);
+    r.variants.forEach(vr=>{const b=el('button','chip'+(S.variantId===vr.id?' on':''),esc(vr.label));b.onclick=()=>{S.variantId=vr.id;S.off=new Set();render()};sc.appendChild(b)});
+    head.appendChild(sc);
+    // scroll the active version into view — otherwise the banner names a variant
+    // whose chip is off-screen, which reads like a bug
+    requestAnimationFrame(()=>{const on=sc.querySelector('.chip.on'); if(on&&on.offsetLeft>40) sc.scrollLeft=on.offsetLeft-16;});
+  }
+  v.appendChild(head);
+
+  const tabs=el('div','grid'); tabs.style.gridTemplateColumns='repeat(4,1fr)'; tabs.style.gap='7px';
+  [['shop','Cost'],['where','Where'],['nutrition','Nutrition'],['cook','Method']].forEach(([k,l])=>{
+    const b=el('button','btn sm'+(S.dishTab===k?' primary':'')); b.style.width='100%'; b.textContent=l;
+    b.style.cssText='width:100%;padding:10px 4px;font-size:13px';
+    b.onclick=()=>{S.dishTab=k;render()}; tabs.appendChild(b);
+  });
+  v.appendChild(tabs);
+
+  const items=PG.applyVariant(r,S.variantId);
+  const n=PG.nutrition(items,r.servings);
+  const b=PG.priceBasket(items,country(),S.tier,S.servings,r.servings,S.pantry);
+  const rest=PG.restaurantPrice(r,country())*S.servings;
+  v.insertBefore(dishStage(r,items,n),v.children[2]);
+  v.insertBefore(ingredientGrid(r,items,S.servings),v.children[3]);
+
+  if(S.dishTab==='shop'){
+    // The comparison people actually came for, stated first and at full size.
+    const homePer=b.marginal/Math.max(S.servings,1);
+    const outPer=PG.restaurantPrice(r,country());
+    const saveEach=outPer-homePer;
+    const vs=el('div','card');
+    vs.innerHTML='<span class="lbl">Cooking it vs ordering it</span>';
+    const two=el('div','row'); two.style.marginTop='6px';
+    two.innerHTML='<div><p class="muted" style="font-size:13px">At home, per serving</p>'+
+      '<p class="big" style="color:var(--accent)">'+money(homePer)+'</p></div>'+
+      '<div style="text-align:right"><p class="muted" style="font-size:13px">Ordered in</p>'+
+      '<p class="big">'+money(outPer)+'</p></div>';
+    vs.appendChild(two);
+    if(saveEach>0){
+      vs.appendChild(el('p','note good','You keep '+money(saveEach)+' a serving. Cooking for '+S.servings+
+        ' saves '+money(saveEach*S.servings)+' tonight, and '+money(saveEach*S.servings*4)+' if you do it once a week for a month.'));
+      const bar=el('div'); bar.style.cssText='margin-top:12px';
+      const pct=Math.max(4,Math.min(100,homePer/Math.max(outPer,0.01)*100));
+      bar.innerHTML='<div style="height:12px;border-radius:999px;background:var(--surface2);overflow:hidden">'+
+        '<i style="display:block;height:100%;width:'+pct.toFixed(0)+'%;background:var(--accent);border-radius:999px"></i></div>'+
+        '<p class="muted" style="font-size:11.5px;margin-top:7px">Cooking it costs '+Math.round(pct)+
+        '% of what ordering it does.</p>';
+      vs.appendChild(bar);
+    } else {
+      vs.appendChild(el('p','note warn','Ordering this in is actually cheaper per serving once you count the whole shop. '+
+        'That flips the moment you cook it twice — the second time costs '+money(homePer)+' because the cupboard is already stocked.'));
+    }
+    vs.appendChild(el('p','muted','Ordered-in price is a typical UK takeaway portion for this dish, scaled to '+
+      esc(country().name)+'. Your local will differ.')).style.cssText='font-size:11.5px;margin-top:10px';
+    v.appendChild(vs);
+
+    // Feeding other people is a different question: it scales, and the saving
+    // scales with it, which is the whole argument for cooking rather than
+    // ordering for a group.
+    if(saveEach>0){
+      const grp=el('div','card');
+      grp.innerHTML='<span class="lbl">Cooking it for people</span>';
+      const t=el('div'); t.style.cssText='margin-top:9px;font-size:14px';
+      [2,4,6,8].forEach(n=>{
+        const home=homePer*n, out=outPer*n;
+        t.innerHTML+=row(n+' people', money(home)+' vs '+money(out)+' · keep '+money(out-home), n===S.servings?'accent':'muted');
+      });
+      grp.appendChild(t);
+      grp.appendChild(el('p','muted','At-home figures assume the cupboard staples are already there, which they are after the first cook.'))
+        .style.cssText='font-size:11.5px;margin-top:9px';
+      v.appendChild(grp);
+    }
+
+    const c=el('div','card');
+    c.appendChild(el('div','row','<div><span class="lbl">Every pack</span><p class="big">'+money(b.firstCook)+'</p></div>'+
+      '<div style="text-align:right"><span class="lbl">Once stocked</span><p class="big" style="color:var(--accent)">'+money(b.marginal)+'</p></div>'));
+    const saved=rest-b.firstCook, rep=rest-b.marginal;
+    const per=b.marginal/Math.max(S.servings,1);
+    const bl=PG.benchmark(per,country());
+    const kit=bl.find(x=>x.id==='kit_full')||bl[0];
+    const sm=el('div'); sm.style.cssText='border-top:1px solid var(--line);margin-top:15px;padding-top:13px;font-size:13.5px';
+    sm.innerHTML=row('Per serving, once stocked',money(per),'accent')+
+      row('Same dish as a meal kit',money(kit.low)+'–'+money(kit.high),'muted')+
+      row('Ordering in ('+S.servings+')',money(rest),'muted')+
+      (saved>0?row('You save tonight vs ordering in',money(saved),'strong'):row('Costs more than ordering in','+'+money(-saved),'strong'))+
+      row('Saved on every repeat',money(Math.max(0,rep)),'accent');
+    c.appendChild(sm);
+    const hd=PG.headline(bl,per,money);
+    c.appendChild(el('p','note '+hd.kind,esc(hd.text))).style.marginTop='13px';
+    if(saved<=0&&rep>0) c.appendChild(el('p','note good','Tonight this costs more than a takeaway — you are buying a spice rack, not a meal. It pays back on cook two, then saves about '+money(rep)+' every time. Roughly '+Math.ceil(b.firstCook/Math.max(rep,1))+' cooks to break even.')).style.marginTop='11px';
+    v.appendChild(c);
+    const bk=el('div','card stack-sm');
+    bk.appendChild(el('h3',null,'Ingredients'));
+    const l=el('div'); b.items.forEach(it=>l.appendChild(shopRow(it))); bk.appendChild(l);
+    const cb=contributeBar(b.items); if(cb) bk.appendChild(cb);
+    bk.appendChild(provenance(b.coverage));
+    v.appendChild(bk);
+  }
+
+  // Someone who has just landed in a city knows the dish and knows nothing
+  // about the shops. That is the whole scenario, and it was only reachable
+  // from a weekly plan.
+  if(S.dishTab==='where') v.appendChild(whereToBuy({shopping:b.items}));
+
+  if(S.dishTab==='nutrition') v.appendChild(nutrition(n,'Per serving'));
+
+  if(S.dishTab==='cook'){
+    const vr=S.variantId?r.variants.find(x=>x.id===S.variantId):null;
+    const deltas={}; const gen={};
+    PG.methodNotes(r,S.variantId).forEach(d=>{
+      (deltas[d.step]=deltas[d.step]||[]).push(d.change);
+      if(d.generated) gen[d.change]=true;
+    });
+    const info=el('div','card row');
+    info.innerHTML=['Active',r.activeMin+' min','Total',(r.totalMin>=120?(r.totalMin/60).toFixed(1)+' h':r.totalMin+' min'),'Level',r.difficulty]
+      .reduce((a,_,i,arr)=>i%2?a+'<div style="text-align:center;flex:1"><span class="lbl">'+esc(arr[i-1])+'</span><p style="margin-top:3px;font-weight:620">'+esc(arr[i])+'</p></div>':a,'');
+    v.appendChild(info);
+    if(vr) v.appendChild(el('div','card','<p style="font-size:13.5px;font-weight:620;color:var(--accent)">Cooking "'+esc(vr.label)+'" — '+Object.keys(deltas).length+' step'+(Object.keys(deltas).length===1?'':'s')+' change</p><p class="muted" style="margin-top:6px;font-size:12.5px">Changing an ingredient without changing the method is how you end up with dry chicken. The changes are marked below.</p>'));
+    const go=el('button','btn primary','▶  Start cooking');
+    go.onclick=()=>{S.cookStep=0;S.screen='cook';render()};
+    v.appendChild(go);
+
+    const m=el('div','card');
+    r.method.forEach(s=>{
+      const d=el('div','step');
+      let h='<div class="n num">'+s.n+'</div><div style="flex:1;min-width:0"><p style="font-size:14.5px">'+esc(s.text)+'</p>';
+      if(s.minutes) h+='<p class="muted" style="margin-top:5px;font-size:12px">≈ '+s.minutes+' min</p>';
+      if(s.tip) h+='<p class="note tip" style="margin-top:9px">'+esc(s.tip)+'</p>';
+      (deltas[s.n]||[]).forEach(c=>{h+='<p class="note delta" style="margin-top:9px;font-weight:540'+(gen[c]?';opacity:.85':'')+'">'+esc(c)+'</p>'});
+      d.innerHTML=h+'</div>'; m.appendChild(d);
+    });
+    v.appendChild(m);
+    const sa=PG.storageAdvice(items);
+    if(sa) v.appendChild(el('div','card','<h3>Keeping the leftovers</h3><p class="note warn" style="margin-top:10px">'+esc(sa.text)+'</p>'));
+    if(r.failures.length){
+      const f=el('div','card stack-sm'); f.appendChild(el('h3',null,'If it goes wrong'));
+      r.failures.forEach(x=>f.appendChild(el('div',null,'<p style="font-size:13.5px;font-weight:560">'+esc(x.symptom)+'</p><p class="muted" style="font-size:13px;margin-top:2px">'+esc(x.cause)+'</p>')));
+      v.appendChild(f);
+    }
+  }
+  return v;
+}
+
+/* ---------------------------------------------------------- account ---- */
+function account(){
+  const v=el('div','stack fade');
+  const back=el('button','btn ghost','← Back');
+  back.onclick=()=>{S.screen='result';authMsg=null;render()};
+  v.appendChild(back);
+
+  if(!sb){
+    v.appendChild(el('h2',null,'Account'));
+    v.appendChild(el('p','note warn','Could not reach the accounts service — you are probably offline. Everything still works; your profile and pantry are saved on this device and will sync when you next open it online.'));
+    return v;
+  }
+
+  if(user){
+    v.appendChild(el('h2',null,'Your account'));
+    const c=el('div','card stack-sm');
+    c.appendChild(el('div','row','<span class="lbl">Signed in as</span><span style="font-size:14px">'+esc(user.email||'—')+'</span>'));
+    c.appendChild(el('div','row','<span class="lbl">Synced</span><span style="font-size:14px">profile · pantry ('+S.pantry.size+' items)</span>'));
+    v.appendChild(c);
+
+    const sync=el('button','btn primary','Sync now');
+    sync.onclick=async()=>{ authBusy=true;render(); await pushRemote(); authBusy=false; render(); };
+    v.appendChild(sync);
+
+    const out=el('button','btn','Sign out');
+    out.onclick=async()=>{ await sb.auth.signOut(); user=null; authMsg='Signed out. Your data stays on this device.'; render(); };
+    v.appendChild(out);
+
+    if(authMsg) v.appendChild(el('p','note good',esc(authMsg)));
+    v.appendChild(el('p','muted','Your answers and pantry are stored against your account and nothing else. No location, no shopping history, no tracking. Row-level security means the database physically cannot return another user\'s rows.'))
+      .style.cssText='font-size:11.5px;line-height:1.6;margin-top:8px';
+    return v;
+  }
+
+  v.appendChild(el('h2',null,'Sign in'));
+  v.appendChild(el('p','muted','Optional. The app works fully without one — an account just carries your profile, pantry and plans between your phone and laptop.'))
+    .style.cssText='font-size:14px;margin-top:8px';
+
+  const c=el('div','card stack-sm'); c.style.marginTop='6px';
+  const em=el('input'); em.type='email'; em.placeholder='you@example.com'; em.autocomplete='email';
+  const pw=el('input'); pw.type='password'; pw.placeholder='Password (8+ characters)'; pw.autocomplete='current-password';
+  c.appendChild(el('span','lbl','Email')); c.appendChild(em);
+  c.appendChild(el('span','lbl','Password')); c.appendChild(pw);
+  v.appendChild(c);
+
+  const doAuth=async(mode)=>{
+    if(!em.value||pw.value.length<8){ authMsg='Enter an email and a password of at least 8 characters.'; render(); return; }
+    authBusy=true; authMsg=null; render();
+    try{
+      const fn = mode==='up' ? sb.auth.signUp.bind(sb.auth) : sb.auth.signInWithPassword.bind(sb.auth);
+      const {data,error}=await fn({email:em.value.trim(),password:pw.value});
+      if(error) throw error;
+      if(mode==='up' && !data.session){ authMsg='Check your email to confirm the address, then sign in.'; }
+      else { user=data.user; await pushRemote(); S.screen='result'; authMsg=null; }
+    }catch(e){ authMsg=e.message||String(e); }
+    authBusy=false; render();
+  };
+
+  const inb=el('button','btn primary',authBusy?'…':'Sign in');
+  inb.onclick=()=>doAuth('in');
+  const upb=el('button','btn',authBusy?'…':'Create an account');
+  upb.onclick=()=>doAuth('up');
+  v.appendChild(inb); v.appendChild(upb);
+
+  if(authMsg) v.appendChild(el('p','note warn',esc(authMsg)));
+
+  v.appendChild(el('p','muted','We store your six onboarding answers, your pantry list and your saved plans. Nothing else — no location, no shopping history.'))
+    .style.cssText='font-size:11.5px;line-height:1.6;margin-top:10px';
+  return v;
+}
+
+/* -------------------------------------------------------- cook mode ---- */
+/* A separate screen rather than a scroll position: cooking is the one time
+   someone is holding a phone with wet hands, glancing at it between actions.
+   One step, large type, and a thumb-sized Next. */
+function cookMode(){
+  const r=byId(S.dishId); if(!r){S.screen='result';return result()}
+  const vr=S.variantId?r.variants.find(x=>x.id===S.variantId):null;
+  const deltas={}; if(vr) vr.methodDeltas.forEach(d=>{(deltas[d.step]=deltas[d.step]||[]).push(d.change)});
+  const i=Math.min(S.cookStep,r.method.length-1);
+  const st=r.method[i];
+  const v=el('div','fade');
+
+  const top=el('div','row');
+  const x=el('button','btn ghost','✕ Exit');
+  x.onclick=()=>{S.screen='dish';S.dishTab='cook';render()};
+  top.appendChild(x);
+  top.appendChild(el('span','lbl',esc(r.name)));
+  v.appendChild(top);
+
+  const prog=el('div','prog'); prog.style.marginTop='18px';
+  r.method.forEach((_,k)=>prog.appendChild(el('i',k<=i?'done':'')));
+  v.appendChild(prog);
+
+  const body=el('div','cookstep');
+  body.innerHTML='<p class="cooknum">Step '+(i+1)+' of '+r.method.length+(st.minutes?' · about '+st.minutes+' min':'')+'</p>'+
+    '<p class="cooktext">'+esc(st.text)+'</p>';
+  if(st.tip) body.appendChild(el('p','note tip',esc(st.tip))).style.marginTop='18px';
+  (deltas[st.n]||[]).forEach(c=>body.appendChild(el('p','note delta',esc(c))).style.marginTop='12px');
+  v.appendChild(body);
+
+  // what you need, so nobody has to leave the screen mid-cook
+  if(i===0){
+    const items=PG.applyVariant(r,S.variantId).filter(x=>x.ref!=='water');
+    const c=el('div','card stack-sm');
+    c.appendChild(el('h3',null,'Everything you need'));
+    const g=el('div'); g.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+    const scale=S.servings/r.servings;
+    items.forEach(x=>{
+      const n=PG.NUTRIENTS?PG.NUTRIENTS[x.ref]:null;
+      g.appendChild(el('span','pill',esc((n?n.name:x.ref))+' · '+Math.round(x.grams*scale)+' g'));
+    });
+    c.appendChild(g);
+    v.appendChild(c);
+  }
+
+  const bar=el('div','bottom');
+  if(i>0){
+    const b=el('button','btn','Back');
+    b.onclick=()=>{S.cookStep=i-1;render()};
+    bar.appendChild(b);
+  }
+  const nx=el('button','btn primary', i===r.method.length-1?'Done ✓':'Next step →');
+  nx.onclick=()=>{
+    if(i===r.method.length-1){ S.screen='dish'; S.dishTab='cook'; }
+    else S.cookStep=i+1;
+    render();
+  };
+  bar.appendChild(nx);
+  v.appendChild(bar);
+  v.appendChild(el('div')).style.height='70px';
+  return v;
+}
+
+/* -------------------------------------------------------- nutrition ---- */
+function nutrition(n,title){
+  const w=el('div','stack');
+  const p=el('div','card');
+  p.innerHTML='<span class="lbl">'+esc(title)+'</span><p class="big" style="font-size:36px">'+Math.round(n.kcal)+'<span class="muted" style="font-size:15px;font-weight:500;letter-spacing:0"> kcal</span></p>';
+  const g=el('div','grid'); g.style.cssText='grid-template-columns:1fr 1fr 1fr;margin-top:16px';
+  [['Protein',n.protein,'var(--accent)'],['Carbs',n.carb,'var(--text)'],['Fat',n.fat,'var(--warn)']].forEach(([l,val,c])=>
+    g.appendChild(el('div','card2','<span class="lbl">'+l+'</span><p class="num" style="margin-top:3px;font-size:21px;font-weight:700;color:'+c+'">'+Math.round(val)+'<span style="font-size:13px">g</span></p>')));
+  p.appendChild(g);
+  const pe=n.protein*4/Math.max(n.kcal,1)*100;
+  p.appendChild(el('p','muted',esc('Protein is '+Math.round(pe)+'% of calories.'+(pe>=30?' Strong for holding muscle in a deficit.':pe>=20?' Reasonable, not high.':' Low — try a higher-protein version.')))).style.cssText='font-size:12.5px;margin-top:13px';
+  w.appendChild(p);
+
+  const m=el('div','card stack-sm'); m.appendChild(el('h3',null,'Micronutrients'));
+  [['Fibre',n.fibre,PG.RNI.fibre,'g'],['Iron',n.iron,PG.RNI.iron,'mg'],['Calcium',n.calcium,PG.RNI.calcium,'mg'],
+   ['Vitamin B12',n.b12,PG.RNI.b12,'µg'],['Zinc',n.zinc,PG.RNI.zinc,'mg'],['Vitamin A',n.vitA,PG.RNI.vitA,'µg'],
+   ['Vitamin C',n.vitC,PG.RNI.vitC,'mg'],['Potassium',n.potassium,PG.RNI.potassium,'mg']].forEach(([l,val,rni,u])=>{
+    const pct=val/rni*100, col=pct>=50?'var(--accent)':pct>=20?'var(--warn)':'var(--bad)';
+    m.appendChild(el('div',null,'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>'+l+'</span>'+
+      '<span class="num muted">'+(val<10?val.toFixed(1):Math.round(val))+' '+u+' · <span style="color:'+col+'">'+Math.round(pct)+'%</span></span></div>'+
+      '<div class="bar"><i style="width:'+Math.min(100,pct)+'%;background:'+col+'"></i></div>'));
+  });
+  const sp=n.sodium/PG.RNI.sodium*100, sc=sp>75?'var(--bad)':'var(--muted)';
+  m.appendChild(el('div',null,'<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span>Sodium</span><span class="num muted">'+Math.round(n.sodium)+' mg · <span style="color:'+sc+'">'+Math.round(sp)+'% of limit</span></span></div><div class="bar"><i style="width:'+Math.min(100,sp)+'%;background:'+sc+'"></i></div>'));
+  m.appendChild(el('p','muted','Against UK adult reference intakes. Sodium is shown versus the daily limit, not a target.')).style.cssText='font-size:11.5px;margin-top:12px';
+  w.appendChild(m);
+
+  if(n.b12<0.4){
+    const b=el('div','card'); b.style.borderColor='rgba(255,122,122,.4)';
+    b.innerHTML='<p style="font-size:13px;color:var(--bad)"><strong>B12 warning.</strong> This delivers '+n.b12.toFixed(1)+' µg — effectively none. Plant-only versions carry B12 only from fortified products; if yours is not fortified it is zero, and B12 is the one nutrient a plant-based diet cannot improvise.</p>';
+    w.appendChild(b);
+  }
+  return w;
+}
+
+/* ----------------------------------------------------------- render ---- */
+/**
+ * Cards arrive as they scroll into view.
+ *
+ * One observer, rebuilt per render, unobserving each element the moment it has
+ * played. A card that re-animates every time it crosses the fold is a tic, not a
+ * flourish, and it makes long lists feel unstable.
+ */
+let riseObs=null;
+function observeRise(){
+  if(riseObs) riseObs.disconnect();
+  if(!('IntersectionObserver' in window)) return;
+  const els=[...app.querySelectorAll('.card,.bub')];
+  // Anything already on screen at render time is shown immediately — animating
+  // what the reader is already looking at reads as a delay, not as motion.
+  const vh=window.innerHeight;
+  riseObs=new IntersectionObserver((es,o)=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); o.unobserve(e.target); } });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.06});
+  els.forEach(e=>{
+    const t=e.getBoundingClientRect().top;
+    if(t<vh*0.92){ e.classList.add('rise','in'); return; }
+    e.classList.add('rise'); riseObs.observe(e);
+  });
+}
+
+/**
+ * Re-render, without throwing the reader back to the top.
+ *
+ * Every interaction rebuilds the whole view, and every rebuild used to jump to
+ * the top of the page. On a thirty-item shopping list that means ticking off
+ * what you already own fires you back to the header thirty times, and the app
+ * feels like it is fighting you rather than like it is slow. Nothing here is a
+ * performance fix — scrolling holds sixty frames a second on a throttled phone.
+ * The scroll position was simply being thrown away.
+ *
+ * Three cases, because they want different things: a new screen starts at the
+ * top, a new tab starts at the tab strip so the content you just asked for is
+ * the first thing under your thumb, and everything else stays exactly where it
+ * was.
+ */
+let lastScreen=null, lastTab=null;
+/**
+ * One navigation bar, always there.
+ *
+ * Eight rounds of features arrived as buttons in headers and strips that moved
+ * around between screens, and a first-time user had no fixed thing to aim at.
+ * Three destinations, in the same place, on every screen.
+ */
+function navBar(){
+  const n=el('div','nav');
+  [['tonight','🕕','Tonight'],['result','📅','Week'],['find','🔍','Search'],['scan','📷','Scan']].forEach(([k,ic,l])=>{
+    const on=S.screen===k||(k==='result'&&(S.screen==='dish'&&S.cameFrom==='result'));
+    const b=el('button',on?'on':'');
+    b.innerHTML='<b>'+ic+'</b>'+esc(l);
+    b.onclick=()=>{
+      if(k==='result'&&!S.profile.skill){S.screen='q';S.q=0}
+      else {S.screen=k; if(k==='find') S.query='';}
+      render();
+    };
+    n.appendChild(b);
+  });
+  return n;
+}
+
+function render(){
+  if(S.screen!=='scan') stopScan();
+  const y=window.scrollY;
+  const sameScreen=S.screen===lastScreen, sameTab=S.tab===lastTab;
+  // every plate on the old screen is about to be discarded; if their tilt
+  // subscribers are not dropped with them the listener list grows without bound
+  tiltSubs=[];
+  app.innerHTML='';
+  app.appendChild(
+    S.screen==='welcome'?welcome():
+    S.screen==='q'?question():
+    S.screen==='scan'?scanScreen():
+    S.screen==='tonight'?tonightScreen():
+    S.screen==='find'?findScreen():
+    S.screen==='cook'?cookMode():
+    S.screen==='account'?account():
+    S.screen==='dish'?dish():result()
+  );
+  if(S.screen!=='welcome'&&S.screen!=='q'&&S.screen!=='cook') app.appendChild(navBar());
+  lastScreen=S.screen; lastTab=S.tab;
+  observeRise();
+  if(!sameScreen){ window.scrollTo({top:0,behavior:'instant'}); return; }
+  if(!sameTab){
+    // Measured on the next frame, not this one. Read immediately after the
+    // append, the strip's position is 24 px short of where it settles, so the
+    // tab bar lands just off the top of the screen instead of at it.
+    requestAnimationFrame(()=>{
+      const strip=document.getElementById('tabstrip');
+      if(!strip) return;
+      const t=strip.getBoundingClientRect().top+window.scrollY-10;
+      window.scrollTo({top:Math.max(0,t),behavior:'instant'});
+    });
+    return;
+  }
+  // clamp: the list can get shorter than where you were standing
+  window.scrollTo({top:Math.min(y,Math.max(0,document.body.scrollHeight-window.innerHeight)),behavior:'instant'});
+}
+render();
+authInit();
+
+/* Offline shell. Only registered over http(s) — on file:// the API exists but
+   throws, and the app is already fully offline there by virtue of being one file. */
+if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})});
+}
+})();
+</script>
+</body>
+</html>

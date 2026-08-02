@@ -1,0 +1,62 @@
+{
+ "garlic": {
+  "title": "File:Garlic and Herbs (Unsplash).jpg",
+  "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Garlic_and_Herbs_%28Unsplash%29.jpg/960px-Garlic_and_Herbs_%28Unsplash%29.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Garlic_and_Herbs_(Unsplash).jpg",
+  "licence": "CC0",
+  "needs_credit": false,
+  "author": "LoboStudio Hamburg <a rel=\"nofollow\" class=\"external text\" href=\"https://unsplash.com/@lobostudiohamburg\">lobostudiohamburg</a>",
+  "w": 900,
+  "h": 900,
+  "file": "garlic.webp",
+  "bytes": 9098,
+  "kept": 0.456,
+  "colour": 0.172,
+  "fetched": "2026-07-31"
+ },
+ "egg": {
+  "title": "File:Chicken & Egg Curry for Rice.jpg",
+  "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Chicken_%26_Egg_Curry_for_Rice.jpg/960px-Chicken_%26_Egg_Curry_for_Rice.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:Chicken_%26_Egg_Curry_for_Rice.jpg",
+  "licence": "CC BY-SA 4.0",
+  "needs_credit": true,
+  "author": "<a href=\"//commons.wikimedia.org/wiki/User:SnapMeUp\" title=\"User:SnapMeUp\">SnapMeUp</a>",
+  "w": 900,
+  "h": 900,
+  "file": "egg.webp",
+  "bytes": 5946,
+  "kept": 0.699,
+  "colour": 0.203,
+  "fetched": "2026-07-31"
+ },
+ "aubergine": {
+  "title": "File:Solanum melongena 24 08 2012 (1).JPG",
+  "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Solanum_melongena_24_08_2012_%281%29.JPG/960px-Solanum_melongena_24_08_2012_%281%29.JPG",
+  "page": "https://commons.wikimedia.org/wiki/File:Solanum_melongena_24_08_2012_(1).JPG",
+  "licence": "CC BY-SA 3.0",
+  "needs_credit": true,
+  "author": "<p><a href=\"//commons.wikimedia.org/wiki/User:JDP90\" class=\"mw-redirect\" title=\"User:JDP90\">Joydeep</a>\n</p>",
+  "w": 900,
+  "h": 983,
+  "file": "aubergine.webp",
+  "bytes": 6060,
+  "kept": 0.231,
+  "colour": 0.352,
+  "fetched": "2026-07-31"
+ },
+ "mushroom": {
+  "title": "File:WHITE MUSHROOM.jpg",
+  "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/WHITE_MUSHROOM.jpg/960px-WHITE_MUSHROOM.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:WHITE_MUSHROOM.jpg",
+  "licence": "CC BY-SA 4.0",
+  "needs_credit": true,
+  "author": "<a href=\"//commons.wikimedia.org/wiki/User:Dinkun_Chen\" title=\"User:Dinkun Chen\">Dinkun Chen</a>",
+  "w": 900,
+  "h": 987,
+  "file": "mushroom.webp",
+  "bytes": 8764,
+  "kept": 0.644,
+  "colour": 0.278,
+  "fetched": "2026-07-31"
+ }
+}

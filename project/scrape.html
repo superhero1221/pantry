@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pantry — data scrape</title>
+<style>
+  body { font: 14px/1.5 ui-monospace, monospace; background: #17150f; color: #e8dfc9; padding: 24px; }
+  b { color: #e8a35c; }
+  #log { white-space: pre-wrap; max-height: 70vh; overflow: auto; font-size: 12px; }
+  .ok { color: #9fbf7a; } .miss { color: #d4695a; }
+</style>
+</head>
+<body>
+<h1>Scraping Open Food Facts + Open Prices</h1>
+<div id="status">starting…</div>
+<div id="log"></div>
+<script type="module">
+import { MAP } from './pantry-map.js';
+
+const status = document.getElementById('status');
+const logEl = document.getElementById('log');
+const say = (s, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = s; logEl.appendChild(d); };
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const median = (a) => { const s = a.filter(x => typeof x === 'number' && isFinite(x) && x >= 0).sort((x, y) => x - y); if (!s.length) return null; const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+
+const NUTRIENTS = {
+  kcal: 'energy-kcal_100g', protein: 'proteins_100g', carb: 'carbohydrates_100g', fat: 'fat_100g',
+  fibre: 'fiber_100g', salt: 'salt_100g', iron: 'iron_100g', calcium: 'calcium_100g',
+  b12: 'vitamin-b12_100g', vitc: 'vitamin-c_100g',
+};
+
+// plausibility guards — OFF is crowd-sourced and has typos (5000 kcal/100g etc)
+const CAP = { kcal: 950, protein: 100, carb: 100, fat: 100, fibre: 90, salt: 100, iron: 0.5, calcium: 2, b12: 0.001, vitc: 0.05 };
+
+async function getJSON(url, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url);
+      if (r.status === 429 || r.status === 503) { await sleep(2500 * (i + 1)); continue; }
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) { await sleep(1200 * (i + 1)); }
+  }
+  return null;
+}
+
+async function nutrition(tag) {
+  const fields = 'nutriments';
+  const hosts = ['https://world.openfoodfacts.net', 'https://world.openfoodfacts.org'];
+  for (const h of hosts) {
+    const j = await getJSON(`${h}/api/v2/search?categories_tags=${encodeURIComponent(tag)}&fields=${fields}&page_size=50`);
+    if (!j || !j.products || !j.products.length) continue;
+    const out = { n: j.products.length, total: j.count };
+    for (const [k, off] of Object.entries(NUTRIENTS)) {
+      const vals = j.products.map(p => p.nutriments && p.nutriments[off]).filter(v => typeof v === 'number' && isFinite(v) && v >= 0 && v <= CAP[k]);
+      out[k] = vals.length >= 3 ? median(vals) : null;
+      out[k + '_n'] = vals.length;
+    }
+    return out;
+  }
+  return null;
+}
+
+async function prices(tag) {
+  const j = await getJSON(`https://prices.openfoodfacts.org/api/v1/prices?category_tag=${encodeURIComponent(tag)}&size=100&order_by=-date`);
+  if (!j || !j.items || !j.items.length) return null;
+  const byCountry = {};
+  let newest = null;
+  for (const it of j.items) {
+    if (it.price_per !== 'KILOGRAM' || typeof it.price !== 'number') continue;
+    const cc = (it.location && (it.location.osm_address_country_code || '')).toUpperCase() || '??';
+    (byCountry[cc] = byCountry[cc] || []).push({ p: it.price, cur: it.currency, d: it.date });
+    if (!newest || it.date > newest) newest = it.date;
+  }
+  const out = { total: j.total, newest, byCountry: {} };
+  for (const [cc, arr] of Object.entries(byCountry)) {
+    const cur = arr[0].cur;
+    const same = arr.filter(x => x.cur === cur).map(x => x.p);
+    if (same.length) out.byCountry[cc] = { perKg: Math.round(median(same) * 100) / 100, cur, n: same.length, newest: arr.map(x => x.d).sort().pop() };
+  }
+  return Object.keys(out.byCountry).length ? out : null;
+}
+
+const RESULT = { fetched: new Date().toISOString().slice(0, 10), nutrition: {}, prices: {}, missing: { nutrition: [], prices: [] } };
+const tags = [...new Set(Object.values(MAP).map(v => v.off))];
+say(`${tags.length} distinct category tags to look up`);
+
+(async () => {
+  let i = 0;
+  for (const tag of tags) {
+    i++;
+    status.textContent = `${i} / ${tags.length} — ${tag}`;
+    const [n, p] = [await nutrition(tag), await prices(tag)];
+    if (n && n.kcal !== null) { RESULT.nutrition[tag] = n; } else { RESULT.missing.nutrition.push(tag); }
+    if (p) { RESULT.prices[tag] = p; } else { RESULT.missing.prices.push(tag); }
+    say(`${tag}  nutrition:${n && n.kcal !== null ? Math.round(n.kcal) + 'kcal/' + n.n + 'p' : 'MISSING'}  price:${p ? Object.keys(p.byCountry).join(',') : 'MISSING'}`,
+        (n && n.kcal !== null) ? 'ok' : 'miss');
+    await sleep(220);
+  }
+  window.__RESULT = RESULT;
+  window.__DONE = true;
+  status.innerHTML = `<b>DONE.</b> nutrition ${Object.keys(RESULT.nutrition).length}/${tags.length}, prices ${Object.keys(RESULT.prices).length}/${tags.length}`;
+})();
+</script>
+</body>
+</html>

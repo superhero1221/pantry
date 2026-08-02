@@ -1,0 +1,333 @@
+import { Recipe } from './types';
+
+/**
+ * Light meals and snacks — 300-500 kcal.
+ *
+ * Added because the planner had no range: every main dish here is a ~1,000 kcal
+ * plate, so a three-meal day could not land under ~2,600 kcal no matter how the
+ * optimiser shuffled it. A constraint solver can only be as good as the options
+ * it is given, and the fix for "can't hit 2,000 kcal across three meals" is
+ * lighter food, not a cleverer search.
+ */
+export const RECIPES_C: Recipe[] = [
+  {
+    id: 'greek_yogurt_bowl',
+    name: 'Greek Yogurt with Honey and Almonds',
+    cuisine: 'Breakfast',
+    country: 'GR',
+    blurb: 'Three minutes, no heat, and the highest protein for the least effort in the menu.',
+    servings: 2,
+    activeMin: 3,
+    totalMin: 3,
+    difficulty: 'easy',
+    restaurantGBP: 5.5,
+    tags: ['vegetarian', 'halal', 'kosher', 'gluten_free'],
+    items: [
+      { ref: 'greek_yogurt', grams: 400, note: 'full fat sets better; 0% is leaner' },
+      { ref: 'honey', grams: 30, note: 'drizzled, not stirred in' },
+      { ref: 'almonds', grams: 40, note: 'toasted in a dry pan for 3 min if you have time' },
+      { ref: 'lemon', grams: 10, note: 'zest only, optional but it lifts the whole thing', optional: true },
+      { ref: 'cinnamon_ground', grams: 1, optional: true },
+    ],
+    method: [
+      { n: 1, text: 'Toast the almonds in a dry pan over medium heat for 3 minutes, shaking often, until they smell nutty. Tip them onto a cold plate immediately.', minutes: 3, tip: 'They carry on cooking in a hot pan and go from toasted to bitter in about 30 seconds. Get them out the moment you can smell them.' },
+      { n: 2, text: 'Roughly chop the cooled almonds — you want rubble, not powder.' },
+      { n: 3, text: 'Spoon the yogurt into two bowls and spread it to the edges with the back of the spoon.' },
+      { n: 4, text: 'Drizzle the honey over the surface, scatter the almonds, and add the lemon zest and cinnamon if using.', tip: 'Drizzle on top rather than stirring through. Stirred honey just makes the whole bowl uniformly sweet; on top you get contrast in every spoonful.' },
+    ],
+    failures: [
+      { symptom: 'Watery pool in the bowl', cause: 'That is whey separating — normal in natural yogurt. Pour it off, or buy strained Greek-style rather than Greek-style-flavoured.' },
+      { symptom: 'Almonds taste bitter', cause: 'Toasted too long or left in the hot pan. Start again; there is no rescuing them.' },
+      { symptom: 'Too sweet', cause: 'Honey stirred in rather than drizzled. Halve it and add lemon zest.' },
+    ],
+    variants: [
+      {
+        id: 'yogurt_vegan',
+        label: 'Vegan, with soya yogurt',
+        tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'gluten_free', 'dairy_free'],
+        swaps: [{ from: 'greek_yogurt', to: 'soya_yogurt', grams: 400 }, { from: 'honey', to: 'sugar', grams: 20 }],
+        methodDeltas: [
+          { step: 3, change: 'Soya yogurt is looser than strained Greek. Spread it thinner or it pools — and it will not hold the honey on the surface.' },
+          { step: 4, change: 'Sugar does not drizzle. Sprinkle it and let it sit 2 minutes to dissolve into the surface.' },
+        ],
+        note: 'Protein drops by roughly a third and B12 depends entirely on whether your soya yogurt is fortified. Check the carton.',
+      },
+      {
+        id: 'yogurt_lean',
+        label: 'Leaner, nut-free',
+        tags: ['vegetarian', 'halal', 'kosher', 'gluten_free', 'nut_free'],
+        swaps: [{ from: 'almonds', to: null }, { from: 'honey', to: 'honey', grams: 15 }],
+        methodDeltas: [
+          { step: 1, change: 'Skip the toasting entirely — there is nothing to toast.' },
+          { step: 4, change: 'Without the almonds there is no texture contrast, so eat it cold and firm straight from the fridge rather than letting it come to room temperature.' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'chicken_salad_bowl',
+    name: 'Chicken, Feta and Cucumber Bowl',
+    cuisine: 'Mediterranean',
+    country: 'GR',
+    blurb: 'Forty-five grams of protein for around four hundred calories, and no cooking beyond the chicken.',
+    servings: 2,
+    activeMin: 15,
+    totalMin: 20,
+    difficulty: 'easy',
+    restaurantGBP: 9.5,
+    tags: ['halal', 'gluten_free', 'nut_free'],
+    items: [
+      { ref: 'chicken_breast', grams: 320, note: 'butterflied so it cooks evenly' },
+      { ref: 'cucumber', grams: 200, note: 'thick half-moons' },
+      { ref: 'tomato_fresh', grams: 200, note: 'wedges, salted separately' },
+      { ref: 'lettuce', grams: 120 },
+      { ref: 'red_onion', grams: 50, note: 'sliced paper-thin' },
+      { ref: 'feta', grams: 60, note: 'crumbled by hand, not cut' },
+      { ref: 'olive_oil', grams: 20 },
+      { ref: 'lemon', grams: 30, note: 'juice' },
+      { ref: 'oregano_dried', grams: 2 },
+      { ref: 'black_pepper', grams: 1 },
+      { ref: 'salt', grams: 4 },
+      { ref: 'olives_black', grams: 40, optional: true },
+    ],
+    method: [
+      { n: 1, text: 'Butterfly the chicken breasts — cut horizontally almost through and open them like a book. Season both sides with half the salt and the pepper.', tip: 'Butterflying halves the thickness, which is the whole trick: a whole breast dries out at the edges before the middle is done.' },
+      { n: 2, text: 'Heat a pan over medium-high with half the olive oil. Cook the chicken 4 minutes on the first side without moving it, then 3 minutes on the second. The thickest part must read 75 C with no pink.', minutes: 7, tip: 'Leave it alone for the first 4 minutes. Every time you move it you interrupt the crust forming.' },
+      { n: 3, text: 'Rest the chicken on a board for 5 minutes before slicing.', minutes: 5, tip: 'Slicing straight away pushes all the juice onto the board. Five minutes and it stays in the meat.' },
+      { n: 4, text: 'Meanwhile, salt the tomato wedges with the remaining salt and leave them in a sieve over a bowl.', tip: 'Salted tomatoes release water. Draining it keeps the dressing from turning into tomato soup at the bottom of the bowl.' },
+      { n: 5, text: 'Soak the sliced red onion in cold water for 5 minutes, then drain hard.', minutes: 5, tip: 'This pulls the harsh sulphur edge out of raw onion. Skip it and the onion dominates everything else.' },
+      { n: 6, text: 'Whisk the remaining olive oil with the lemon juice and oregano.' },
+      { n: 7, text: 'Combine the lettuce, cucumber, drained tomatoes and onion. Dress, toss, then add the sliced chicken and crumbled feta on top with the olives if using.', tip: 'Dress the vegetables before the feta goes on — tossing feta through dressing turns it to paste.' },
+    ],
+    failures: [
+      { symptom: 'Chicken dry', cause: 'Overcooked or not butterflied. Seven minutes total for a butterflied breast is plenty; it carries on cooking while it rests.' },
+      { symptom: 'Watery bowl', cause: 'Tomatoes not drained after salting, or the cucumber cut too thin. Thick half-moons hold up; thin slices collapse.' },
+      { symptom: 'Tastes flat', cause: 'Under-salted or under-acidic. Add lemon before you add more salt — flat usually means not enough acid.' },
+    ],
+    variants: [
+      {
+        id: 'salad_prawn',
+        label: 'With prawns',
+        tags: ['halal', 'gluten_free', 'nut_free'],
+        swaps: [{ from: 'chicken_breast', to: 'prawns_raw', grams: 300 }],
+        methodDeltas: [
+          { step: 1, change: 'Nothing to butterfly. Pat the prawns bone dry instead — wet prawns steam rather than sear.' },
+          { step: 2, change: 'Prawns need 90 seconds a side on high heat, not 4 minutes. They are done the instant they curl into a loose C; a tight O means overcooked.' },
+          { step: 3, change: 'No resting needed. Straight from the pan into the bowl.' },
+        ],
+      },
+      {
+        id: 'salad_vegan',
+        label: 'Vegan, with chickpeas',
+        tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'gluten_free', 'nut_free', 'dairy_free'],
+        swaps: [
+          { from: 'chicken_breast', to: 'chickpeas_tinned', grams: 300 },
+          { from: 'feta', to: 'tofu_firm', grams: 80 },
+        ],
+        methodDeltas: [
+          { step: 1, change: 'Drain and dry the chickpeas thoroughly, then season them directly.' },
+          { step: 2, change: 'Fry the chickpeas in the oil for 6-8 minutes until some have split and browned. They need longer than chicken, not less, and they should rattle in the pan when ready.' },
+          { step: 3, change: 'No resting. Let them cool 2 minutes so they do not wilt the lettuce.' },
+          { step: 7, change: 'Crumbled firm tofu has no salt of its own, unlike feta. Add another pinch of salt and a squeeze of lemon directly onto the tofu.' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'red_lentil_soup',
+    name: 'Red Lentil Soup with Cumin',
+    localName: 'Shorbat Adas',
+    cuisine: 'Levantine',
+    country: 'LB',
+    blurb: 'Store-cupboard soup that costs pennies a bowl and thickens itself without blending.',
+    servings: 2,
+    activeMin: 10,
+    totalMin: 35,
+    difficulty: 'easy',
+    restaurantGBP: 6.5,
+    tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'nut_free', 'dairy_free'],
+    items: [
+      { ref: 'red_lentils', grams: 160, note: 'rinsed until the water runs clear' },
+      { ref: 'onion', grams: 150, note: 'roughly diced — it gets softened, not browned' },
+      { ref: 'carrot', grams: 120, note: 'diced small so it cooks in the same time as the lentils' },
+      { ref: 'garlic', grams: 12 },
+      { ref: 'cumin_ground', grams: 4 },
+      { ref: 'turmeric', grams: 2 },
+      { ref: 'olive_oil', grams: 20 },
+      { ref: 'stock_cube_veg', grams: 10 },
+      { ref: 'water', grams: 900 },
+      { ref: 'lemon', grams: 30, note: 'juice, added off the heat' },
+      { ref: 'salt', grams: 5 },
+      { ref: 'bread_sourdough', grams: 120, note: 'to serve' },
+      { ref: 'parsley_fresh', grams: 8, optional: true },
+    ],
+    method: [
+      { n: 1, text: 'Rinse the lentils in a sieve under cold water until the water runs clear rather than cloudy.', tip: 'That cloudiness is surface starch. Leave it in and the soup turns gluey instead of silky.' },
+      { n: 2, text: 'Soften the onion and carrot in the olive oil over medium heat for 8 minutes with a pinch of salt.', minutes: 8, tip: 'Sweat, do not brown. Browned onion makes this taste like a different soup — you want it sweet and neutral underneath the cumin.' },
+      { n: 3, text: 'Add the garlic, cumin and turmeric. Stir for 45 seconds.', minutes: 1, tip: 'The moment the spices smell fragrant rather than raw and dusty, add liquid. Ground cumin burns in well under a minute.' },
+      { n: 4, text: 'Add the lentils, crumbled stock cube and water. Bring to a boil, then drop to a bare simmer.', minutes: 3 },
+      { n: 5, text: 'Simmer uncovered for 20-25 minutes, stirring occasionally so nothing catches on the base.', minutes: 25, tip: 'It is ready when the lentils have completely collapsed and no longer hold their shape. Stop before that and it tastes thin and raw.' },
+      { n: 6, text: 'Take it off the heat. Stir in the lemon juice and the rest of the salt, then taste.', tip: 'Lemon goes in off the heat. Boiled lemon juice turns dull and slightly bitter, and this soup depends on that brightness.' },
+      { n: 7, text: 'If it is thicker than you want, loosen with hot water. Serve with the bread and parsley.' },
+    ],
+    failures: [
+      { symptom: 'Gluey rather than silky', cause: 'Lentils not rinsed, or boiled hard instead of simmered. A bare simmer is the difference.' },
+      { symptom: 'Tastes flat and earthy', cause: 'No acid. This soup needs the lemon — it is not a garnish, it is the seasoning.' },
+      { symptom: 'Catching on the bottom', cause: 'Heat too high once the lentils start breaking down. Drop it and stir more often; scrape rather than let it sit.' },
+    ],
+    variants: [
+      {
+        id: 'soup_protein',
+        label: 'Higher protein, with soya',
+        tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'nut_free', 'dairy_free'],
+        swaps: [{ from: 'carrot', to: 'soya_chunks', grams: 40 }],
+        methodDeltas: [
+          { step: 2, change: 'Nothing to dice and soften but the onion — 6 minutes is enough.' },
+          { step: 4, change: 'Add the dry soya chunks with the lentils. They rehydrate in the stock and roughly double the protein, but they also drink liquid, so add another 150 ml of water.' },
+          { step: 5, change: 'Give it 5 minutes longer. Soya chunks stay unpleasantly springy if undercooked.' },
+        ],
+      },
+      {
+        id: 'soup_gf',
+        label: 'Gluten-free',
+        tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'nut_free', 'dairy_free', 'gluten_free'],
+        swaps: [{ from: 'bread_sourdough', to: null }, { from: 'potato', to: 'potato', grams: 200 }],
+        methodDeltas: [
+          { step: 4, change: 'Add diced potato with the lentils to replace the bread as the filling starch. It also thickens the soup, so start with 100 ml less water.' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'spinach_feta_eggs',
+    name: 'Spinach and Feta Eggs on Toast',
+    cuisine: 'Brunch',
+    country: 'GB',
+    blurb: 'Ten minutes, one pan, and enough protein to stop you snacking before lunch.',
+    servings: 2,
+    activeMin: 10,
+    totalMin: 12,
+    difficulty: 'easy',
+    restaurantGBP: 8.5,
+    tags: ['vegetarian', 'halal', 'kosher', 'nut_free'],
+    items: [
+      { ref: 'egg', grams: 220, note: '4 large' },
+      { ref: 'spinach_frozen', grams: 150, note: 'defrosted and squeezed dry' },
+      { ref: 'feta', grams: 60, note: 'crumbled' },
+      { ref: 'bread_sourdough', grams: 120, note: '2 thick slices' },
+      { ref: 'butter', grams: 15 },
+      { ref: 'garlic', grams: 6 },
+      { ref: 'black_pepper', grams: 1 },
+      { ref: 'salt', grams: 3 },
+      { ref: 'lemon', grams: 10, optional: true },
+    ],
+    method: [
+      { n: 1, text: 'Squeeze the defrosted spinach in your hands over the sink until no more water comes out. Keep squeezing past the point you think it is done.', tip: 'This is the whole dish. Wet spinach makes watery eggs, and frozen spinach holds far more water than looks possible.' },
+      { n: 2, text: 'Toast the bread and set it aside. Do this first — eggs wait for nothing.' },
+      { n: 3, text: 'Beat the eggs with the salt and pepper until uniformly yellow, with no streaks of white left.', tip: 'Streaks of unbeaten white cook into rubbery ribbons. Thirty seconds of proper beating fixes it.' },
+      { n: 4, text: 'Melt the butter in a non-stick pan over medium-LOW heat. Add the garlic and spinach and warm through for 1 minute.', minutes: 1 },
+      { n: 5, text: 'Pour in the eggs. Leave them for 20 seconds, then push them slowly from the edge to the centre with a spatula.', minutes: 3, tip: 'Low and slow, and stop while they still look slightly underdone and glossy. They keep cooking off the heat, and dry scrambled eggs cannot be undone.' },
+      { n: 6, text: 'Off the heat, fold through the feta so it softens without melting completely.', tip: 'Off the heat. Feta stirred into a hot pan goes stringy and squeaky.' },
+      { n: 7, text: 'Pile onto the toast, add a squeeze of lemon if using, and eat immediately.' },
+    ],
+    failures: [
+      { symptom: 'Watery puddle on the toast', cause: 'Spinach not squeezed hard enough. There is no fixing it mid-cook — next time, squeeze until your hands ache.' },
+      { symptom: 'Rubbery, dry eggs', cause: 'Heat too high, or cooked to looking done in the pan. Medium-low, and off the heat while still glossy.' },
+      { symptom: 'Toast gone soggy', cause: 'Eggs sat on it too long before eating. Assemble at the table, not at the hob.' },
+    ],
+    variants: [
+      {
+        id: 'eggs_vegan_tofu',
+        label: 'Vegan scramble',
+        tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'nut_free', 'dairy_free'],
+        swaps: [
+          { from: 'egg', to: 'tofu_firm', grams: 300 },
+          { from: 'feta', to: 'tofu_firm', grams: 40 },
+          { from: 'butter', to: 'olive_oil', grams: 20 },
+        ],
+        methodDeltas: [
+          { step: 3, change: 'Nothing to beat. Crumble the tofu with your fingers into irregular curds — uniform cubes read as tofu, irregular curds read as scramble.' },
+          { step: 5, change: 'Tofu has no proteins to set, so it will never go from liquid to solid. Fry it on MEDIUM-HIGH for 6-8 minutes to drive off water and brown the edges — the opposite of the low-and-slow egg technique. Add a pinch of turmeric for colour and it will look like scrambled egg. It will not taste like it, and pretending otherwise is why people give up on tofu.' },
+          
+          { step: 6, change: 'No feta to fold. Season harder at the end — tofu absorbs salt rather than carrying it the way cheese does.' },
+        ],
+        note: 'B12 is effectively zero here unless something on the plate is fortified.',
+      },
+      {
+        id: 'eggs_gf',
+        label: 'Gluten-free',
+        tags: ['vegetarian', 'halal', 'kosher', 'nut_free', 'gluten_free'],
+        swaps: [{ from: 'bread_sourdough', to: 'potato', grams: 300 }],
+        methodDeltas: [
+          { step: 2, change: 'No toast. Boil the diced potato for 12 minutes and crush it roughly with a fork and a knob of the butter — start this before anything else, it is the longest step now.' },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'chickpea_feta_salad',
+    name: 'Chickpea, Tomato and Feta Salad',
+    cuisine: 'Mediterranean',
+    country: 'GR',
+    blurb: 'No cooking at all, keeps for two days in the fridge, and gets better on the second.',
+    servings: 2,
+    activeMin: 12,
+    totalMin: 12,
+    difficulty: 'easy',
+    restaurantGBP: 7.5,
+    tags: ['vegetarian', 'halal', 'kosher', 'gluten_free', 'nut_free'],
+    items: [
+      { ref: 'chickpeas_tinned', grams: 400, note: 'drained and rinsed' },
+      { ref: 'tomato_fresh', grams: 250, note: 'quartered' },
+      { ref: 'cucumber', grams: 200 },
+      { ref: 'red_onion', grams: 60, note: 'thin slices, soaked' },
+      { ref: 'feta', grams: 80, note: 'crumbled' },
+      { ref: 'parsley_fresh', grams: 15, note: 'roughly chopped, stalks and all' },
+      { ref: 'olive_oil', grams: 25 },
+      { ref: 'lemon', grams: 35, note: 'juice' },
+      { ref: 'oregano_dried', grams: 2 },
+      { ref: 'salt', grams: 4 },
+      { ref: 'black_pepper', grams: 1 },
+      { ref: 'olives_black', grams: 40, optional: true },
+    ],
+    method: [
+      { n: 1, text: 'Drain and rinse the chickpeas thoroughly, then leave them in the sieve to dry for 5 minutes.', minutes: 5, tip: 'The liquid in the tin tastes metallic and it will flavour the whole bowl. Rinse until no foam comes off.' },
+      { n: 2, text: 'Slice the red onion as thinly as you can and soak it in cold water for 5 minutes, then drain hard.', minutes: 5, tip: 'Five minutes in water takes the aggression out of raw onion without losing the crunch.' },
+      { n: 3, text: 'Quarter the tomatoes and cut the cucumber into thick half-moons. Salt them lightly and leave 5 minutes.', minutes: 5 },
+      { n: 4, text: 'Whisk the olive oil, lemon juice, oregano and pepper together until it thickens slightly.', tip: 'Whisk rather than pour. An emulsified dressing coats everything; a split one sits at the bottom of the bowl.' },
+      { n: 5, text: 'Tip away any liquid the tomatoes have released, then combine everything except the feta and dress it.' },
+      { n: 6, text: 'Fold the feta through at the very end, and the olives if using.', tip: 'Last, and gently. Feta stirred early breaks down into the dressing and you lose the pockets of salt that make this worth eating.' },
+      { n: 7, text: 'Leave it 10 minutes before eating if you can — the chickpeas take up the dressing and it tastes noticeably better.', minutes: 10 },
+    ],
+    failures: [
+      { symptom: 'Bland and watery by the time you eat it', cause: 'Tomatoes not drained, or dressed too far ahead without draining. Salt them, wait, pour the liquid off.' },
+      { symptom: 'Tastes of tin', cause: 'Chickpeas not rinsed properly. Rinse until the water runs clear and stops foaming.' },
+      { symptom: 'Onion overwhelms everything', cause: 'Not soaked, or sliced too thick. Thin and soaked, or leave it out.' },
+    ],
+    variants: [
+      {
+        id: 'chickpea_vegan',
+        label: 'Vegan',
+        tags: ['vegan', 'vegetarian', 'halal', 'kosher', 'gluten_free', 'nut_free', 'dairy_free'],
+        swaps: [{ from: 'feta', to: 'tofu_firm', grams: 100 }],
+        methodDeltas: [
+          { step: 6, change: 'Firm tofu brings none of the salt or tang feta does. Crumble it, then toss it separately with a pinch of salt and a squeeze of lemon before folding it through — otherwise it just adds bulk and dilutes everything.' },
+        ],
+      },
+      {
+        id: 'chickpea_chicken',
+        label: 'With chicken, higher protein',
+        tags: ['halal', 'gluten_free', 'nut_free'],
+        swaps: [{ from: 'chickpeas_tinned', to: 'chicken_breast', grams: 300 }],
+        methodDeltas: [
+          { step: 1, change: 'Nothing to rinse. Butterfly the chicken to no more than 1.5 cm first — a whole fillet is 2 to 2.5 cm at the thick end and will still be raw in the middle after four minutes a side. Season it, pan-fry 4 minutes then 3 on the other side until it reads 75 C in the thickest part with no pink, rest 5 minutes and slice. This stops being a no-cook salad.' },
+          { step: 7, change: 'Do not leave chicken sitting in acidic dressing for long; the lemon starts to cure the surface and the texture goes chalky. Dress and eat.' },
+        ],
+      },
+    ],
+  },
+];
