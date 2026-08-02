@@ -47,6 +47,15 @@ export const EXTRA: Record<string, Record<string, string>> = {
     haveIt: 'in your kitchen',
     tapToToggle: 'Tap anything you already have — it comes off the total and stays off.',
     tapPrice: 'Tap a price to correct it.',
+    totalMeans: 'What this meal\u2019s share of each ingredient costs',
+    totalMeansBody:
+      'Not your till receipt. You buy a whole bag of noodles, not the 160 g this needs \u2014 so the first shop is dearer and the rest carries into the next meal.',
+
+    /* ── Sample data ── */
+    sampleStats:
+      'These eight weeks are sample data, so this screen has something to show before you have cooked anything. They are not yours, they never leave this device, and your first real cook replaces them.',
+    samplePassport:
+      'Sample data. This screen does not track what you have actually cooked yet.',
 
     /* ── Planner ── */
     planTitle: 'The week',

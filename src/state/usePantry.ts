@@ -1648,6 +1648,8 @@ export function usePantry() {
       };
     }),
     statsSub: (X.statsSub || '').split('{n}').join(String(S.history.length)),
+    /** True while every row in the log is the sample data the app ships with. */
+    isSampleLog: S.history.length > 0 && S.history.every((c) => c.seeded),
     questions: openQuestions()
       .slice(0, 1)
       .map((q) => ({

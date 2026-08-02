@@ -14,7 +14,14 @@ export function Passport({ v }: { v: Pantry }) {
         {v.passportSub}
       </p>
 
-      <div style={css('margin-top:16px;padding:20px;border-radius:28px;background:#201e1d;color:#f5ead8;display:flex;gap:18px')}>
+      <div
+        dir="auto"
+        style={css('margin-top:14px;padding:15px 17px;border-radius:24px;background:#ebddc5;font-size:12.5px;line-height:1.5;color:#645c50;text-wrap:pretty')}
+      >
+        {v.xt('samplePassport')}
+      </div>
+
+      <div style={css('margin-top:14px;padding:20px;border-radius:28px;background:#201e1d;color:#f5ead8;display:flex;gap:18px')}>
         <div style={css('flex:1')}>
           <div style={css("font-family:'Caprasimo',serif;font-size:34px;line-height:1;color:#f6a06b")}>
             {v.countriesCooked}

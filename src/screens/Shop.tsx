@@ -118,10 +118,18 @@ export function Shop({ v }: { v: Pantry }) {
           </div>
         ))}
         <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:15px 0 13px')}>
-          <span style={css('font-size:16px;font-weight:700')}>{v.t.shopTotal}</span>
+          <span style={css('flex:1;min-width:0')}>
+            <span style={css('display:block;font-size:16px;font-weight:700')}>{v.t.shopTotal}</span>
+            <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
+              {v.xt('totalMeans')}
+            </span>
+          </span>
           <span style={css("font-family:'Caprasimo',serif;font-size:28px")}>{v.basketTotal}</span>
         </div>
       </div>
+      <p dir="auto" style={css('margin:8px 2px 0;font-size:12px;line-height:1.5;color:#a19786;text-wrap:pretty')}>
+        {v.xt('totalMeansBody')}
+      </p>
 
       <div style={css('margin-top:12px;padding:16px 18px;border-radius:26px;background:#e1eecc;display:flex;gap:12px;align-items:flex-start')}>
         <Check size={20} stroke="#56633f" style={{ flex: 'none', marginTop: 2 }} />

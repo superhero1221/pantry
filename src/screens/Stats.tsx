@@ -16,6 +16,15 @@ export function Stats({ v }: { v: Pantry }) {
         {v.statsSub}
       </p>
 
+      {v.isSampleLog && (
+        <div
+          dir="auto"
+          style={css('margin-top:14px;padding:15px 17px;border-radius:24px;background:#ebddc5;font-size:12.5px;line-height:1.5;color:#645c50;text-wrap:pretty')}
+        >
+          {v.xt('sampleStats')}
+        </div>
+      )}
+
       <div style={css('margin-top:16px;padding:22px 20px 20px;border-radius:30px;background:#201e1d;color:#f5ead8')}>
         <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;opacity:.55')}>
           {v.t.statsSpend}
