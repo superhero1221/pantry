@@ -132,7 +132,7 @@ export function Cook({ v }: { v: Pantry }) {
         </Btn>
         <div style={css('display:flex;gap:9px')}>
           <Btn
-            aria-label={v.t.tierSkip}
+            aria-label={v.xt('stepBack')}
             onClick={v.prevStep}
             css="flex:none;width:60px;height:60px;border-radius:999px;background:#ebddc5;display:flex;align-items:center;justify-content:center"
             hover="background:#dcd3c4"

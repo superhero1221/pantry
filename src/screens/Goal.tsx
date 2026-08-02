@@ -10,7 +10,7 @@ export function Goal({ v }: { v: Pantry }) {
   return (
     <div style={css('min-height:100%;display:flex;flex-direction:column;padding:14px 22px 22px')}>
       <div style={css('display:flex;align-items:center;justify-content:space-between;margin-bottom:12px')}>
-        <BackBtn onClick={v.back} />
+        <BackBtn label={v.t.back} onClick={v.back} />
         <Dots at={0} />
         <Btn
           onClick={v.toTier}

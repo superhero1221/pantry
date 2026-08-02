@@ -21,7 +21,7 @@ export function Settings({ v }: { v: Pantry }) {
       <Kicker style={{ marginTop: 24 }}>{v.t.setDiet}</Kicker>
       <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
         {v.dietChips.map((d) => (
-          <Btn key={d.key} onClick={d.toggle} css={d.style}>
+          <Btn key={d.key} onClick={d.toggle} aria-pressed={d.on} css={d.style}>
             {d.label}
           </Btn>
         ))}
@@ -78,7 +78,7 @@ export function Settings({ v }: { v: Pantry }) {
         <Pin size={22} stroke="#b2622d" style={{ flex: 'none' }} />
         <span style={css('flex:1;min-width:0')}>
           <span style={css('display:block;font-size:15px;font-weight:700;color:#643312')}>{v.liveAreaLine}</span>
-          <span style={css('display:block;font-size:12.5px;color:#8c491a;margin-top:3px')}>{v.liveShopLine}</span>
+          <span style={css('display:block;font-size:12.5px;color:#8c491a;margin-top:3px')}>{v.liveWhereLine}</span>
         </span>
       </Btn>
       <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
@@ -116,6 +116,7 @@ export function Settings({ v }: { v: Pantry }) {
           <Btn
             key={t.key}
             onClick={t.flip}
+            aria-pressed={t.on}
             css="display:flex;align-items:center;gap:13px;padding:15px 17px;border-radius:24px;background:#f9f4ed;width:100%;text-align:start"
             hover="background:#eee7db"
           >

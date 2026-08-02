@@ -1,11 +1,16 @@
 /* Pantry service worker.
  *
  * A kitchen is the place your signal dies, and the cook screen is the place
- * you need it least to. Everything the app needs to get you through a recipe —
- * the shell, the language packs, the methods, the photos — is cached on first
- * visit and served from cache after that. The only things that ever hit the
- * network are the ones that are meaningless stale: shops near you, live
- * prices, and your account.
+ * you need it least to. What is precached up front is the shell: the page, the
+ * manifest, the icon. Everything else is kept the first time it is used — the
+ * bundle and each of its split chunks on the visit that loads them, each dish
+ * photograph the first time you look at it. So the language you cook in and
+ * the dishes you have opened are all there with no signal. What was never
+ * fetched was never kept: the ingredient names for a language you have never
+ * opened online read in English until you are online, and the Supabase client
+ * is only fetched when something asks the cloud a question, which needs a
+ * network regardless. The only things that always hit the network are the ones
+ * that are meaningless stale: shops near you, live prices, and your account.
  */
 
 const VERSION = 'pantry-v1';
@@ -18,7 +23,18 @@ const MEDIA = VERSION + '-media';
 const BASE = new URL('./', self.location).pathname;
 const at = (p) => BASE + p;
 
-const PRECACHE = [BASE, at('index.html'), at('manifest.webmanifest'), at('icon.svg')];
+// The two typefaces are precached with the shell rather than kept on first
+// use, because they are what the design looks like: a cold start with no
+// signal should come up in Caprasimo and Figtree, not in Times.
+const PRECACHE = [
+  BASE,
+  at('index.html'),
+  at('manifest.webmanifest'),
+  at('icon.svg'),
+  at('fonts/fonts.css'),
+  at('fonts/caprasimo-400.woff2'),
+  at('fonts/figtree.woff2'),
+];
 
 /** Hosts whose answers are only worth having fresh. */
 const ALWAYS_NETWORK = /(supabase\.co|nominatim\.openstreetmap\.org|overpass-api\.de|prices\.openfoodfacts\.org|world\.openfoodfacts\.org|api\.frankfurter\.app)/;

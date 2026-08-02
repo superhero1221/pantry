@@ -2,10 +2,12 @@ import type { ReactNode } from 'react';
 import { Btn } from './Btn';
 import { ChevronLeft } from './Icon';
 
-/** The 38px round back control that opens most screens. */
-export const BackBtn = ({ onClick }: { onClick: () => void }) => (
+/** The 38px round back control that opens most screens. Its label is the only
+ *  thing it says, so it comes from the pack like every other piece of copy —
+ *  required, so a screen cannot quietly go back to shipping English. */
+export const BackBtn = ({ label, onClick }: { label: string; onClick: () => void }) => (
   <Btn
-    aria-label="Back"
+    aria-label={label}
     onClick={onClick}
     css="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center"
     hover="background:#eee7db"

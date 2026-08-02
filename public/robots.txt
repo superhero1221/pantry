@@ -1,0 +1,6 @@
+# Pantry is one page. Every screen is state behind the same URL and the router
+# is hash-based, so there is nothing here to crawl but this. The file exists so
+# that a crawler asking for it gets an answer rather than the app's own HTML.
+
+User-agent: *
+Allow: /

@@ -10,7 +10,7 @@ export function Tier({ v }: { v: Pantry }) {
   return (
     <div style={css('min-height:100%;display:flex;flex-direction:column;padding:14px 18px 18px')}>
       <div style={css('display:flex;align-items:center;justify-content:space-between;margin-bottom:12px')}>
-        <BackBtn onClick={v.back} />
+        <BackBtn label={v.t.back} onClick={v.back} />
         <div style={css('display:flex;gap:6px')}>
           <span style={css('width:22px;height:5px;border-radius:999px;background:#c67139')} />
           <span style={css(`width:22px;height:5px;border-radius:999px;background:${v.dot1}`)} />
@@ -37,13 +37,16 @@ export function Tier({ v }: { v: Pantry }) {
       <div style={css('display:flex;flex-direction:column;gap:8px')}>
         {v.tierRows.map((row) => (
           <div key={row.key} data-tier={row.key} onClick={row.onDrop} style={css(row.style)}>
-            <div
-              style={css(
-                `flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;font-size:22px;background:${row.badgeBg};color:${row.badgeFg}`,
-              )}
+            {/* The badge doubles as this row's keyboard drop target: tab to a
+                card, Enter to pick it up, then Enter here. It is a real button
+                because the row cannot be one — the cards placed in it are. */}
+            <Btn
+              onClick={row.place}
+              aria-label={row.placeLabel}
+              css={`flex:none;width:44px;height:44px;padding:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;font-size:22px;background:${row.badgeBg};color:${row.badgeFg}`}
             >
               {row.key}
-            </div>
+            </Btn>
             <div style={css('flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px;align-items:center')}>
               {row.cards.map((c) => (
                 <Btn
@@ -66,7 +69,13 @@ export function Tier({ v }: { v: Pantry }) {
         <Kicker style={{ marginBottom: 9 }}>{v.trayLabel}</Kicker>
         <div style={css('display:flex;flex-wrap:wrap;gap:7px;min-height:44px')}>
           {v.tray.map((c) => (
-            <Btn key={c.key} onPointerDown={c.grab} css={c.style}>
+            <Btn
+              key={c.key}
+              onPointerDown={c.grab}
+              onKeyDown={c.onKey}
+              aria-pressed={c.on}
+              css={c.style}
+            >
               {c.label}
             </Btn>
           ))}

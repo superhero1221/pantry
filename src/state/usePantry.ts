@@ -28,11 +28,11 @@ import {
   TIME_CARDS,
   TIME_TIERS,
 } from '../data/cookbook';
-import type { HistoryRow, Recipe, Store, TechniqueCard } from '../data/types';
-import * as food from '../data/pantry-food';
+import type { HistoryRow, Item, Recipe, Store, TechniqueCard } from '../data/types';
+import * as food from '../lib/food-table';
 import * as i18n from '../data/pantry-i18n';
 import type { Fx, Shop } from '../data/pantry-live';
-import { cloudEnabled, db } from '../lib/supabase';
+import { cloudEnabled, getDb } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
 import { DERIVED, meetsDiet } from '../lib/diets';
@@ -55,6 +55,11 @@ import {
 /** Photographs are resolved against BASE_URL once, here, rather than at each
  *  of the five places a dish picture is rendered. */
 const RECIPES: Recipe[] = RAW_RECIPES.map((r) => ({ ...r, pic: asset(r.pic) }));
+
+/** How many countries the cookbook actually covers — the Passport's
+ *  denominator. Counted from the recipes rather than typed in, because the
+ *  number that was typed in said 91 long after it meant anything. */
+const COVERED = new Set(RECIPES.map((r) => r.code)).size;
 
 export type Screen =
   | 'welcome'
@@ -144,6 +149,11 @@ export interface PantryState {
   /** Explicit "I have this" / "I do not" overrides, keyed by canonical name.
    *  Absent means "no opinion" and the default below decides. */
   owned: Record<string, boolean>;
+  /** Optional extras you have actually asked for, keyed the same way. Absent
+   *  means you have not, and an extra you have not asked for is not part of
+   *  what the dish costs. Deliberately not folded into `owned`: not wanting
+   *  the dip is not the same claim as having it in the fridge. */
+  extras: Record<string, boolean>;
   medians: Record<string, PriceMedian>;
   reportFor: string | null;
   reportPrice: string;
@@ -157,6 +167,9 @@ export interface PantryState {
   /** What a pound is worth today, where anyone has managed to ask. Null is the
    *  ordinary case, not the error case: it means the bundled rates. */
   fx: FxCache | null;
+  /** The ingredient table has landed. Held here only because a render has to
+   *  happen when it does — nothing reads it. English never needs it at all. */
+  foodReady: boolean;
 }
 
 const INITIAL: PantryState = {
@@ -208,6 +221,7 @@ const INITIAL: PantryState = {
   photoSkipped: false,
   plate: null,
   owned: {},
+  extras: {},
   medians: {},
   reportFor: null,
   reportPrice: '',
@@ -219,6 +233,7 @@ const INITIAL: PantryState = {
   plan: [],
   planSaved: false,
   fx: null,
+  foodReady: false,
 };
 
 /* ── What survives a reload ────────────────────────────────────────────────
@@ -246,6 +261,7 @@ const KEEP = [
   'planServings',
   'plan',
   'owned',
+  'extras',
 ] as const;
 
 function load(): Partial<PantryState> {
@@ -299,6 +315,15 @@ function initialState(): PantryState {
   const saved = load();
   const s = { ...INITIAL, ...saved, fx: loadFx() };
   if (s.seen) s.screen = 'home';
+  // Where the address bar says, within reason. Someone who has not been
+  // through the setup starts at the welcome whatever the hash claims, and
+  // someone who has finished it is never dropped back into it by one left over
+  // from last time.
+  const at = s.seen && typeof window !== 'undefined' ? parseHash(window.location.hash) : null;
+  if (at && ONBOARDING.indexOf(at.screen) < 0) {
+    s.screen = at.screen;
+    if (at.pickId) s.pickId = at.pickId;
+  }
   return s;
 }
 
@@ -309,6 +334,61 @@ const keyOf = (name: string) => name.split(',')[0].trim();
 /** The budget presets the design ships, in GBP: the chip row on Home, and the
  *  set that a typed-in amount is measured against. */
 const BUDGETS = [3, 5, 6, 8, 12];
+
+/* ── The address bar ───────────────────────────────────────────────────────
+   Pantry had no routing at all: the URL never moved, so the phone's own back
+   button left the app instead of stepping back a screen, and a reload dropped
+   you at Home with the dish you were reading gone. One history entry per
+   screen answers both.
+
+   The four screens that are about a particular dish carry its id, because the
+   pick is deliberately not in KEEP — the address bar, not localStorage, is
+   where a screen's transient subject belongs. */
+const SCREENS: Screen[] = [
+  'welcome', 'goal', 'tier', 'diet', 'locate', 'home', 'browse', 'results',
+  'shop', 'cook', 'after', 'kitchen', 'stats', 'passport', 'plan', 'settings',
+];
+const DISH_SCREENS: Screen[] = ['results', 'shop', 'cook', 'after'];
+/** The setup is walked, never linked to. */
+const ONBOARDING: Screen[] = ['welcome', 'goal', 'tier', 'diet', 'locate'];
+
+const hashFor = (screen: Screen, pickId: string) =>
+  '#/' + screen + (DISH_SCREENS.indexOf(screen) >= 0 ? '/' + pickId : '');
+
+/** '#/results/pad_thai' → the screen, and the dish if this build has one by
+ *  that name. A dish it does not recognise is dropped rather than obeyed: the
+ *  screen keeps the pick it already had, so a dead link lands on a real dinner
+ *  instead of a blank, and the hash is rewritten to say which one. */
+function parseHash(hash: string): { screen: Screen; pickId?: string } | null {
+  const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  const head = parts[0] || '';
+  if ((SCREENS as string[]).indexOf(head) < 0) return null;
+  const id = parts[1] || '';
+  return RECIPES.some((r) => r.id === id)
+    ? { screen: head as Screen, pickId: id }
+    : { screen: head as Screen };
+}
+
+/** How many screens deep this entry is. Kept in history.state, which survives
+ *  a reload — a counter of our own would forget, and the back button would
+ *  stop stepping back at exactly the moment the stack is still there. */
+const depthOf = () => {
+  const st = window.history.state as { pg?: number } | null;
+  return st && typeof st.pg === 'number' ? st.pg : 0;
+};
+
+/** Write an entry. A single-file build opened from a file:// page has an
+ *  opaque origin and refuses one; the screen still changes, the URL simply
+ *  stays put, which is what the whole app did before it had any routing. */
+function writeHash(url: string, push: boolean) {
+  try {
+    const at = { pg: depthOf() + (push ? 1 : 0) };
+    if (push) window.history.pushState(at, '', url);
+    else window.history.replaceState(at, '', url);
+  } catch {
+    /* opaque origin — navigation still works, the address bar just stays put */
+  }
+}
 
 export function usePantry() {
   const [S, setS] = useState<PantryState>(initialState);
@@ -328,6 +408,16 @@ export function usePantry() {
     if (!ref.current.lang) setState({ lang: i18n.detect() });
   }, [setState]);
 
+  /* The ingredient names for whatever language that turned out to be. English
+     is the key rather than a translation, so an English kitchen fetches
+     nothing; every other one fetches the table once and the worker keeps it. */
+  useEffect(() => {
+    if (!food.needsTable(S.lang || 'en') || food.ready()) return;
+    food.loadTable().then((ok) => {
+      if (ok) setState({ foodReady: true });
+    });
+  }, [S.lang, setState]);
+
   /* One-second tick for the cook-step timer. */
   useEffect(() => {
     const t = window.setInterval(() => {
@@ -338,13 +428,59 @@ export function usePantry() {
   }, [setState]);
 
   const go = useCallback(
-    (screen: Screen, extra?: Partial<PantryState>) => {
+    (screen: Screen, extra?: Partial<PantryState>, replace?: boolean) => {
       setState({ screen, lostOpen: false, ...extra });
+      // One entry per screen, so Back steps back through Pantry and only leaves
+      // it from the screen you opened on. Arriving where you already are — a
+      // nav tap on the tab you are on — replaces instead: an entry for every
+      // tap that changed nothing is how Back comes to need twenty presses.
+      // Chip taps never reach here at all. They are state, not a screen, and
+      // they leave the address bar alone.
+      const want = hashFor(screen, (extra && extra.pickId) || ref.current.pickId);
+      writeHash(want, !replace && window.location.hash !== want);
       const el = document.querySelector('.pg-scroll');
       if (el) el.scrollTop = 0;
     },
     [setState],
   );
+
+  /* The stack. The entry you arrive on is replaced rather than pushed, so Back
+     from the first screen still leaves — the one place it should. */
+  useEffect(() => {
+    const h = window.location.hash;
+    // A fragment that is not ours — a sign-in link carries its own — is left
+    // alone rather than thrown away; the next screen change writes over it.
+    if (!h || h.slice(0, 2) === '#/') {
+      const want = hashFor(ref.current.screen, ref.current.pickId);
+      if (h !== want) writeHash(want, false);
+    }
+
+    const onPop = () => {
+      const cur = ref.current;
+      const at = parseHash(window.location.hash);
+      const to = at && (cur.seen || ONBOARDING.indexOf(at.screen) >= 0) ? at : null;
+      const next: Screen = to ? to.screen : cur.seen ? 'home' : 'welcome';
+      const pick = (to && to.pickId) || cur.pickId;
+      // An entry this visit is not allowed to be on — the setup, to someone who
+      // has not been through it — corrects the address bar instead of obeying
+      // it, and stays where it is.
+      if (!to) writeHash(hashFor(next, pick), false);
+      setS((prev) =>
+        prev.screen === next && prev.pickId === pick
+          ? prev
+          : { ...prev, screen: next, pickId: pick, lostOpen: false },
+      );
+      const el = document.querySelector('.pg-scroll');
+      if (el) el.scrollTop = 0;
+    };
+
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('hashchange', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('hashchange', onPop);
+    };
+  }, []);
 
   const place = useCallback(
     (id: string, tier: string) => {
@@ -553,6 +689,21 @@ export function usePantry() {
     [c, fx],
   );
 
+  /** The figure fmt() will actually print, handed back in pounds. Any line that
+   *  multiplies a saving starts here: "×4" beside £10.18 read £40.70 because
+   *  the four was applied to 10.1753, a number nobody was ever shown. It
+   *  quantises in display money rather than in pounds, and takes the same
+   *  branch fmt() takes, so whole lira and whole naira stay whole after they
+   *  are multiplied. */
+  const asShown = useCallback(
+    (gbp: number) => {
+      const k = c.idx * fx;
+      const v = gbp * k;
+      return (c.fx >= 40 ? Math.round(v) : Math.round(v * 100) / 100) / k;
+    },
+    [c, fx],
+  );
+
   /* ── The budget ───────────────────────────────────────────────────────────
      Presets are held in GBP; a typed amount is local money divided back by
      c.idx * c.fx, so it almost never lands on a preset float exactly. Compare
@@ -613,12 +764,37 @@ export function usePantry() {
     [isOwned, setState],
   );
 
+  /**
+   * The dip is not part of what the wings cost. A line the recipe marks
+   * optional stays off the shopping list until you ask for it, and asking is
+   * one tap — the same two-state override the cupboard uses, kept in its own
+   * map on purpose. Folding it into `owned` would have the list tell you that
+   * soured cream is already in your kitchen because you did not want it.
+   */
+  const wantsExtra = useCallback((name: string) => !!S.extras[keyOf(name)], [S.extras]);
+
+  const toggleExtra = useCallback(
+    (name: string) => {
+      const k = keyOf(name);
+      setState({ extras: { ...ref.current.extras, [k]: !ref.current.extras[k] } });
+    },
+    [setState],
+  );
+
+  /** On your list: the recipe needs it, your cupboard has not already covered
+   *  it, and if it is only an extra you have actually asked for it. */
+  const onList = useCallback(
+    (r: Recipe, i: Item) => !isOwned(r, i.n) && (!i.opt || wantsExtra(i.n)),
+    [isOwned, wantsExtra],
+  );
+
   const toBuy = useCallback(
     (r: Recipe, m: number = mult) =>
-      r.items.filter((i) => !isOwned(r, i.n)).reduce((a, i) => a + i.s * m, 0),
-    [mult, isOwned],
+      r.items.filter((i) => onList(r, i)).reduce((a, i) => a + i.s * m, 0),
+    [mult, onList],
   );
-  const allIn = (r: Recipe) => r.items.reduce((a, i) => a + i.s * mult, 0);
+  const allIn = (r: Recipe) =>
+    r.items.filter((i) => !i.opt || wantsExtra(i.n)).reduce((a, i) => a + i.s * mult, 0);
   void allIn;
 
   /* ── The tier lists ───────────────────────────────────────────────────── */
@@ -962,6 +1138,11 @@ export function usePantry() {
   const saved = whole - buy;
   const per = buy / recipe.servings;
   const under = S.budget - buy;
+  /** A portion of this against a portion of the takeaway — `restaurant` is a
+   *  per-serving price everywhere else in here, which is why savedVsTakeaway
+   *  multiplies it by servings. Quantised to the figure the screen prints, so
+   *  "four times a month" multiplies what you were actually shown. */
+  const keep = asShown(recipe.restaurant - per);
   const lvl = skillLevel();
   /** The dish on screen runs past the time budget. It gets here by being named,
    *  or by being tapped in Browse or the planner — so the screen drops the
@@ -970,7 +1151,7 @@ export function usePantry() {
 
   // What the basket costs once real reported prices replace the model.
   const buyReal = recipe.items
-    .filter((i) => !isOwned(recipe, i.n))
+    .filter((i) => onList(recipe, i))
     .reduce((a, i) => {
       const seen = S.medians[refOf(i.n)];
       const g = gramsOf(i.g);
@@ -1003,6 +1184,15 @@ export function usePantry() {
   const countryName = P.cn[cc] || c.name;
   /** "over your 30" — what a time past the budget is called, wherever it shows. */
   const overBy = fill(xt(lg, 'timeOver'), { m: S.maxTime });
+
+  /** What the shop lookup has to say for itself. "Looking" is only true while a
+   *  call is genuinely in flight: once Overpass has answered this is the count,
+   *  and before anything has been asked it is not this line's turn to speak. */
+  const shopsLine = S.liveShops
+    ? hs('liveShops', '{n} shops within walking distance, straight off OpenStreetMap', {
+        n: S.liveShops.length,
+      })
+    : vs('looking', 'Looking for shops near you…');
 
   const wasteMap = {
     none: { head: word('clearedIt', 'Nothing left.'), body: V.wasteNone, pct: 0 },
@@ -1135,6 +1325,7 @@ export function usePantry() {
     skipOnboarding: () => go('home', { seen: true }),
     back: () => {
       if (screen === 'tier' && S.tierStep === 1) return setState({ tierStep: 0 });
+      if (depthOf() > 0) return window.history.back();
       if (screen === 'tier') return go('welcome');
       if (screen === 'diet') return go('tier', { tierStep: 1 });
       if (screen === 'locate') return go('diet');
@@ -1170,6 +1361,15 @@ export function usePantry() {
         onDrop: () => {
           if (S.sel) place(S.sel, t.key);
         },
+        /** The same drop, reached from the keyboard. The badge in each row is a
+         *  real button — the row itself cannot be one, because the cards sitting
+         *  in it are — and this is what pressing it does. The click is stopped
+         *  here so the row's own handler does not place the card a second time. */
+        place: (e: ReactMouseEvent) => {
+          e.stopPropagation();
+          if (S.sel) place(S.sel, t.key);
+        },
+        placeLabel: fill(xt(lg, 'tierPlaceIn'), { t: tierWord(t) }),
         cards: mine.map((cd) => ({
           key: cd.id,
           label: cardWord(cd),
@@ -1185,6 +1385,7 @@ export function usePantry() {
       .map((cd) => ({
         key: cd.id,
         label: cardWord(cd),
+        on: S.sel === cd.id,
         style:
           'padding:11px 15px;border-radius:999px;font-size:13.5px;font-weight:600;touch-action:none;user-select:none;transition:transform .12s;background:' +
           (S.sel === cd.id ? '#c67139;color:#fff' : '#fff;color:#201e1d') +
@@ -1204,6 +1405,14 @@ export function usePantry() {
               over: null,
             },
           });
+        },
+        /** A pointer picks a card up on pointerdown, which a keyboard never
+         *  sends. Enter and Space do here what a tap does — arm the card, so the
+         *  next Enter on a row's badge places it. */
+        onKey: (e: ReactKeyboardEvent) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          setState({ sel: S.sel === cd.id ? null : cd.id });
         },
       })),
     tierReadout: tierIsSkill
@@ -1241,6 +1450,7 @@ export function usePantry() {
     dietChips: DIETS.map((d) => ({
       key: d.id,
       label: dietWords[d.id] || d.label,
+      on: dietOn(d.id),
       style: (dietOn(d.id) ? PILL_ON : PILL_OFF) + 'flex:none;',
       toggle: () =>
         setState({ diets: dietOn(d.id) ? S.diets.filter((x) => x !== d.id) : S.diets.concat([d.id]) }),
@@ -1277,11 +1487,18 @@ export function usePantry() {
     liveOn: S.liveStatus === 'live' || S.liveStatus === 'placed' || S.liveStatus === 'noshops',
     liveErrText: S.liveErr || '',
     liveAreaLine: S.liveArea ? S.liveArea + ', ' + cityNow : cityNow,
-    liveShopLine: S.liveShops
-      ? hs('liveShops', '{n} shops within walking distance, straight off OpenStreetMap', {
-          n: S.liveShops.length,
-        })
-      : vs('looking', 'Looking for shops near you…'),
+    liveShopLine: shopsLine,
+    /* Locate draws the four live states as four blocks; Settings has one line,
+       so it folds them into one. The idle state is the whole point of this:
+       before you have tapped, nothing is looking, and there is a difference
+       between a call that is running and one that has never started. A failure
+       gives its reason and leaves the button tappable. */
+    liveWhereLine:
+      S.liveStatus === 'idle'
+        ? xt(lg, 'liveLook')
+        : S.liveStatus === 'error'
+          ? S.liveErr || xt(lg, 'liveLook')
+          : shopsLine,
     useLocation: useMyLocation,
 
     /* ── Home ───────────────────────────────────────────────────────────── */
@@ -1292,6 +1509,7 @@ export function usePantry() {
     cravings: (P.cravings || CRAVINGS).map((label) => ({
       key: label,
       label,
+      on: S.query.toLowerCase() === label.toLowerCase(),
       style:
         (S.query.toLowerCase() === label.toLowerCase() ? PILL_ON : PILL_OFF) +
         'font-size:13.5px;padding:10px 15px;',
@@ -1301,6 +1519,7 @@ export function usePantry() {
     budgetChips: BUDGETS.map((b) => ({
       key: String(b),
       label: fmt(b),
+      on: sameMoney(S.budget, b) && !S.budgetOtherOpen,
       style:
         (sameMoney(S.budget, b) && !S.budgetOtherOpen ? PILL_ON : PILL_OFF) +
         'flex:none;min-width:64px;text-align:center;justify-content:center;',
@@ -1315,6 +1534,7 @@ export function usePantry() {
               {
                 key: 'custom',
                 label: fmt(S.budget),
+                on: !S.budgetOtherOpen,
                 style:
                   (S.budgetOtherOpen ? PILL_OFF : PILL_ON) +
                   'flex:none;min-width:64px;text-align:center;justify-content:center;',
@@ -1327,6 +1547,7 @@ export function usePantry() {
         {
           key: 'other',
           label: HH.otherChip || 'Other',
+          on: S.budgetOtherOpen,
           style: (S.budgetOtherOpen ? PILL_ON : PILL_OFF) + 'flex:none;',
           pick: () => setState({ budgetOtherOpen: !S.budgetOtherOpen }),
         },
@@ -1356,6 +1577,7 @@ export function usePantry() {
     ].map((t) => ({
       key: String(t.m),
       label: t.w ? word(t.w, t.l!) : t.m + ' ' + word('minutes', 'min'),
+      on: S.maxTime === t.m,
       style: (S.maxTime === t.m ? PILL_ON : PILL_OFF) + 'flex:none;',
       pick: () => setState({ maxTime: t.m }),
     })),
@@ -1426,31 +1648,28 @@ export function usePantry() {
       pct: Math.min(100, m.pct) + '%',
     })),
     takeawayPrice: fmt(recipe.restaurant),
+    /* Both sides of this are one portion. It used to put a restaurant order of
+       eight next to a whole batch of twelve and then call the difference "a
+       portion", which is three different units in one sentence. The copycat
+       line is a single templated string rather than six concatenated
+       fragments, so word order — and right-to-left — belongs to whoever wrote
+       the translation instead of to the order the pieces are glued in. */
     savingLine: recipe.copycat
-      ? recipe.copycat +
-        ' ' +
-        X.anOrderOf +
-        ' ' +
-        fmt(recipe.restaurant) +
-        ' ' +
-        X.forEight +
-        ' ' +
-        fmt(buy) +
-        ', ' +
-        X.andYouKeep +
-        ' ' +
-        fmt(recipe.restaurant - per) +
-        ' ' +
-        X.aPortion
+      ? fill(xt(lg, 'copycatKeep'), {
+          who: recipe.copycat,
+          a: fmt(recipe.restaurant),
+          b: fmt(per),
+          c: fmt(keep),
+        })
       : X.youKeep +
         ' ' +
-        fmt(recipe.restaurant - per) +
+        fmt(keep) +
         ' ' +
         X.everyTime +
         ' ' +
         X.fourTimes +
         ' ' +
-        fmt((recipe.restaurant - per) * 4) +
+        fmt(keep * 4) +
         '.',
     timeTotal: recipe.total + ' ' + word('minutes', 'min'),
     timeActive: recipe.active + ' ' + word('activeMins', 'of them are you'),
@@ -1505,6 +1724,11 @@ export function usePantry() {
     }),
     basket: recipe.items.map((i) => {
       const owned = isOwned(recipe, i.n);
+      /** An extra you have not asked for: on the list to look at, off the
+       *  total, one tap from being either. Not struck through — a line through
+       *  a name means you have it, and you do not. */
+      const skipped = !owned && !!i.opt && !wantsExtra(i.n);
+      const off = owned || skipped;
       const key = refOf(i.n);
       const seen = S.medians[key];
       // A community median beats the model, so when there is one it is what
@@ -1519,7 +1743,9 @@ export function usePantry() {
           ? { reports: seen.reports, newest: seen.newest.slice(0, 10), amount: community }
           : null,
         owned,
-        toggle: () => toggleOwned(recipe, i.n),
+        /** Crossed off, whichever of the two reasons it is. */
+        pressed: off,
+        toggle: () => (i.opt ? toggleExtra(i.n) : toggleOwned(recipe, i.n)),
         openReport: () =>
           setState({
             reportFor: key,
@@ -1528,11 +1754,12 @@ export function usePantry() {
           }),
         tick: owned ? '✓' : '',
         boxBg: owned ? '#8fa073' : '#eee7db',
-        nameFg: owned ? '#82796a' : '#201e1d',
+        nameFg: off ? '#82796a' : '#201e1d',
         strike: owned ? 'line-through' : 'none',
         sub: owned
           ? word('already', 'already in your kitchen')
-          : i.g + (i.opt ? ' · ' + word('optional', 'optional') : ''),
+          : i.g +
+            (i.opt ? ' · ' + (skipped ? xt(lg, 'extraAdd') : word('optional', 'optional')) : ''),
         srcColor: seen
           ? '#56633f'
           : i.src === 'local'
@@ -1540,15 +1767,16 @@ export function usePantry() {
             : i.src === 'euro'
               ? '#f6a06b'
               : '#c0b6a5',
-        price: owned ? fmt(0) : community != null ? fmt(community) : fmt(i.s * mult),
-        priceFg: owned ? '#a19786' : '#201e1d',
+        price: off ? fmt(0) : community != null ? fmt(community) : fmt(i.s * mult),
+        priceFg: off ? '#a19786' : '#201e1d',
       };
     }),
     shopSubLine: stores.length + ' ' + SH.shopSub + ' ' + cityNow + '. ' + SH.sameBasket,
     listSummary: (() => {
       const have = recipe.items.filter((i) => isOwned(recipe, i.n)).length;
+      const buying = recipe.items.filter((i) => onList(recipe, i)).length;
       return (
-        recipe.items.length - have + ' ' + word('toBuy', 'to buy') +
+        buying + ' ' + word('toBuy', 'to buy') +
         ' · ' + have + ' ' + word('youHave', 'you have')
       );
     })(),
@@ -1559,7 +1787,7 @@ export function usePantry() {
     assumedOwned: recipe.items.some(
       (i) => !(keyOf(i.n) in S.owned) && recipe.have.indexOf(keyOf(i.n)) >= 0,
     ),
-    savedLine: fill(SL.saved, { a: fmt(saved), b: fmt(saved * 9) }),
+    savedLine: fill(SL.saved, { a: fmt(saved), b: fmt(asShown(saved) * 9) }),
 
     /* ── Reporting a real price ─────────────────────────────────────────── */
     reportOpen: !!S.reportFor,
@@ -1730,7 +1958,10 @@ export function usePantry() {
     })),
     finishMeal: () => {
       logCook(recipe, S.waste);
-      go('home');
+      // The end of a cook takes the place of the after screen rather than
+      // stacking on top of it: Back from Home should not offer to log the same
+      // dinner a second time.
+      go('home', undefined, true);
     },
 
     /* ── Kitchen ────────────────────────────────────────────────────────── */
@@ -1759,7 +1990,7 @@ export function usePantry() {
     }),
 
     /* ── Passport ───────────────────────────────────────────────────────── */
-    ofCountriesLabel: word('ofCountries', 'of 91 countries'),
+    ofCountriesLabel: word('ofCountries', 'of ' + COVERED + ' countries'),
     keptOutLabel: word('keptOut', 'kept out of takeaways'),
     countriesCooked: PASSPORT.length,
     totalSaved: fmt(savedVsTakeaway),
@@ -1969,6 +2200,7 @@ export function usePantry() {
         if (!r) continue;
         const scale = S.planServings / r.servings;
         for (const item of r.items) {
+          if (item.opt && !wantsExtra(item.n)) continue;
           const owned = isOwned(r, item.n);
           const line = map.get(item.n) || {
             key: item.n,
@@ -2010,7 +2242,7 @@ export function usePantry() {
         if (!r) continue;
         const scale = S.planServings / r.servings;
         for (const item of r.items) {
-          if (isOwned(r, item.n)) continue;
+          if (!onList(r, item)) continue;
           counted.add(item.n);
           total += item.s * mult * scale;
         }
@@ -2027,7 +2259,9 @@ export function usePantry() {
       return fmt(S.planDays ? total / S.planDays : 0);
     })(),
     savePlan: async () => {
-      if (!auth.userId || !db || !S.plan.length) return;
+      if (!auth.userId || !S.plan.length) return;
+      const db = await getDb();
+      if (!db) return;
       const { data, error } = await db
         .from('saved_plans')
         .insert({
@@ -2099,6 +2333,7 @@ export function usePantry() {
       key: t.k,
       label: t.label,
       sub: t.sub,
+      on: !!S.toggles[t.k],
       trackBg: S.toggles[t.k] ? '#8fa073' : '#dcd3c4',
       knobX: S.toggles[t.k] ? '23px' : '3px',
       flip: () => setState({ toggles: { ...S.toggles, [t.k]: !S.toggles[t.k] } }),
@@ -2112,6 +2347,10 @@ export function usePantry() {
       // Your language and what a pound is worth are not things you told me, so
       // neither is mine to throw away here.
       setS({ ...INITIAL, lang: S.lang, fx: S.fx });
+      // Starting over is not somewhere you travelled to: the address bar goes
+      // back to the welcome in place, so Back does not offer the settings of a
+      // profile that no longer exists.
+      writeHash(hashFor('welcome', INITIAL.pickId), false);
     },
     langNative: i18n.nativeOf(lg),
     langOpen: S.langOpen,
@@ -2120,7 +2359,14 @@ export function usePantry() {
       key: l.code,
       native: l.native,
       style: (lg === l.code ? PILL_ON : PILL_OFF) + 'flex:none;font-size:14.5px;padding:11px 18px;',
-      pick: () => setState({ lang: l.code, langOpen: false }),
+      // The interface pack is bundled, the ingredient names are not: wait for
+      // them before switching, so the screen changes language once rather than
+      // in two passes. Offline the wait ends in a no, and the names stay
+      // English — which is what an untranslated name reads as anyway.
+      pick: async () => {
+        if (food.needsTable(l.code)) await food.loadTable();
+        setState({ lang: l.code, langOpen: false });
+      },
     })),
     vendorDraft: S.vendorDraft,
     onVendorDraft: (e: ChangeEvent<HTMLInputElement>) => setState({ vendorDraft: e.target.value }),
@@ -2138,7 +2384,15 @@ export function usePantry() {
        is not wired in yet, and the screen shows which is which rather than
        implying they are all live. */
     sources: SOURCES.map((s, n) => {
-      const on = /nominatim|overpass/i.test(s.name);
+      // Live means this session has actually had something back, not that the
+      // name matches something we could in principle call. Nominatim answers
+      // with a place name and Overpass with a list of shops; until one of those
+      // has landed the row says "not connected yet", because it is not.
+      const on = /nominatim/i.test(s.name)
+        ? S.liveCity !== null
+        : /overpass/i.test(s.name)
+          ? S.liveShops !== null
+          : false;
       return {
         ...s,
         key: s.name,
@@ -2172,7 +2426,7 @@ export function usePantry() {
     /* ── The account ─────────────────────────────────────────────────────── */
     cloudEnabled,
     authStatus: auth.status,
-    authError: auth.error,
+    authError: auth.error ?? (auth.status === 'error' ? xt(lg, 'cloudUnreachable') : null),
     signedIn: !!auth.userId,
     userId: auth.userId,
     email: auth.email,

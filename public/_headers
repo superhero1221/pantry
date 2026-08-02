@@ -1,0 +1,21 @@
+# Netlify headers. Kept in step with vercel.json — change one, change the other.
+
+# The worker decides when everything else updates, so it must never be the
+# stale thing. It calls skipWaiting(), and its VERSION does not change between
+# deploys, so it takes over the moment the browser sees bytes that differ — a
+# cached copy is the one thing that can hold the app on an old build.
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# Without this the manifest goes out as application/octet-stream, and a
+# manifest served as a download is a manifest the installer ignores.
+/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+  Cache-Control: no-cache
+
+# Content-hashed by the build, so they can be cached forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/pix/*
+  Cache-Control: public, max-age=31536000, immutable

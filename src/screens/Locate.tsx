@@ -5,13 +5,16 @@ import { Pin } from '../ui/Icon';
 import type { Pantry } from '../state/usePantry';
 
 const H2 = "font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.06;margin:0;letter-spacing:-.3px";
-const PING = 'position:absolute;inset:0;border-radius:50%;background:#c67139';
+/* opacity:0 is the resting state: a ripple that is not running is not there.
+   The keyframes set opacity at every stop, so this is only ever seen when the
+   animation is not — during its delay, and when reduced motion is honoured. */
+const PING = 'position:absolute;inset:0;border-radius:50%;background:#c67139;opacity:0';
 
 export function Locate({ v }: { v: Pantry }) {
   return (
     <div style={css('min-height:100%;display:flex;flex-direction:column;padding:14px 22px 22px')}>
       <div style={css('display:flex;align-items:center;justify-content:space-between;margin-bottom:12px')}>
-        <BackBtn onClick={v.back} />
+        <BackBtn label={v.t.back} onClick={v.back} />
         <Dots at={3} />
         <span style={css('width:38px')} />
       </div>

@@ -15,7 +15,7 @@ export function Shop({ v }: { v: Pantry }) {
   return (
     <div style={css('padding:6px 22px 26px')}>
       <div style={css('margin-inline-start:-6px')}>
-        <BackBtn onClick={v.back} />
+        <BackBtn label={v.t.back} onClick={v.back} />
       </div>
       <h1
         dir="auto"
@@ -70,7 +70,7 @@ export function Shop({ v }: { v: Pantry }) {
             {/* Tap the line to say you already have it. Your answer sticks. */}
             <Btn
               onClick={i.toggle}
-              aria-pressed={i.owned}
+              aria-pressed={i.pressed}
               css="flex:1;min-width:0;display:flex;gap:11px;align-items:center;padding:11px 6px 11px 0;text-align:start;border-radius:14px"
               hover="background:#f2ece2"
             >

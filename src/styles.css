@@ -157,6 +157,23 @@ select {
   }
 }
 
+/* Someone who has told their phone to stop moving things has told this app too.
+   Most of the movement here is written in declaration strings passed through
+   css(), and a media query cannot select a style attribute — but an author
+   !important declaration outranks a normal one in a style attribute, and a
+   shorthand like `transition:background .15s` has already expanded into normal
+   longhands by the time this lands on top of it. So this is the one place in the
+   app allowed to shout, and the only place that can reach the inline rules. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Shell ──────────────────────────────────────────────────────────────
    Full viewport on a phone; a centred column on anything wider, lifted off
    the warm ground the way the design's cards are lifted off the page. */
@@ -167,10 +184,16 @@ select {
   background: radial-gradient(120% 80% at 12% 0%, #f7eeda 0%, #efe3cd 55%, #e6d8bd 100%);
 }
 .pg-shell {
+  /* Nothing at all on a desktop; the status bar and the notch on a phone that
+     has been installed to its home screen, where viewport-fit=cover means the
+     shell would otherwise start under the clock. Kept as a variable because the
+     toast that floats inside the shell has to clear the same band. */
+  --pg-top: env(safe-area-inset-top);
   position: relative;
   width: 100%;
   max-width: var(--shell-max);
   min-height: 100dvh;
+  padding-top: var(--pg-top);
   display: flex;
   flex-direction: column;
   background: #f5ead8;
@@ -181,6 +204,9 @@ select {
     padding: 32px 24px;
   }
   .pg-shell {
+    /* A floating card, already clear of the top of the window: no band here, and
+       no gap where the design does not have one. */
+    --pg-top: 0px;
     min-height: min(920px, calc(100dvh - 64px));
     height: min(920px, calc(100dvh - 64px));
     border-radius: 34px;

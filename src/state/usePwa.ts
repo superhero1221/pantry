@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { db, vapidKey } from '../lib/supabase';
+import { cloudEnabled, getDb, vapidKey } from '../lib/supabase';
 
 interface InstallPrompt extends Event {
   prompt: () => Promise<void>;
@@ -68,7 +68,10 @@ export function usePwa(userId: string | null) {
     if (typeof Notification === 'undefined' || !('serviceWorker' in navigator)) return;
     const result = await Notification.requestPermission();
     setPermission(result);
-    if (result !== 'granted' || !vapidKey || !db || !userId) return;
+    if (result !== 'granted' || !vapidKey || !cloudEnabled || !userId) return;
+
+    const db = await getDb();
+    if (!db) return;
 
     const reg = await navigator.serviceWorker.ready;
     const existing = await reg.pushManager.getSubscription();
@@ -112,6 +115,6 @@ export function usePwa(userId: string | null) {
     permission,
     subscribed,
     enableNudges,
-    pushConfigured: !!vapidKey && !!db,
+    pushConfigured: !!vapidKey && cloudEnabled,
   };
 }

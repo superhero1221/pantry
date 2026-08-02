@@ -34,6 +34,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     syncing: 'Syncing…',
     cloudOff: 'Cloud sync is not configured in this build, so everything stays on this device.',
     localOnly: 'On this device only',
+    cloudUnreachable:
+      'Could not reach the sign-in service — usually that is no signal. Everything else carries on working on this device.',
 
     /* ── Prices ── */
     priceAsk: 'Saw a different price?',
@@ -54,7 +56,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'Tap a price to correct it.',
     totalMeans: 'What this meal’s share of each ingredient costs',
     totalMeansBody:
-      'Not your till receipt. You buy a whole bag of noodles, not the 160 g this needs — so the first shop is dearer and the rest carries into the next meal.',
+      'Not your till receipt. You buy whole packets, not the exact amount a dish needs — so the first shop is dearer and the rest carries into the next meal.',
+    extraAdd: 'optional — tap to add it',
+    copycatKeep:
+      '{who} charge {a} for a portion. Yours comes to {b} — you keep {c} every time you cook it instead of ordering it.',
 
     /* ── The time budget ── */
     timeOver: 'over your {m}',
@@ -112,6 +117,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sourceIdle: 'not connected yet',
     sourceFx: 'today’s rate between pounds and your currency',
     sourceFxBundled: 'no rate published',
+    liveLook: 'Tap to look for shops near you',
+
+    /* ── Getting around without a mouse ── */
+    tierPlaceIn: 'Put the selected card in this row: {t}',
+    stepBack: 'Previous step',
   },
 
   es: {
@@ -129,6 +139,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudOff:
       'La sincronización no está configurada en esta versión, así que todo se queda en este dispositivo.',
     localOnly: 'Solo en este dispositivo',
+    cloudUnreachable:
+      'No he podido conectar con el servicio de acceso; casi siempre es falta de señal. Todo lo demás sigue funcionando en este dispositivo.',
 
     priceAsk: '¿Has visto otro precio?',
     priceAskBody:
@@ -148,7 +160,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'Toca un precio para corregirlo.',
     totalMeans: 'Lo que cuesta la parte de cada ingrediente que usa esta comida',
     totalMeansBody:
-      'No es tu tique. Compras la bolsa entera de fideos, no los 160 g que hacen falta, así que la primera compra sale más cara y el resto pasa a la comida siguiente.',
+      'No es tu tique. Compras los paquetes enteros, no la cantidad exacta que pide el plato, así que la primera compra sale más cara y el resto pasa a la comida siguiente.',
+    extraAdd: 'opcional: tócalo para añadirlo',
+    copycatKeep:
+      '{who} cobra {a} por una ración. La tuya sale por {b}: te ahorras {c} cada vez que la cocinas en lugar de pedirla.',
 
     /* ── The time budget ── */
     timeOver: 'por encima de tus {m}',
@@ -205,6 +220,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sourceIdle: 'aún no conectado',
     sourceFx: 'el cambio de hoy entre la libra y tu moneda',
     sourceFxBundled: 'sin tipo publicado',
+    liveLook: 'Toca para buscar tiendas cerca de ti',
+
+    /* ── Getting around without a mouse ── */
+    tierPlaceIn: 'Pon la tarjeta seleccionada en esta fila: {t}',
+    stepBack: 'Paso anterior',
   },
 
   fr: {
@@ -222,6 +242,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudOff:
       'La synchronisation n’est pas configurée dans cette version : tout reste sur cet appareil.',
     localOnly: 'Sur cet appareil uniquement',
+    cloudUnreachable:
+      'Impossible de joindre le service de connexion — le plus souvent, c’est le réseau. Tout le reste continue de fonctionner sur cet appareil.',
 
     priceAsk: 'Vu un autre prix ?',
     priceAskBody:
@@ -241,7 +263,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'Touchez un prix pour le corriger.',
     totalMeans: 'Ce que coûte la part de chaque ingrédient utilisée par ce plat',
     totalMeansBody:
-      'Ce n’est pas votre ticket de caisse. Vous achetez le paquet entier de nouilles, pas les 160 g nécessaires : les premières courses coûtent donc plus cher et le reste sert au repas suivant.',
+      'Ce n’est pas votre ticket de caisse. Vous achetez des paquets entiers, pas la quantité exacte qu’il faut au plat : les premières courses coûtent donc plus cher et le reste sert au repas suivant.',
+    extraAdd: 'facultatif — touchez pour l’ajouter',
+    copycatKeep:
+      '{who} facture {a} la portion. La vôtre revient à {b} — vous gardez {c} à chaque fois que vous la cuisinez au lieu de la commander.',
 
     /* ── The time budget ── */
     timeOver: 'au-dessus de vos {m}',
@@ -298,6 +323,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sourceIdle: 'pas encore connecté',
     sourceFx: 'le taux du jour entre la livre et votre monnaie',
     sourceFxBundled: 'aucun taux publié',
+    liveLook: 'Touchez pour chercher des magasins près de vous',
+
+    /* ── Getting around without a mouse ── */
+    tierPlaceIn: 'Mettre la carte sélectionnée dans cette rangée : {t}',
+    stepBack: 'Étape précédente',
   },
 
   pl: {
@@ -315,6 +345,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudOff:
       'Synchronizacja nie jest skonfigurowana w tej wersji, więc wszystko zostaje na tym urządzeniu.',
     localOnly: 'Tylko na tym urządzeniu',
+    cloudUnreachable:
+      'Nie udało się połączyć z usługą logowania — zwykle to brak zasięgu. Cała reszta działa dalej na tym urządzeniu.',
 
     priceAsk: 'Widziałeś inną cenę?',
     priceAskBody:
@@ -334,7 +366,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'Dotknij ceny, żeby ją poprawić.',
     totalMeans: 'Ile kosztuje ta część każdego składnika, którą zjada ten posiłek',
     totalMeansBody:
-      'To nie paragon. Kupujesz cały makaron, a nie 160 g, których potrzeba — więc pierwsze zakupy są droższe, a reszta przechodzi na następny posiłek.',
+      'To nie paragon. Kupujesz całe opakowania, a nie dokładnie tyle, ile potrzeba do dania — więc pierwsze zakupy są droższe, a reszta przechodzi na następny posiłek.',
+    extraAdd: 'opcjonalne — dotknij, żeby dodać',
+    copycatKeep:
+      '{who} liczy sobie {a} za porcję. Twoja wychodzi {b} — zostaje ci {c} za każdym razem, gdy gotujesz to zamiast zamawiać.',
 
     /* ── The time budget ── */
     timeOver: 'ponad twoje {m}',
@@ -391,6 +426,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sourceIdle: 'jeszcze niepodłączone',
     sourceFx: 'dzisiejszy kurs funta do twojej waluty',
     sourceFxBundled: 'kurs niepublikowany',
+    liveLook: 'Dotknij, aby poszukać sklepów w pobliżu',
+
+    /* ── Getting around without a mouse ── */
+    tierPlaceIn: 'Umieść wybraną kartę w tym rzędzie: {t}',
+    stepBack: 'Poprzedni krok',
   },
 
   ur: {
@@ -407,6 +447,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     syncing: 'ہم آہنگ کیا جا رہا ہے…',
     cloudOff: 'اس نسخے میں کلاؤڈ سنک ترتیب نہیں دی گئی، اس لیے سب کچھ اسی آلے پر رہتا ہے۔',
     localOnly: 'صرف اسی آلے پر',
+    cloudUnreachable:
+      'سائن اِن سروس تک رسائی نہیں ہو سکی — عام طور پر سگنل نہ ہونے کی وجہ سے۔ باقی سب کچھ اسی آلے پر چلتا رہے گا۔',
 
     priceAsk: 'کوئی اور قیمت دیکھی؟',
     priceAskBody:
@@ -425,7 +467,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'قیمت درست کرنے کے لیے اسے چھوئیں۔',
     totalMeans: 'اس کھانے میں استعمال ہونے والے ہر جزو کے حصے کی قیمت',
     totalMeansBody:
-      'یہ آپ کی رسید نہیں۔ آپ نوڈلز کا پورا پیکٹ خریدتے ہیں، صرف مطلوبہ ۱۶۰ گرام نہیں — اس لیے پہلی خریداری مہنگی رہتی ہے اور باقی اگلے کھانے کے کام آتا ہے۔',
+      'یہ آپ کی رسید نہیں۔ آپ پورے پیکٹ خریدتے ہیں، اتنا نہیں جتنا اس کھانے کو درکار ہے — اس لیے پہلی خریداری مہنگی رہتی ہے اور باقی اگلے کھانے کے کام آتا ہے۔',
+    extraAdd: 'اختیاری — شامل کرنے کے لیے چھوئیں',
+    copycatKeep:
+      '{who} ایک حصے کے {a} لیتے ہیں۔ آپ کا اپنا حصہ {b} میں پڑتا ہے — یعنی ہر بار جب آپ اسے منگوانے کے بجائے خود بناتے ہیں، {c} بچ جاتے ہیں۔',
 
     /* ── The time budget ── */
     timeOver: 'آپ کے {m} سے زیادہ',
@@ -480,6 +525,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sourceIdle: 'ابھی منسلک نہیں',
     sourceFx: 'پاؤنڈ اور آپ کی کرنسی کے درمیان آج کی شرح',
     sourceFxBundled: 'شرح شائع نہیں',
+    liveLook: 'اپنے قریب دکانیں تلاش کرنے کے لیے چھوئیں',
+
+    /* ── Getting around without a mouse ── */
+    tierPlaceIn: 'منتخب کارڈ اس قطار میں رکھیں: {t}',
+    stepBack: 'پچھلا مرحلہ',
   },
 
   ar: {
@@ -496,6 +546,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     syncing: 'جارٍ المزامنة…',
     cloudOff: 'المزامنة السحابية غير مُهيّأة في هذه النسخة، لذا يبقى كل شيء على هذا الجهاز.',
     localOnly: 'على هذا الجهاز فقط',
+    cloudUnreachable:
+      'تعذّر الوصول إلى خدمة تسجيل الدخول — غالباً بسبب انقطاع الشبكة. كل شيء آخر يواصل العمل على هذا الجهاز.',
 
     priceAsk: 'رأيت سعراً مختلفاً؟',
     priceAskBody:
@@ -514,7 +566,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'المس السعر لتصحيحه.',
     totalMeans: 'تكلفة حصّة هذه الوجبة من كل مكوّن',
     totalMeansBody:
-      'ليست فاتورتك. أنت تشتري كيس المعكرونة كاملاً، لا الـ ١٦٠ غراماً التي تحتاجها — لذا تكون التسوّقة الأولى أغلى، والباقي ينتقل إلى الوجبة التالية.',
+      'ليست فاتورتك. أنت تشتري عبوات كاملة، لا المقدار الذي تحتاجه الوجبة بالضبط — لذا تكون التسوّقة الأولى أغلى، والباقي ينتقل إلى الوجبة التالية.',
+    extraAdd: 'اختياري — المس لإضافته',
+    copycatKeep:
+      'يطلب {who} {a} للحصة الواحدة. حصّتك تكلّف {b} — أي يبقى معك {c} في كل مرة تطبخه بدل أن تطلبه.',
 
     /* ── The time budget ── */
     timeOver: 'أكثر من {m} التي حدّدتها',
@@ -569,6 +624,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sourceIdle: 'غير موصول بعد',
     sourceFx: 'سعر صرف اليوم بين الجنيه الإسترليني وعملتك',
     sourceFxBundled: 'لا سعر منشور',
+    liveLook: 'المس للبحث عن متاجر قريبة منك',
+
+    /* ── Getting around without a mouse ── */
+    tierPlaceIn: 'ضع البطاقة المختارة في هذا الصف: {t}',
+    stepBack: 'الخطوة السابقة',
   },
 };
 

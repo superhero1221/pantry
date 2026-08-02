@@ -103,6 +103,31 @@ The leftover nudge is a real Web Push notification the day after you cook
 something that keeps, composed in your language before it is queued. It is the
 only notification the app ever sends.
 
+## Hosting
+
+The build is a folder of static files, so any host that serves one will do.
+Three are configured, and they say the same things:
+
+- **Netlify** — `public/_redirects` and `public/_headers`. They sit in
+  `public/` rather than in `netlify.toml` so Vite copies them into `dist/`,
+  which is what a Netlify Drop uploads; a root `netlify.toml` is never part of
+  a drag-and-drop deploy. The `netlify.toml` here carries build settings only.
+- **Vercel** — `vercel.json`.
+- **GitHub Pages** — `.github/workflows/pages.yml`, which works out the
+  `/<repo>/` base path and copies the shell to `404.html`.
+
+Two rules matter more than the rest. Nothing under `/assets/` or `/pix/` ever
+falls through to the app shell: after a deploy, a client still holding an old
+chunk name has to get a 404 it can recover from, because HTML answered as
+JavaScript is a parse error and a white screen. And `sw.js` goes out
+`no-cache`: the worker calls `skipWaiting()` and its `VERSION` does not change
+between deploys, so it updates the moment the browser sees bytes that differ —
+a cached copy is the one thing that can hold everyone on an old build.
+
+Screens are state and the router is hash-based, so the server only ever sees
+`/` in normal use. The catch-all rewrite is a safety net for stray deep links,
+not the routing.
+
 ## Layout
 
 The design was drawn inside a 390×844 phone frame. This build drops the bezel, notch, status bar and
@@ -119,16 +144,16 @@ src/
   screens/             one file per screen
   ui/                  Btn/A (themed hover), Icon (Lucide at 2.75), Nav, PlateDrop, bits
   lib/css.ts           CSS declaration strings → React style objects
+  lib/food-table.ts    ingredient names, fetched only in a language that needs them
   state/cloud.ts       session, sync, price medians, reminders
   state/usePwa.ts      install prompt, notification permission, push subscription
   data/
     cookbook.js        recipes, countries, stores, history, passport, staples
-    extra-copy.ts      copy added after the handoff — English only, see below
+    extra-copy.ts      copy added after the handoff, in all six languages
+    ../lib/diets.ts    whether a recipe meets a diet: six by tag, three derived
     pantry-i18n.js     six languages, RTL included
     pantry-food.js     ingredient and micronutrient names, leftover verdicts
     pantry-live.js     geolocation, Nominatim, Overpass, Open Prices
-    pantry-data.js     Open Food Facts nutrition snapshot — present, not yet wired in
-    pantry-map.js      ingredient → Open Food Facts tag map — present, not yet wired in
 ```
 
 `usePantry` keeps one state object and returns a flat bag of values, mirroring the prototype's
@@ -180,9 +205,38 @@ one. Interface copy carries no such risk, so it is translated.
   wrongly the same one.
 - **The eight weeks of history are sample data**, flagged as such on Stats
   until your first real cook replaces them, and never written to an account.
+- **The Kitchen cupboard is sample data too**, and says so. Nothing in this
+  build writes to those shelves, so unlike the Stats caveat this one does not
+  expire — it would be describing something still true.
+- **Optional ingredients are not in the total.** A dip you might not make is
+  not part of what dinner costs. The line sits at zero with "tap to add it",
+  and adding it puts it in the total and on the list.
 - **Of the five data sources listed in Settings, two are live** — Nominatim and
   Overpass, when you grant location. The other three are marked
   "not connected yet" rather than implied to be running.
+
+## Diets, and what a filter can honestly promise
+
+Nine are offered. Six are answered from tags the cookbook carries — vegan,
+vegetarian, gluten free, dairy free, halal, kosher. The other three had no tag
+on any recipe and were, until recently, accepted and then silently ignored:
+ticking **Nut free** still returned Pad Thai and its roasted peanuts. Those
+three are now read off the ingredient list in [`src/lib/diets.ts`](src/lib/diets.ts),
+and the Diet screen says as much.
+
+What that can and cannot do is stated on the screen rather than left implied.
+It reads the ingredients a recipe asks you to buy. It cannot see what a factory
+put in a jar of curry powder, it cannot see a shared production line, and it
+does not know what happened to the pan before you got there. **It is a filter,
+not an allergen guarantee.** Coconut counts as a nut: botanically it is a drupe
+and many people with a nut allergy eat it safely, but it is labelled a tree nut
+in the US, and for a filter whose failure mode is an allergic reaction the
+cautious answer is the right one. It costs a nut-free cook one curry.
+
+A diet outranks everything, including the clock: nothing that breaks one is
+offered above something that keeps it. A test asserts that every diet in the
+picker is one `diets.ts` can actually answer for, so the original bug — offer a
+filter, implement nothing — fails the build rather than shipping.
 
 ## Tests
 
@@ -199,7 +253,7 @@ Covers the pure layers, which is where the mistakes actually were:
   something it never asks for, every logged cook resolves to a real dish
 - translation completeness across all six languages, in both directions
 
-## Server bits## Server bits
+## Server bits
 
 None of this is needed to run the app; each piece switches on a feature.
 
@@ -255,9 +309,10 @@ No UK, US or EU supermarket publishes a public price API. Without a vendor key t
 Prices, which is real but patchy, and every line says whether it is measured, scaled or modelled.
 **You → Supermarket price key** holds a slot for a paid aggregator.
 
-`pantry-data.js` and `pantry-map.js` — the Open Food Facts nutrition snapshot from the last, unfinished
-turn of the design conversation — are copied across but not wired in. Macros still come from the
-recipe data. Wiring them up is a follow-on.
+`project/pantry-data.js` and `project/pantry-map.js` — the Open Food Facts nutrition snapshot from
+the last, unfinished turn of the design conversation — sit in the prototype folder, not in `src/`.
+Nothing imports them, so nothing in the bundle carries them. Macros still come from the recipe
+data. Wiring them up is a follow-on.
 
 ## What persists
 

@@ -39,7 +39,7 @@ export function Home({ v }: { v: Pantry }) {
 
       <div className="pg-x" style={css('display:flex;gap:8px;margin:12px -22px 0;padding:2px 22px')}>
         {v.cravings.map((c) => (
-          <Btn key={c.key} onClick={c.pick} css={c.style}>
+          <Btn key={c.key} onClick={c.pick} aria-pressed={c.on} css={c.style}>
             {c.label}
           </Btn>
         ))}
@@ -51,7 +51,7 @@ export function Home({ v }: { v: Pantry }) {
       </div>
       <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:9px')}>
         {v.budgetChips.map((b) => (
-          <Btn key={b.key} onClick={b.pick} css={b.style}>
+          <Btn key={b.key} onClick={b.pick} aria-pressed={b.on} css={b.style}>
             {b.label}
           </Btn>
         ))}
@@ -80,7 +80,7 @@ export function Home({ v }: { v: Pantry }) {
       <Kicker style={{ marginTop: 22 }}>{v.t.homeTime}</Kicker>
       <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:9px')}>
         {v.timeChips.map((t) => (
-          <Btn key={t.key} onClick={t.pick} css={t.style}>
+          <Btn key={t.key} onClick={t.pick} aria-pressed={t.on} css={t.style}>
             {t.label}
           </Btn>
         ))}

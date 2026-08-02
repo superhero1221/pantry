@@ -34,6 +34,20 @@ const curl = (url) =>
    Caprasimo and Figtree, latin only. The Arabic and Urdu screens fall back
    to the system face either way — neither family carries those scripts. */
 function inlineFonts() {
+  // The faces live in public/fonts, so this needs no network and cannot come
+  // out in Times because a CDN was unreachable at build time. Each url() is
+  // swapped for the base64 of the file it points at.
+  const local = join(ROOT, 'public', 'fonts', 'fonts.css');
+  if (existsSync(local)) {
+    const out = readFileSync(local, 'utf8').replace(
+      /url\(\/fonts\/([^)]+)\)/g,
+      (_, file) =>
+        `url(data:font/woff2;base64,${readFileSync(join(ROOT, 'public', 'fonts', file)).toString('base64')})`,
+    );
+    console.log(`  fonts: ${(out.match(/@font-face/g) || []).length} faces inlined from disk`);
+    return out;
+  }
+
   const href =
     'https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;500;600;700;800&display=swap';
   let cssText;
@@ -140,6 +154,9 @@ const safeJs = js.split('</script>').join('<\\/script>');
 const page = html
   .replace(/<link rel="preconnect"[^>]*>\s*/g, '')
   .replace(/<link[^>]*fonts\.googleapis[^>]*>\s*/g, '')
+  // The self-hosted faces are inlined as data URIs below, so the stylesheet
+  // link and its two preloads would be three dead requests in a file:// page.
+  .replace(/<link[^>]*\/fonts\/[^>]*>\s*/g, '')
   .replace(/<link rel="manifest"[^>]*>\s*/g, '')
   .replace(/<link rel="apple-touch-icon"[^>]*>\s*/g, '')
   .replace(/<link rel="icon"[^>]*>/, () => (favicon ? `<link rel="icon" href="${favicon}">` : ''))

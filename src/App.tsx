@@ -33,7 +33,7 @@ export default function App() {
         {v.notif && (
           <div
             role="status"
-            style={css('position:absolute;top:10px;inset-inline:10px;z-index:60;animation:pgDrop .34s cubic-bezier(.2,.9,.3,1.2) both')}
+            style={css('position:absolute;top:calc(10px + var(--pg-top));inset-inline:10px;z-index:60;animation:pgDrop .34s cubic-bezier(.2,.9,.3,1.2) both')}
           >
             <div style={css('display:flex;gap:11px;align-items:flex-start;padding:13px 14px;border-radius:22px;background:rgba(255,255,255,.93);backdrop-filter:blur(18px);box-shadow:0 12px 32px rgba(46,43,37,.24)')}>
               <div style={css("flex:none;width:34px;height:34px;border-radius:11px;background:#c67139;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:17px")}>

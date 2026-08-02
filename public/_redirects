@@ -1,0 +1,16 @@
+# Netlify routing. Kept in step with vercel.json — change one, change the other.
+#
+# This lives in public/ rather than in netlify.toml so that it ends up inside
+# dist/, which is what a Netlify Drop actually uploads.
+
+# Build output is real files or nothing. A client still holding an old chunk
+# name after a deploy has to get a 404 it can recover from, never the index
+# shell answered as JavaScript — that is a module parse error and a white
+# screen. A file that exists is served as normal; only a miss reaches this.
+/assets/*  /assets/:splat  404
+/pix/*     /pix/:splat     404
+
+# Screens are state, not routes, and the router is hash-based, so the server
+# only ever sees / in normal use. This is the safety net for a stray deep link,
+# which should land on the app rather than a dead end.
+/*  /index.html  200

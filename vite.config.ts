@@ -24,6 +24,18 @@ export default defineConfig({
   },
   build: {
     cssCodeSplit: !standalone,
-    rollupOptions: standalone ? { output: { inlineDynamicImports: true } } : {},
+    // React does not change between deploys; the app does. Its own chunk keeps
+    // its own hash, so a deploy that only touched a screen leaves 190 kB of
+    // framework sitting in the worker's cache where it already is. Not a
+    // first-load saving — the page still fetches both, in parallel, and Vite
+    // adds the modulepreload that keeps it from becoming a waterfall.
+    rollupOptions: standalone
+      ? { output: { inlineDynamicImports: true } }
+      : {
+          output: {
+            manualChunks: (id: string) =>
+              id.includes('/node_modules/react') ? 'react' : undefined,
+          },
+        },
   },
 });

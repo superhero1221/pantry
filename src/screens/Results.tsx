@@ -10,7 +10,7 @@ export function Results({ v }: { v: Pantry }) {
   return (
     <div style={css('padding:6px 0 26px')}>
       <div style={css('display:flex;align-items:center;gap:8px;padding:0 16px')}>
-        <BackBtn onClick={v.goHome} />
+        <BackBtn label={v.t.back} onClick={v.back} />
         <div className="pg-x" style={css('flex:1;min-width:0;display:flex;gap:6px')}>
           <span style={css(CHIP)}>{v.cityName}</span>
           <span style={css(CHIP)}>{v.budgetLabel}</span>

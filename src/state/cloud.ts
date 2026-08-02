@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { db } from '../lib/supabase';
+import { cloudEnabled, getDb } from '../lib/supabase';
 import type { HistoryRow } from '../data/types';
 
 /* ── Session ──────────────────────────────────────────────────────────────
@@ -11,26 +11,37 @@ export type AuthStatus = 'off' | 'loading' | 'out' | 'sent' | 'in' | 'error';
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
-  const [status, setStatus] = useState<AuthStatus>(db ? 'loading' : 'off');
+  const [status, setStatus] = useState<AuthStatus>(cloudEnabled ? 'loading' : 'off');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!db) return;
-    db.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setStatus(data.session ? 'in' : 'out');
+    if (!cloudEnabled) return;
+    let unsubscribe = () => {};
+    getDb().then((db) => {
+      if (!db) return;
+      db.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        setStatus(data.session ? 'in' : 'out');
+      });
+      const { data: sub } = db.auth.onAuthStateChange((_event, next) => {
+        setSession(next);
+        setStatus(next ? 'in' : 'out');
+      });
+      unsubscribe = () => sub.subscription.unsubscribe();
     });
-    const { data: sub } = db.auth.onAuthStateChange((_event, next) => {
-      setSession(next);
-      setStatus(next ? 'in' : 'out');
-    });
-    return () => sub.subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
   const signIn = useCallback(async (email: string) => {
-    if (!db) return;
     setStatus('loading');
     setError(null);
+    // No client means the SDK never arrived, which means no network. Say so
+    // rather than dropping the button back to its resting state in silence.
+    const db = await getDb();
+    if (!db) {
+      setStatus('error');
+      return;
+    }
     const { error: err } = await db.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: window.location.origin },
@@ -44,6 +55,7 @@ export function useSession() {
   }, []);
 
   const signOut = useCallback(async () => {
+    const db = await getDb();
     if (!db) return;
     await db.auth.signOut();
     setStatus('out');
@@ -73,6 +85,7 @@ export interface CloudProfile {
 }
 
 export async function pullProfile(userId: string): Promise<CloudProfile | null> {
+  const db = await getDb();
   if (!db) return null;
   const { data, error } = await db
     .from('profiles')
@@ -89,6 +102,7 @@ export async function pullProfile(userId: string): Promise<CloudProfile | null> 
 }
 
 export async function pushProfile(userId: string, p: Partial<CloudProfile>) {
+  const db = await getDb();
   if (!db) return;
   const { error } = await db.from('profiles').upsert({ id: userId, ...p });
   if (error) console.warn('pushProfile', error.message);
@@ -144,6 +158,7 @@ const fromRow = (r: Record<string, unknown>): LocalCook => {
 };
 
 export async function pullCooks(userId: string): Promise<LocalCook[]> {
+  const db = await getDb();
   if (!db) return [];
   const { data, error } = await db
     .from('cook_log')
@@ -159,9 +174,10 @@ export async function pullCooks(userId: string): Promise<LocalCook[]> {
 }
 
 export async function pushCooks(userId: string, cooks: LocalCook[]) {
-  if (!db) return;
   const real = cooks.filter((c) => !c.seeded && c.clientId);
   if (!real.length) return;
+  const db = await getDb();
+  if (!db) return;
   const { error } = await db
     .from('cook_log')
     .upsert(real.map((c) => toRow(userId, c)), { onConflict: 'user_id,client_id' });
@@ -179,7 +195,9 @@ export interface PriceMedian {
 }
 
 export async function priceMedians(refs: string[], country: string) {
-  if (!db || !refs.length) return {} as Record<string, PriceMedian>;
+  if (!refs.length) return {} as Record<string, PriceMedian>;
+  const db = await getDb();
+  if (!db) return {} as Record<string, PriceMedian>;
   const { data, error } = await db.rpc('price_medians', { refs, in_country: country });
   if (error) {
     console.warn('priceMedians', error.message);
@@ -200,6 +218,7 @@ export async function reportPrice(input: {
   storeTier?: string;
   country: string;
 }) {
+  const db = await getDb();
   if (!db) return { ok: false, error: 'Not connected' };
   const { error } = await db.from('price_reports').insert({
     user_id: input.userId,
@@ -224,6 +243,7 @@ export async function scheduleReminder(input: {
   dueAt: Date;
   kind?: string;
 }) {
+  const db = await getDb();
   if (!db) return { ok: false };
   const { error } = await db.from('reminders').insert({
     user_id: input.userId,

@@ -5,8 +5,13 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "comment": "Screens are state, not routes, but a stray deep link should still land on the app rather than a 404. Anything with a file extension is left alone so a genuinely missing asset still 404s.",
-      "source": "/((?!assets/|pix/).*\\.[a-zA-Z0-9]+$)",
+      "comment": "Build output is real files or nothing. A client still holding an old chunk name after a deploy has to get a 404 it can recover from, never the index shell answered as JavaScript — that is a module parse error and a white screen. Rewriting the path to itself leaves a real file alone and lets a missing one 404.",
+      "source": "/(assets/.*|pix/.*)",
+      "destination": "/$1"
+    },
+    {
+      "comment": "Screens are state, not routes, and the router is hash-based, so the server only ever sees / in normal use. This is the safety net for a stray deep link, which should land on the app rather than a dead end. Anything with a file extension is left alone so a genuinely missing asset still 404s.",
+      "source": "/(.*\\.[a-zA-Z0-9]+$)",
       "destination": "/$1"
     },
     { "source": "/(.*)", "destination": "/index.html" }
@@ -18,8 +23,12 @@
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
     },
     {
+      "comment": "A host that does not know .webmanifest guesses application/octet-stream, and a manifest served as a download is a manifest the installer ignores.",
       "source": "/manifest.webmanifest",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
     },
     {
       "comment": "Content-hashed by the build, so they can be cached forever.",
