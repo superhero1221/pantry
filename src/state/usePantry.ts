@@ -359,9 +359,14 @@ const hashFor = (screen: Screen, pickId: string) =>
  *  that name. A dish it does not recognise is dropped rather than obeyed: the
  *  screen keeps the pick it already had, so a dead link lands on a real dinner
  *  instead of a blank, and the hash is rewritten to say which one. */
+/** The tab is labelled "You"; the screen has always been called `settings`.
+ *  Anyone typing the name they can see landed on the home screen, so the name
+ *  they can see is a route too. Written links keep saying `settings`. */
+const ALIASES: Record<string, Screen> = { you: 'settings', tonight: 'home', week: 'plan' };
+
 function parseHash(hash: string): { screen: Screen; pickId?: string } | null {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-  const head = parts[0] || '';
+  const head = ALIASES[parts[0]] || parts[0] || '';
   if ((SCREENS as string[]).indexOf(head) < 0) return null;
   const id = parts[1] || '';
   return RECIPES.some((r) => r.id === id)
