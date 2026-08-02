@@ -7,6 +7,7 @@ import type { Pantry } from '../state/usePantry';
 export function Shop({ v }: { v: Pantry }) {
   const legend: [string, string][] = [
     ['#56633f', v.xt('legCommunity')],
+    ['#8fa073', v.xt('legOpenPrices')],
     ['#728157', v.u.legMeasured],
     ['#f6a06b', v.u.legEurope],
     ['#c0b6a5', v.u.legModelled],
@@ -90,7 +91,7 @@ export function Shop({ v }: { v: Pantry }) {
                 </span>
                 <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
                   {i.community
-                    ? `${i.community.reports} ${v.xt('priceCommunity')} · ${i.community.newest}`
+                    ? `${i.community.reports} ${v.xt(i.community.openData ? 'priceOpen' : 'priceCommunity')} · ${i.community.newest}`
                     : i.sub}
                 </span>
               </span>

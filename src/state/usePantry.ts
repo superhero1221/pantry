@@ -36,6 +36,7 @@ import { cloudEnabled, getDb } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
 import { DERIVED, meetsDiet } from '../lib/diets';
+import { fromLocal, toLocal } from '../lib/money';
 import { xt } from '../data/extra-copy';
 import {
   pullCooks,
@@ -155,6 +156,10 @@ export interface PantryState {
    *  the dip is not the same claim as having it in the fridge. */
   extras: Record<string, boolean>;
   medians: Record<string, PriceMedian>;
+  /** Open Prices, keyed the same way as medians. Crowdsourced worldwide under
+   *  an open licence, so it needs no account and arrives for signed-out users
+   *  too — the one real price source this app has without a vendor deal. */
+  openPrices: Record<string, { perKg: number; n: number; newest: string }>;
   reportFor: string | null;
   reportPrice: string;
   reportPack: string;
@@ -223,6 +228,7 @@ const INITIAL: PantryState = {
   owned: {},
   extras: {},
   medians: {},
+  openPrices: {},
   reportFor: null,
   reportPrice: '',
   reportPack: '',
@@ -684,7 +690,7 @@ export function usePantry() {
 
   const fmt = useCallback(
     (gbp: number) => {
-      const v = gbp * c.idx * fx;
+      const v = toLocal(gbp, c, fx);
       // Whole lira and whole naira, pounds and euros to the penny: that is a
       // property of the currency, not of today's rate. The bundled figure
       // decides the shape so a live rate can never change it.
@@ -693,6 +699,17 @@ export function usePantry() {
     },
     [c, fx],
   );
+
+  /** The inverse of fmt's arithmetic: a real price in real local money, turned
+   *  back into the pounds-and-pence base the cookbook is written in.
+   *
+   *  Every measured price arrives in the currency it was paid in — a community
+   *  report is stored as entered, Open Prices answers in the shop's currency —
+   *  while everything the app computes is a GBP baseline that fmt multiplies up
+   *  on the way out. Handing fmt a local figure multiplies it a second time,
+   *  which is invisible in the UK (idx and fx are both 1) and off by 925x in
+   *  Nigeria. Real money goes through here first. */
+  const localToBase = useCallback((local: number) => fromLocal(local, c, fx), [c, fx]);
 
   /** The figure fmt() will actually print, handed back in pounds. Any line that
    *  multiplies a saving starts here: "×4" beside £10.18 read £40.70 because
@@ -1129,6 +1146,46 @@ export function usePantry() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S.screen, S.pickId, S.country, setState]);
 
+  /* Open Prices, on the same trigger as the community medians but with no
+     `cloudEnabled` guard: it is a public read under an open licence, so a
+     signed-out user with no Supabase project still gets real shelf prices.
+     Every failure path leaves `openPrices` alone and the basket falls back to
+     the modelled figure, which is what it did before this existed. */
+  useEffect(() => {
+    if (S.screen !== 'shop') return;
+    const r = RECIPES.find((x) => x.id === ref.current.pickId) || RECIPES[0];
+    const cc = ref.current.country || 'GB';
+    const want = COUNTRIES[cc]?.iso;
+    let alive = true;
+
+    (async () => {
+      try {
+        const L = await live();
+        const found = await L.priceBasket(
+          r.items.map((i) => i.n),
+          cc,
+        );
+        if (!alive) return;
+        const out: PantryState['openPrices'] = {};
+        for (const [name, p] of Object.entries(found)) {
+          // Only a price paid in this country's own currency can be shown in
+          // it. Open Prices answers in whatever the shopper paid, and there is
+          // no honest way to turn a euro shelf price into a rupee one here.
+          if (!p || !want || p.currency !== want || !(p.value > 0)) continue;
+          out[refOf(name)] = { perKg: p.value, n: p.n, newest: String(p.newest || '').slice(0, 10) };
+        }
+        if (Object.keys(out).length) setState({ openPrices: out });
+      } catch {
+        /* offline, blocked, or nobody has logged one — the model still works */
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [S.screen, S.pickId, S.country, setState]);
+
   /* ── Derived view values ──────────────────────────────────────────────── */
   const screen = S.screen;
   const cityNow = S.liveCity || c.city;
@@ -1154,14 +1211,31 @@ export function usePantry() {
    *  "under {m} min" chip it has not earned and states the real number. */
   const overTime = recipe.total > S.maxTime;
 
-  // What the basket costs once real reported prices replace the model.
+  /** What one line costs, in the pounds-and-pence base the cookbook is written
+   *  in, taking the best source available for it:
+   *
+   *    1. a community report — what someone paid in a shop you can walk to
+   *    2. Open Prices      — real money, from anyone in this country
+   *    3. the model        — arithmetic over a baseline, not a receipt
+   *
+   *  Both measured sources are held in the currency they were paid in, so they
+   *  come back through localToBase before fmt multiplies them out again.
+   *  The basket total and every line read this one function, so the sum can
+   *  never disagree with the numbers printed above it. */
+  const lineCost = (i: { n: string; g: string; s: number }) => {
+    const k = refOf(i.n);
+    const g = gramsOf(i.g);
+    const seen = S.medians[k];
+    const open = S.openPrices[k];
+    if (g && seen) return localToBase((seen.median_per_kg * g) / 1000);
+    if (g && open) return localToBase((open.perKg * g) / 1000);
+    return i.s * mult;
+  };
+
+  // What the basket costs once real prices replace the model.
   const buyReal = recipe.items
     .filter((i) => onList(recipe, i))
-    .reduce((a, i) => {
-      const seen = S.medians[refOf(i.n)];
-      const g = gramsOf(i.g);
-      return a + (seen && g ? (seen.median_per_kg * g) / 1000 : i.s * mult);
-    }, 0);
+    .reduce((a, i) => a + lineCost(i), 0);
 
   const cardWord = (cd: TechniqueCard) => P.skill[cd.id] || P.times[cd.id] || cd.label;
   const tierWord = (t: { key: string; label: string }) =>
@@ -1736,17 +1810,25 @@ export function usePantry() {
       const off = owned || skipped;
       const key = refOf(i.n);
       const seen = S.medians[key];
-      // A community median beats the model, so when there is one it is what
-      // the line costs — and the dot turns green to say why.
+      const open = S.openPrices[key];
       const grams = gramsOf(i.g);
-      const community = seen && grams ? (seen.median_per_kg * grams) / 1000 : null;
+      /* Three sources, best first. A community report is what someone actually
+         paid in a shop you can walk to, so it wins. Open Prices is real money
+         too but from anyone in the country, so it comes second. The modelled
+         figure is last because it is arithmetic, not a receipt.
+         Both measured sources are stored in the currency they were paid in and
+         have to come back through localToBase, or fmt multiplies them a second
+         time on the way out. */
+      const measured = grams && (seen || open) ? lineCost(i) : null;
       return {
         key: i.n,
         ref: key,
         name: foodName(i.n),
         community: seen
-          ? { reports: seen.reports, newest: seen.newest.slice(0, 10), amount: community }
-          : null,
+          ? { reports: seen.reports, newest: seen.newest.slice(0, 10), amount: measured }
+          : open
+            ? { reports: open.n, newest: open.newest, amount: measured, openData: true }
+            : null,
         owned,
         /** Crossed off, whichever of the two reasons it is. */
         pressed: off,
@@ -1767,12 +1849,14 @@ export function usePantry() {
             (i.opt ? ' · ' + (skipped ? xt(lg, 'extraAdd') : word('optional', 'optional')) : ''),
         srcColor: seen
           ? '#56633f'
-          : i.src === 'local'
-            ? '#728157'
-            : i.src === 'euro'
-              ? '#f6a06b'
-              : '#c0b6a5',
-        price: off ? fmt(0) : community != null ? fmt(community) : fmt(i.s * mult),
+          : open
+            ? '#8fa073'
+            : i.src === 'local'
+              ? '#728157'
+              : i.src === 'euro'
+                ? '#f6a06b'
+                : '#c0b6a5',
+        price: off ? fmt(0) : measured != null ? fmt(measured) : fmt(i.s * mult),
         priceFg: off ? '#a19786' : '#201e1d',
       };
     }),
@@ -2405,11 +2489,12 @@ export function usePantry() {
       L.setVendorKey(S.vendorDraft);
       ping(S.vendorDraft ? vs('keyOn', 'Key saved.') : vs('keyOff', 'Key cleared.'));
     },
-    /* Nominatim and Overpass run for real when you grant location, and the
-       exchange rate is live the moment a network allows it — the last row says
-       so, or says why not. The other three are honest provenance for data that
-       is not wired in yet, and the screen shows which is which rather than
-       implying they are all live. */
+    /* Nominatim and Overpass run for real when you grant location, Open Prices
+       runs whenever you open a shopping list, and the exchange rate is live the
+       moment a network allows it — the last row says so, or says why not. The
+       remaining two are honest provenance for data that is not wired in yet,
+       and the screen shows which is which rather than implying all of them are
+       live. */
     sources: SOURCES.map((s, n) => {
       // Live means this session has actually had something back, not that the
       // name matches something we could in principle call. Nominatim answers
@@ -2419,7 +2504,9 @@ export function usePantry() {
         ? S.liveCity !== null
         : /overpass/i.test(s.name)
           ? S.liveShops !== null
-          : false;
+          : /open prices/i.test(s.name)
+            ? Object.keys(S.openPrices).length > 0
+            : false;
       return {
         ...s,
         key: s.name,

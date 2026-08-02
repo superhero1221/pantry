@@ -49,6 +49,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceCommunity: 'people shopping here',
     priceReported: 'reported',
     legCommunity: 'Reported by people shopping here',
+    legOpenPrices: 'Open Prices, logged by shoppers in this country',
+    priceOpen: 'logged on Open Prices',
 
     /* ── The cupboard ── */
     haveIt: 'in your kitchen',
@@ -156,6 +158,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceCommunity: 'personas que compran aquí',
     priceReported: 'reportado',
     legCommunity: 'Reportado por gente que compra aquí',
+    legOpenPrices: 'Open Prices, registrados por compradores de este país',
+    priceOpen: 'registrados en Open Prices',
 
     haveIt: 'en tu cocina',
     tapToToggle: 'Toca lo que ya tengas: sale del total y se queda fuera.',
@@ -261,6 +265,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceCommunity: 'personnes qui font leurs courses ici',
     priceReported: 'signalé',
     legCommunity: 'Signalé par des gens qui font leurs courses ici',
+    legOpenPrices: 'Open Prices, relevés par des acheteurs dans ce pays',
+    priceOpen: 'relevés sur Open Prices',
 
     haveIt: 'dans votre cuisine',
     tapToToggle: 'Touchez ce que vous avez déjà : ça sort du total et ça y reste.',
@@ -366,6 +372,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceCommunity: 'osób kupujących tutaj',
     priceReported: 'zgłoszono',
     legCommunity: 'Zgłoszone przez ludzi kupujących tutaj',
+    legOpenPrices: 'Open Prices, zapisane przez kupujących w tym kraju',
+    priceOpen: 'zapisanych w Open Prices',
 
     haveIt: 'w twojej kuchni',
     tapToToggle: 'Dotknij tego, co już masz — zniknie z sumy i tak zostanie.',
@@ -469,6 +477,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceCommunity: 'لوگ یہاں خریداری کرتے ہیں',
     priceReported: 'اطلاع دی گئی',
     legCommunity: 'یہاں خریداری کرنے والوں کی بتائی ہوئی',
+    legOpenPrices: 'اوپن پرائسز، اسی ملک کے خریداروں کے درج کردہ',
+    priceOpen: 'اوپن پرائسز پر درج',
 
     haveIt: 'آپ کی باورچی خانے میں',
     tapToToggle: 'جو کچھ آپ کے پاس پہلے سے ہے اسے چھوئیں — وہ کل رقم سے نکل جائے گا اور نکلا رہے گا۔',
@@ -570,6 +580,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceCommunity: 'أشخاص يتسوّقون هنا',
     priceReported: 'مُبلَّغ عنه',
     legCommunity: 'أبلغ عنه من يتسوّقون هنا',
+    legOpenPrices: 'Open Prices، سجّلها متسوّقون في هذا البلد',
+    priceOpen: 'مسجّلة في Open Prices',
 
     haveIt: 'في مطبخك',
     tapToToggle: 'المس أي شيء تملكه أصلاً — يخرج من المجموع ويبقى خارجه.',

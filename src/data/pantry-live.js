@@ -146,8 +146,42 @@ const CATEGORY_TAG = {
  * Open Prices is crowdsourced, so coverage is patchy and honest about it:
  * returns {value, currency, n, newest, source} or null when nobody has logged it.
  */
+/**
+ * The cookbook writes ingredients the way a recipe does — "Raw prawns, peeled",
+ * "Mature cheddar", "Onion" — and the category table is keyed on the plain
+ * product. Rather than list every wording, strip the cooking adjectives and try
+ * the singular. Takes the cookbook from 21 matched lines to 27 with no new tags.
+ *
+ * The rest stay unmatched on purpose. Guessing an Open Food Facts tag that
+ * happens to exist but names a different product would return real prices for
+ * the wrong thing, which is worse than the modelled figure it replaced — so
+ * only tags someone has checked go in the table.
+ *
+ * Deliberately conservative: it only ever removes qualifiers and a trailing s,
+ * so it cannot turn one product into a different one. "Spring onions" does not
+ * become "Onions" — the qualifier list has no "spring" in it, because a spring
+ * onion is a different thing at a different price.
+ */
+const QUALIFIER =
+  /^(raw|firm|fresh|dried|ground|mature|long grain|tinned|chopped|whole|smoked|roasted|extra virgin)\s+/i;
+
+export function normaliseIngredient(name) {
+  let n = String(name).split(',')[0].trim();
+  // "Tuna in spring water" is tuna; the packing medium is not the product.
+  n = n.replace(/\s+in\s+.+$/i, '');
+  for (let i = 0; i < 3 && QUALIFIER.test(n); i += 1) n = n.replace(QUALIFIER, '');
+  if (CATEGORY_TAG[n]) return n;
+  const cap = n.charAt(0).toUpperCase() + n.slice(1);
+  if (CATEGORY_TAG[cap]) return cap;
+  // Singular ↔ plural, both directions, because the table mixes the two.
+  for (const alt of [cap.replace(/s$/, ''), cap + 's', cap.replace(/es$/, '')]) {
+    if (alt !== cap && CATEGORY_TAG[alt]) return alt;
+  }
+  return cap;
+}
+
 export async function openPrice(ingredient, countryCode = 'GB') {
-  const tag = CATEGORY_TAG[ingredient];
+  const tag = CATEGORY_TAG[normaliseIngredient(ingredient)];
   if (!tag) return null;
   return memo(`op:${tag}:${countryCode}`, 216e5, async () => {
     const u = `https://prices.openfoodfacts.org/api/v1/prices?category_tag=${encodeURIComponent(tag)}`

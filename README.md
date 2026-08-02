@@ -153,7 +153,10 @@ src/
     ../lib/diets.ts    whether a recipe meets a diet: six by tag, three derived
     pantry-i18n.js     six languages, RTL included
     pantry-food.js     ingredient and micronutrient names, leftover verdicts
-    pantry-live.js     geolocation, Nominatim, Overpass, Open Prices
+    pantry-live.js     geolocation, Nominatim, Overpass, Open Prices, ECB rates
+  lib/
+    money.ts           the two directions money travels, and only these two
+    diets.ts           whether a recipe meets a diet: six by tag, three derived
 ```
 
 `usePantry` keeps one state object and returns a flat bag of values, mirroring the prototype's
@@ -200,6 +203,13 @@ one. Interface copy carries no such risk, so it is translated.
   an actual forecast; that data is not in the app.
 - **Eight countries can be priced**, four of them from measured market surveys
   and the rest modelled from pack prices. The coverage note says exactly that.
+- **A line takes the best price it can get**, and the dot beside it says which:
+  a community report first, then Open Prices, then the model. Only a price paid
+  in this country's own currency is used — there is no honest way to turn a euro
+  shelf price into a rupee one, so a mismatch falls back to the model.
+- **27 of the cookbook's 93 ingredient lines can reach Open Prices.** The rest
+  have no checked category tag, and guessing one that happens to exist but names
+  a different product would put a real price on the wrong thing.
 - **The Passport denominator is the eleven countries the cookbook covers**, not
   the countries that can be priced — two different numbers that were once
   wrongly the same one.
@@ -211,9 +221,11 @@ one. Interface copy carries no such risk, so it is translated.
 - **Optional ingredients are not in the total.** A dip you might not make is
   not part of what dinner costs. The line sits at zero with "tap to add it",
   and adding it puts it in the total and on the list.
-- **Of the five data sources listed in Settings, two are live** — Nominatim and
-  Overpass, when you grant location. The other three are marked
-  "not connected yet" rather than implied to be running.
+- **A source is marked live once it has actually answered**, not because its
+  name matches something the app could in principle call. Nominatim and Overpass
+  light up when you grant location, Open Prices when a shopping list comes back
+  with something in it, the exchange rate when a network allows it. The rest say
+  "not connected yet", because they are not.
 
 ## Diets, and what a filter can honestly promise
 
@@ -305,9 +317,15 @@ Nominatim, and pulls the actual supermarkets within 2.5 km from Overpass with th
 tiering them by chain. Deny permission and it falls back to the country picker. Open Prices supplies
 real crowdsourced shelf prices where anyone has logged them.
 
-No UK, US or EU supermarket publishes a public price API. Without a vendor key the app uses Open
-Prices, which is real but patchy, and every line says whether it is measured, scaled or modelled.
-**You → Supermarket price key** holds a slot for a paid aggregator.
+No UK, US or EU supermarket publishes a public price API, and their terms prohibit scraping one
+together — in the UK and EU a price catalogue is also protected by database right, quite apart from
+copyright. So the real prices in here come from the two routes that are actually open: Open Prices,
+crowdsourced under ODbL and read without a key or an account, and the app's own reports, which are
+what someone paid in a shop near you. **You → Supermarket price key** holds a slot for a paid
+aggregator, for anyone who wants named-chain prices and has a licence to use them.
+
+Open Prices is real but patchy — 27 of the cookbook's 93 ingredient lines have a checked category
+tag, and coverage varies by country on top of that. Every line says which of the three it is.
 
 `project/pantry-data.js` and `project/pantry-map.js` — the Open Food Facts nutrition snapshot from
 the last, unfinished turn of the design conversation — sit in the prototype folder, not in `src/`.
