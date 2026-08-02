@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# A zipped dist/, for hosts you upload to by hand rather than build on.
+pantry-dist.zip
 *.local
 .DS_Store
 
