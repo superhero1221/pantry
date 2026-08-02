@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   ChangeEvent,
+  KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react';
@@ -30,10 +31,11 @@ import {
 import type { HistoryRow, Recipe, Store, TechniqueCard } from '../data/types';
 import * as food from '../data/pantry-food';
 import * as i18n from '../data/pantry-i18n';
-import type { Shop } from '../data/pantry-live';
+import type { Fx, Shop } from '../data/pantry-live';
 import { cloudEnabled, db } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
+import { DERIVED, meetsDiet } from '../lib/diets';
 import { xt } from '../data/extra-copy';
 import {
   pullCooks,
@@ -83,6 +85,14 @@ interface Drag {
   oy: number;
   moved: boolean;
   over: string | null;
+}
+
+/** Live rates as last seen, plus the moment we saw them. `at` is ours, not the
+ *  ECB's, and it is what holds the app to one ask a day. Null anywhere means it
+ *  is running on the rates it shipped with — which is also exactly where a
+ *  failed, blocked or offline fetch leaves it. */
+interface FxCache extends Fx {
+  at: number;
 }
 
 export interface PantryState {
@@ -144,6 +154,9 @@ export interface PantryState {
   planServings: number;
   plan: string[];
   planSaved: boolean;
+  /** What a pound is worth today, where anyone has managed to ask. Null is the
+   *  ordinary case, not the error case: it means the bundled rates. */
+  fx: FxCache | null;
 }
 
 const INITIAL: PantryState = {
@@ -205,6 +218,7 @@ const INITIAL: PantryState = {
   planServings: 2,
   plan: [],
   planSaved: false,
+  fx: null,
 };
 
 /* ── What survives a reload ────────────────────────────────────────────────
@@ -253,9 +267,37 @@ function save(s: PantryState) {
   }
 }
 
+/* ── What a pound is worth ─────────────────────────────────────────────────
+   Its own key, deliberately not part of the profile above: an exchange rate is
+   not something you told the app, so "Start over" forgets you and leaves this
+   where it is. Read synchronously at boot so a returning user never sees a
+   price change shape a frame after opening, and written only when a fetch has
+   actually come back with something. Missing, unreadable or half-written all
+   mean the bundled rates, which is where the app starts anyway. */
+const FX_KEY = 'pantry.fx.v1';
+const FX_TTL = 864e5;
+
+function loadFx(): FxCache | null {
+  try {
+    const raw = localStorage.getItem(FX_KEY);
+    const f = raw ? (JSON.parse(raw) as FxCache) : null;
+    return f && f.rates && typeof f.rates === 'object' && typeof f.at === 'number' ? f : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveFx(f: FxCache) {
+  try {
+    localStorage.setItem(FX_KEY, JSON.stringify(f));
+  } catch {
+    /* private mode, quota — the bundled rates are always there */
+  }
+}
+
 function initialState(): PantryState {
   const saved = load();
-  const s = { ...INITIAL, ...saved };
+  const s = { ...INITIAL, ...saved, fx: loadFx() };
   if (s.seen) s.screen = 'home';
   return s;
 }
@@ -263,6 +305,10 @@ function initialState(): PantryState {
 /** Canonical ingredient key — the name before the first comma, which is what
  *  the recipe `have` lists and the cupboard both match on. */
 const keyOf = (name: string) => name.split(',')[0].trim();
+
+/** The budget presets the design ships, in GBP: the chip row on Home, and the
+ *  set that a typed-in amount is measured against. */
+const BUDGETS = [3, 5, 6, 8, 12];
 
 export function usePantry() {
   const [S, setS] = useState<PantryState>(initialState);
@@ -486,15 +532,41 @@ export function usePantry() {
   /* ── Money ────────────────────────────────────────────────────────────── */
   const cc = S.country || 'GB';
   const c = COUNTRIES[cc] || COUNTRIES.GB;
+  /** Today's rate where a fetch has got through and the ECB publishes one for
+   *  this currency; the rate the cookbook shipped with everywhere else. Naira,
+   *  Pakistani rupees and dirhams are never in the published set, so those
+   *  three always read from the cookbook — as does every country on a phone
+   *  with no signal. A rate of 0, NaN or undefined falls through to the
+   *  bundled number on the same line, so a malformed answer cannot land. */
+  const fxLive = (S.fx && S.fx.rates[c.iso]) || 0;
+  const fx = fxLive || c.fx;
 
   const fmt = useCallback(
     (gbp: number) => {
-      const v = gbp * c.idx * c.fx;
+      const v = gbp * c.idx * fx;
+      // Whole lira and whole naira, pounds and euros to the penny: that is a
+      // property of the currency, not of today's rate. The bundled figure
+      // decides the shape so a live rate can never change it.
       if (c.fx >= 40) return c.sym + Math.round(v).toLocaleString();
       return c.sym + v.toFixed(2);
     },
-    [c],
+    [c, fx],
   );
+
+  /* ── The budget ───────────────────────────────────────────────────────────
+     Presets are held in GBP; a typed amount is local money divided back by
+     c.idx * c.fx, so it almost never lands on a preset float exactly. Compare
+     what the two print instead: if the row and the budget read alike, they are
+     the same choice, and no epsilon has to be invented to say so. */
+  const sameMoney = (a: number, b: number) => fmt(a) === fmt(b);
+  const budgetIsCustom = !BUDGETS.some((b) => sameMoney(S.budget, b));
+
+  const commitBudget = () => {
+    const v = parseFloat(S.budgetDraft);
+    // Divide by the rate it was displayed at, not the bundled one, or a budget
+    // typed in local money is stored as a different amount than it read.
+    if (v > 0) setState({ budget: v / (c.idx * fx), budgetOtherOpen: false, budgetDraft: '' });
+  };
 
   const storeList = useCallback((): Store[] => {
     const s = ref.current.liveShops;
@@ -570,26 +642,47 @@ export function usePantry() {
   };
 
   /* ── Ranking ──────────────────────────────────────────────────────────── */
+  /** The time budget, taken literally. Everything that reads it treats it as a
+   *  line rather than a nudge — the soft penalty this replaced let a name match
+   *  buy its way past a 30-minute promise with a 55-minute dish. */
+  const fitsTime = (r: Recipe) => r.total <= S.maxTime;
+
   const ranked = useCallback((): Recipe[] => {
     const q = S.query.toLowerCase().trim();
     const lvl = skillLevel();
     const scored = RECIPES.map((r) => {
       let s = 0;
+      // Asked for by name. The one thing allowed to pull a dish past the time
+      // budget, because refusing to show you the dish you typed would be worse
+      // than showing it and saying how long it really takes.
+      let named = false;
       if (q) {
         const hay = (r.name + ' ' + r.cuisine + ' ' + (r.copycat || '') + ' ' + r.local).toLowerCase();
-        if (hay.indexOf(q) >= 0) s -= 100;
+        if (hay.indexOf(q) >= 0) {
+          s -= 100;
+          named = true;
+        }
         q.split(/\s+/).forEach((w) => {
           if (w.length > 2 && hay.indexOf(w) >= 0) s -= 30;
         });
-        if (r.copycat && COPYCAT_HINTS.some((h) => q.indexOf(h) >= 0)) s -= 140;
+        if (r.copycat && COPYCAT_HINTS.some((h) => q.indexOf(h) >= 0)) {
+          s -= 140;
+          named = true;
+        }
       }
       const cost = toBuy(r, 0.82);
       if (cost > S.budget) s += (cost - S.budget) * 22;
       else s -= 6;
-      if (r.total > S.maxTime) s += (r.total - S.maxTime) * 0.5;
+      // A diet is a harder line than a clock, so it is tracked as a flag and
+      // not only as a score: nothing that breaks one may outrank something that
+      // keeps it, however quick it is. All nine are checked here — four of them
+      // used to be, and ticking "Nut free" still returned Pad Thai.
+      let breaksDiet = false;
       S.diets.forEach((d) => {
-        if (['vegan', 'vegetarian', 'gluten_free', 'dairy_free'].indexOf(d) >= 0 && r.tags.indexOf(d) < 0)
+        if (!meetsDiet(r, d)) {
           s += 200;
+          breaksDiet = true;
+        }
       });
       const pr = S.profile;
       const head = pr.push === 'yes' ? 1 : 0;
@@ -605,9 +698,17 @@ export function usePantry() {
       if (pr.goal === 'recomp') s -= (r.per.protein / r.per.kcal) * 420;
       if (pr.goal === 'cheap') s += (toBuy(r, 0.82) / r.servings) * 12;
       if (pr.goal === 'energy') s -= Math.min(28, r.per.carb * 0.3);
-      return { r, s };
+      return { r, s, named, breaksDiet };
     });
-    scored.sort((a, b) => a.s - b.s);
+    // Two promises, hardest first. A diet you have set is absolute — nothing
+    // that breaks it can outrank something that keeps it. Within that, the time
+    // budget is a promise too, not a preference: only a dish you named by hand
+    // gets past it, and every screen that shows one says so. Partitioning
+    // rather than filtering keeps the list fourteen long, so nothing that reads
+    // it can be handed an empty pool.
+    const rank = (x: { r: Recipe; named: boolean; breaksDiet: boolean }) =>
+      (x.breaksDiet ? 2 : 0) + (x.named || fitsTime(x.r) ? 0 : 1);
+    scored.sort((a, b) => rank(a) - rank(b) || a.s - b.s);
     return scored.map((x) => x.r);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S.query, S.budget, S.maxTime, S.diets, S.profile, S.skill, toBuy]);
@@ -643,6 +744,43 @@ export function usePantry() {
       });
     }
   }, [setState]);
+
+  /* ── What a pound is worth today ──────────────────────────────────────────
+     The bundled rates are the floor: the app boots on them and never waits for
+     a network to show a price. Once a day, and only on landing on Tonight —
+     never between the shop list and the till — we ask the ECB's daily set what
+     is true and merge in the currencies it actually covers.
+
+     Every part of this is allowed to fail. No spinner, no error, no "loading"
+     anywhere in the bag: blocked, refused, slow or impossible and every number
+     on screen is the one the app shipped with, which is exactly what it shows
+     today. An answer that lands after you have left Tonight is written to the
+     cache and applied on the next visit instead, so a rate never moves a
+     basket you are standing in front of. */
+  const fxAsked = useRef(false);
+
+  useEffect(() => {
+    if (S.screen !== 'home' || fxAsked.current) return;
+    const have = ref.current.fx;
+    if (have && Date.now() - have.at < FX_TTL) return;
+    fxAsked.current = true;
+    let onTonight = true;
+    (async () => {
+      try {
+        const L = await live();
+        const fresh = await L.fxRates();
+        if (!fresh) return;
+        const next = { ...fresh, at: Date.now() };
+        saveFx(next);
+        if (onTonight) setState({ fx: next });
+      } catch {
+        /* the rates it shipped with were always the answer if this fails */
+      }
+    })();
+    return () => {
+      onTonight = false;
+    };
+  }, [S.screen, setState]);
 
   /* ── The log, and the questions it earns the right to ask ─────────────── */
   const logCook = (r: Recipe, waste: Waste | null) => {
@@ -825,6 +963,10 @@ export function usePantry() {
   const per = buy / recipe.servings;
   const under = S.budget - buy;
   const lvl = skillLevel();
+  /** The dish on screen runs past the time budget. It gets here by being named,
+   *  or by being tapped in Browse or the planner — so the screen drops the
+   *  "under {m} min" chip it has not earned and states the real number. */
+  const overTime = recipe.total > S.maxTime;
 
   // What the basket costs once real reported prices replace the model.
   const buyReal = recipe.items
@@ -859,6 +1001,8 @@ export function usePantry() {
   const hs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(HH[k] || fb, vals);
   const vs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(V[k] || fb, vals);
   const countryName = P.cn[cc] || c.name;
+  /** "over your 30" — what a time past the budget is called, wherever it shows. */
+  const overBy = fill(xt(lg, 'timeOver'), { m: S.maxTime });
 
   const wasteMap = {
     none: { head: word('clearedIt', 'Nothing left.'), body: V.wasteNone, pct: 0 },
@@ -877,6 +1021,18 @@ export function usePantry() {
   const maxWeek = Math.max.apply(null, weekly);
   const thisWeek = weekly[weekly.length - 1];
   const lastWeek = weekly[weekly.length - 2];
+
+  /** What the log says you did not hand to a takeaway: each cook's restaurant
+   *  price less what it actually cost you, floored at zero so a dear night
+   *  counts as nothing saved rather than as a loss. Stats prints it in a tile
+   *  and the passport prints it under the flags, so it is worked out once, here
+   *  — two screens reading one number cannot quote you two. A dish with no
+   *  restaurant price is counted at a nine pound plate, and the whole thing
+   *  follows the log the moment real cooks push the sample weeks out. */
+  const savedVsTakeaway = S.history.reduce(
+    (a, x) => a + Math.max(0, (RECIPES.find((y) => y.id === x.id)?.restaurant || 9) * x.servings - x.spend),
+    0,
+  );
 
   const dishMap: Record<string, { id: string; name: string; cuisine: string; n: number; spend: number; pic?: string }> =
     {};
@@ -1089,7 +1245,13 @@ export function usePantry() {
       toggle: () =>
         setState({ diets: dietOn(d.id) ? S.diets.filter((x) => x !== d.id) : S.diets.concat([d.id]) }),
     })),
-    dietNote: S.diets.length ? vs('dietSome', '') : vs('dietNone', ''),
+    /* Nut free, no pork and no alcohol are read off the ingredient list rather
+       than off a tag, because the cookbook carries no tag for them. That works,
+       but it cannot see a factory, so the screen says so rather than letting an
+       allergy filter imply a guarantee it has no way to make. */
+    dietNote:
+      (S.diets.some((d) => DERIVED.indexOf(d) >= 0) ? xt(lg, 'dietDerived') + ' ' : '') +
+      (S.diets.length ? vs('dietSome', '') : vs('dietNone', '')),
     toLocate: () => {
       go('locate', { locating: true, located: false });
       window.setTimeout(() => setState({ locating: false, located: true }), 1900);
@@ -1136,15 +1298,31 @@ export function usePantry() {
       pick: () => setState({ query: label }),
     })),
     servingsLabel: hs('forServings', 'for {n} servings', { n: 2 }),
-    budgetChips: [3, 5, 6, 8, 12]
-      .map((b) => ({
-        key: String(b),
-        label: fmt(b),
-        style:
-          (S.budget === b && !S.budgetOtherOpen ? PILL_ON : PILL_OFF) +
-          'flex:none;min-width:64px;text-align:center;justify-content:center;',
-        pick: () => setState({ budget: b, budgetOtherOpen: false }),
-      }))
+    budgetChips: BUDGETS.map((b) => ({
+      key: String(b),
+      label: fmt(b),
+      style:
+        (sameMoney(S.budget, b) && !S.budgetOtherOpen ? PILL_ON : PILL_OFF) +
+        'flex:none;min-width:64px;text-align:center;justify-content:center;',
+      pick: () => setState({ budget: b, budgetOtherOpen: false }),
+    }))
+      // Your own number sits in the row as a sixth chip, lit like any other, so
+      // setting it is visibly a choice and not a shot into the dark. It is
+      // derived, never stored: tap a preset and it stops existing.
+      .concat(
+        budgetIsCustom
+          ? [
+              {
+                key: 'custom',
+                label: fmt(S.budget),
+                style:
+                  (S.budgetOtherOpen ? PILL_OFF : PILL_ON) +
+                  'flex:none;min-width:64px;text-align:center;justify-content:center;',
+                pick: () => setState({ budgetOtherOpen: false }),
+              },
+            ]
+          : [],
+      )
       .concat([
         {
           key: 'other',
@@ -1157,9 +1335,17 @@ export function usePantry() {
     budgetDraft: S.budgetDraft,
     symbol: c.sym,
     onBudgetDraft: (e: ChangeEvent<HTMLInputElement>) => setState({ budgetDraft: e.target.value }),
-    commitBudget: () => {
-      const v = parseFloat(S.budgetDraft);
-      if (v > 0) setState({ budget: v / (c.idx * c.fx), budgetOtherOpen: false, budgetDraft: '' });
+    commitBudget,
+    /* Enter is the Set button — the same function, so the two cannot drift.
+       Escape abandons what you typed and leaves the budget where it was. */
+    onBudgetKey: (e: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitBudget();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setState({ budgetOtherOpen: false, budgetDraft: '' });
+      }
     },
     timeChips: [
       { m: 15 },
@@ -1177,8 +1363,12 @@ export function usePantry() {
     search: () => go('results', { pickId: ranked()[0].id, showMicro: false }),
     decideForMe: () => {
       const pool = ranked();
+      // Nothing has been asked for by name here, so the budget is a line: the
+      // shuffle only lands on something you have actually got the evening for.
+      const fits = pool.filter(fitsTime);
+      const from = fits.length ? fits : pool;
       go('results', {
-        pickId: pool[Math.floor(Math.random() * Math.min(3, pool.length))].id,
+        pickId: from[Math.floor(Math.random() * Math.min(3, from.length))].id,
         query: '',
         showMicro: false,
       });
@@ -1197,8 +1387,16 @@ export function usePantry() {
     priceSub: word('toBuyFor', 'to buy, for') + ' ' + recipe.servings + ' ' + word('servings', 'servings'),
     pricePer: fmt(per),
     budgetLabel: fmt(S.budget),
-    timeLabel:
-      S.maxTime === 999 ? R.noRush : R.underMins + ' ' + S.maxTime + ' ' + word('minutes', 'min'),
+    // Over a 55-minute dish this chip used to read "under 30 min". Now it reads
+    // "55 min · over your 30", and the note below says why it is here at all.
+    timeLabel: overTime
+      ? recipe.total + ' ' + word('minutes', 'min') + ' · ' + overBy
+      : S.maxTime === 999
+        ? R.noRush
+        : R.underMins + ' ' + S.maxTime + ' ' + word('minutes', 'min'),
+    timeOverNote: overTime
+      ? fill(xt(lg, 'timeOverWhy'), { m: S.maxTime, t: recipe.total })
+      : null,
     verdict:
       under >= 0
         ? fmt(under) + ' ' + R.underYour + ' ' + fmt(S.budget) + ' ' + R.andIncludes
@@ -1270,6 +1468,7 @@ export function usePantry() {
           a.total +
           ' ' +
           word('minutes', 'min') +
+          (fitsTime(a) ? '' : ' · ' + overBy) +
           ' · ' +
           Math.round(a.per.protein) +
           'g ' +
@@ -1354,6 +1553,12 @@ export function usePantry() {
       );
     })(),
     basketTotal: fmt(buyReal),
+    /** True while a line is struck through because the recipe assumes it, not
+     *  because you said so — five of Mango Habanero Wings' eleven. The note
+     *  under the list says as much, once, for exactly as long as it is true. */
+    assumedOwned: recipe.items.some(
+      (i) => !(keyOf(i.n) in S.owned) && recipe.have.indexOf(keyOf(i.n)) >= 0,
+    ),
     savedLine: fill(SL.saved, { a: fmt(saved), b: fmt(saved * 9) }),
 
     /* ── Reporting a real price ─────────────────────────────────────────── */
@@ -1557,7 +1762,7 @@ export function usePantry() {
     ofCountriesLabel: word('ofCountries', 'of 91 countries'),
     keptOutLabel: word('keptOut', 'kept out of takeaways'),
     countriesCooked: PASSPORT.length,
-    totalSaved: fmt(287.4),
+    totalSaved: fmt(savedVsTakeaway),
     passport: PASSPORT.slice()
       .sort((a, b) => a.price - b.price)
       .map((p, i) => ({
@@ -1597,12 +1802,7 @@ export function usePantry() {
     statsAvgServing: fmt(
       S.history.reduce((a, x) => a + x.spend / x.servings, 0) / Math.max(1, S.history.length),
     ),
-    statsSaved: fmt(
-      S.history.reduce(
-        (a, x) => a + Math.max(0, (RECIPES.find((y) => y.id === x.id)?.restaurant || 9) * x.servings - x.spend),
-        0,
-      ),
-    ),
+    statsSaved: fmt(savedVsTakeaway),
     statsWaste:
       Math.round((S.history.reduce((a, x) => a + x.waste, 0) / Math.max(1, S.history.length)) * 100) + '%',
     weekBars: weekly.map((v, i) => ({
@@ -1716,10 +1916,18 @@ export function usePantry() {
     buildPlan: () => {
       const pool = ranked();
       if (!pool.length) return;
+      // A week you have not got the evenings for is not a plan. The days are
+      // filled from what fits your time — rotated, so a shuffle still shuffles
+      // — and only spill past it when there are not enough dishes under it to
+      // go round without serving you the same one five nights running. The
+      // cells that spilled say so.
+      const fits = pool.filter(fitsTime);
+      const over = pool.filter((r) => !fitsTime(r));
+      const spin = fits.length ? Math.floor(Math.random() * fits.length) : 0;
+      const order = fits.length ? fits.slice(spin).concat(fits.slice(0, spin), over) : pool;
       const want = S.planDays * S.planMeals;
-      const offset = Math.floor(Math.random() * pool.length);
       const picks: string[] = [];
-      for (let i = 0; i < want; i += 1) picks.push(pool[(offset + i) % pool.length].id);
+      for (let i = 0; i < want; i += 1) picks.push(order[i % order.length].id);
       setState({ plan: picks, planSaved: false });
     },
     planCells: S.plan.map((id, i) => {
@@ -1733,7 +1941,14 @@ export function usePantry() {
         name: dish(r),
         pic: r.pic,
         meta:
-          cuisineWord(r.cuisine) + ' · ' + r.total + ' ' + word('minutes', 'min') + ' · ' + diffWord(r.diff),
+          cuisineWord(r.cuisine) +
+          ' · ' +
+          r.total +
+          ' ' +
+          word('minutes', 'min') +
+          (fitsTime(r) ? '' : ' · ' + overBy) +
+          ' · ' +
+          diffWord(r.diff),
         price: fmt((toBuy(r, mult) / r.servings) * S.planServings),
         open: () => go('results', { pickId: id, showMicro: false }),
         swap: (e: ReactMouseEvent) => {
@@ -1894,7 +2109,9 @@ export function usePantry() {
       } catch {
         /* nothing to clear */
       }
-      setS({ ...INITIAL, lang: S.lang });
+      // Your language and what a pound is worth are not things you told me, so
+      // neither is mine to throw away here.
+      setS({ ...INITIAL, lang: S.lang, fx: S.fx });
     },
     langNative: i18n.nativeOf(lg),
     langOpen: S.langOpen,
@@ -1915,15 +2132,35 @@ export function usePantry() {
       L.setVendorKey(S.vendorDraft);
       ping(S.vendorDraft ? vs('keyOn', 'Key saved.') : vs('keyOff', 'Key cleared.'));
     },
-    /* Nominatim and Overpass run for real when you grant location. The other
-       three are honest provenance for data that is not wired in yet, and the
-       screen says which is which rather than implying all five are live. */
-    sources: SOURCES.map((s, n) => ({
-      ...s,
-      key: s.name,
-      use: P.us[n] || s.use,
-      active: /nominatim|overpass/i.test(s.name),
-    })),
+    /* Nominatim and Overpass run for real when you grant location, and the
+       exchange rate is live the moment a network allows it — the last row says
+       so, or says why not. The other three are honest provenance for data that
+       is not wired in yet, and the screen shows which is which rather than
+       implying they are all live. */
+    sources: SOURCES.map((s, n) => {
+      const on = /nominatim|overpass/i.test(s.name);
+      return {
+        ...s,
+        key: s.name,
+        use: P.us[n] || s.use,
+        active: on,
+        note: on ? '' : xt(lg, 'sourceIdle'),
+      };
+    }).concat([
+      {
+        key: 'fx',
+        name: 'European Central Bank · Frankfurter',
+        use: xt(lg, 'sourceFx'),
+        licence: 'ECB',
+        url: 'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html',
+        active: !!fxLive,
+        // Three states, three truths. "Not connected yet" would be a permanent
+        // lie in Lagos, Lahore and Dubai: the ECB publishes no rate for their
+        // money and never will, so those prices are bundled by design, not by
+        // failure, and the row says which.
+        note: fxLive ? '' : S.fx ? xt(lg, 'sourceFxBundled') : xt(lg, 'sourceIdle'),
+      },
+    ]),
 
     /* ── Copy that appears on more than one screen ──────────────────────── */
     t: T,

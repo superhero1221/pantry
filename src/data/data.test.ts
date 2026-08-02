@@ -1,6 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { COUNTRIES, HISTORY, PASSPORT, RECIPES, STORES_BY_COUNTRY } from './cookbook';
+import { COUNTRIES, DIETS, HISTORY, PASSPORT, RECIPES, STORES_BY_COUNTRY } from './cookbook';
+import { ENFORCEABLE, meetsDiet } from '../lib/diets';
 import { EXTRA, orphaned, untranslated } from './extra-copy';
 import { LANGS, pack, strings } from './pantry-i18n';
 
@@ -32,6 +33,36 @@ describe('the cookbook', () => {
   it('can price every country it offers, with shops for each', () => {
     for (const code of Object.keys(COUNTRIES)) {
       expect(STORES_BY_COUNTRY[code]?.length, code).toBeGreaterThan(0);
+    }
+  });
+
+  it('names the currency of every country, so a live rate can find it', () => {
+    // A missing or misspelled ISO code does not fail loudly — that country just
+    // stays on the rate the app shipped with, quietly, forever. Which is the
+    // whole failure this line exists to catch early.
+    for (const [code, country] of Object.entries(COUNTRIES)) {
+      expect(/^[A-Z]{3}$/.test(country.iso), `${code} -> ${country.iso}`).toBe(true);
+    }
+  });
+
+  it('can actually answer for every diet it offers', () => {
+    // Five of the nine were offered and then silently ignored: halal and kosher
+    // had tags nothing read, and nut free, no pork and no alcohol had no tag on
+    // any recipe at all. Ticking "Nut free" returned Pad Thai and its peanuts.
+    for (const d of DIETS) {
+      expect(ENFORCEABLE, `"${d.label}" is offered but nothing enforces it`).toContain(d.id);
+    }
+  });
+
+  it('keeps allergens off a plate that says it has none', () => {
+    const nutty = RECIPES.filter((r) => !meetsDiet(r, 'nut_free')).map((r) => r.name);
+    expect(nutty).toContain('Pad Thai'); // roasted peanuts
+    expect(nutty).toContain('Sweet Potato and Chickpea Curry'); // coconut milk
+    // A derived diet must never exclude everything, which is what a matcher
+    // that has gone wrong looks like from the outside.
+    for (const d of DIETS) {
+      const left = RECIPES.filter((r) => meetsDiet(r, d.id)).length;
+      expect(left, `no dish at all survives "${d.label}"`).toBeGreaterThan(0);
     }
   });
 

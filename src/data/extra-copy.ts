@@ -56,6 +56,19 @@ export const EXTRA: Record<string, Record<string, string>> = {
     totalMeansBody:
       'Not your till receipt. You buy a whole bag of noodles, not the 160 g this needs — so the first shop is dearer and the rest carries into the next meal.',
 
+    /* ── The time budget ── */
+    timeOver: 'over your {m}',
+    timeOverWhy:
+      'Longer than the {m} minutes you asked for. I am showing it rather than pretending it is quicker: {t} minutes is the real number.',
+
+    /* ── The cupboard, honestly ── */
+    sampleKitchen:
+      'This cupboard is sample data, so the screen has something to show before you have added anything. The counts, the days and the value are not a measure of your kitchen — your shopping list only takes off what each recipe assumes and what you tick yourself.',
+    assumedHave:
+      'The lines already crossed off are what this recipe assumes most kitchens have, not something you have told me — tap one to put it back on the list.',
+    dietDerived:
+      'Nut free, no pork and no alcohol are worked out by reading each recipe\'s ingredients — I cannot see what a factory put in a jar, or what shared a production line. Check the label if it matters.',
+
     /* ── Sample data ── */
     sampleStats:
       'These eight weeks are sample data, so this screen has something to show before you have cooked anything. They are not yours, they never leave this device, and your first real cook replaces them.',
@@ -97,6 +110,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     notifyNeedsAccount: 'Sign in first — a reminder has to be attached to an account to be sent.',
     offlineReady: 'Ready to use offline',
     sourceIdle: 'not connected yet',
+    sourceFx: 'today’s rate between pounds and your currency',
+    sourceFxBundled: 'no rate published',
   },
 
   es: {
@@ -134,6 +149,19 @@ export const EXTRA: Record<string, Record<string, string>> = {
     totalMeans: 'Lo que cuesta la parte de cada ingrediente que usa esta comida',
     totalMeansBody:
       'No es tu tique. Compras la bolsa entera de fideos, no los 160 g que hacen falta, así que la primera compra sale más cara y el resto pasa a la comida siguiente.',
+
+    /* ── The time budget ── */
+    timeOver: 'por encima de tus {m}',
+    timeOverWhy:
+      'Más de los {m} minutos que pediste. Te lo enseño en vez de fingir que es más rápido: {t} minutos es el número real.',
+
+    /* ── The cupboard, honestly ── */
+    sampleKitchen:
+      'Esta despensa son datos de ejemplo, para que la pantalla tenga algo que mostrar antes de que añadas nada. Las cantidades, los días y el valor no miden tu cocina: tu lista de la compra solo descuenta lo que cada receta da por supuesto y lo que marcas tú.',
+    assumedHave:
+      'Las líneas ya tachadas son lo que esta receta da por supuesto que hay en casi todas las cocinas, no algo que me hayas dicho tú: toca una para devolverla a la lista.',
+    dietDerived:
+      'Sin frutos secos, sin cerdo y sin alcohol se deducen leyendo los ingredientes de cada receta: no puedo ver qué metió una fábrica en un bote ni qué compartió línea de producción. Mira la etiqueta si es importante.',
 
     sampleStats:
       'Estas ocho semanas son datos de ejemplo, para que esta pantalla tenga algo que mostrar antes de que cocines nada. No son tuyos, no salen de este dispositivo, y tu primera comida real los sustituye.',
@@ -175,6 +203,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
       'Inicia sesión primero: un recordatorio tiene que ir asociado a una cuenta para poder enviarse.',
     offlineReady: 'Listo para usar sin conexión',
     sourceIdle: 'aún no conectado',
+    sourceFx: 'el cambio de hoy entre la libra y tu moneda',
+    sourceFxBundled: 'sin tipo publicado',
   },
 
   fr: {
@@ -212,6 +242,19 @@ export const EXTRA: Record<string, Record<string, string>> = {
     totalMeans: 'Ce que coûte la part de chaque ingrédient utilisée par ce plat',
     totalMeansBody:
       'Ce n’est pas votre ticket de caisse. Vous achetez le paquet entier de nouilles, pas les 160 g nécessaires : les premières courses coûtent donc plus cher et le reste sert au repas suivant.',
+
+    /* ── The time budget ── */
+    timeOver: 'au-dessus de vos {m}',
+    timeOverWhy:
+      'Plus long que les {m} minutes que vous avez demandées. Je vous le montre plutôt que de faire croire que c’est plus rapide : {t} minutes, c’est le vrai chiffre.',
+
+    /* ── The cupboard, honestly ── */
+    sampleKitchen:
+      'Ce placard est constitué de données d’exemple, pour que l’écran ait quelque chose à montrer avant que vous ayez ajouté quoi que ce soit. Les quantités, les jours et la valeur ne mesurent pas votre cuisine — votre liste de courses ne retire que ce que chaque recette suppose et ce que vous cochez vous-même.',
+    assumedHave:
+      'Les lignes déjà barrées sont ce que cette recette suppose présent dans la plupart des cuisines, pas ce que vous m’avez dit — touchez-en une pour la remettre sur la liste.',
+    dietDerived:
+      'Sans fruits à coque, sans porc et sans alcool sont déduits des ingrédients de chaque recette — je ne vois pas ce qu\'une usine a mis dans un bocal, ni ce qui a partagé une ligne de production. Vérifiez l\'étiquette si cela compte.',
 
     sampleStats:
       'Ces huit semaines sont des données d’exemple, pour que cet écran ait quelque chose à montrer avant que vous ayez cuisiné. Elles ne sont pas les vôtres, elles ne quittent jamais cet appareil, et votre premier vrai plat les remplace.',
@@ -253,6 +296,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
       'Connectez-vous d’abord : un rappel doit être rattaché à un compte pour être envoyé.',
     offlineReady: 'Prête à servir hors ligne',
     sourceIdle: 'pas encore connecté',
+    sourceFx: 'le taux du jour entre la livre et votre monnaie',
+    sourceFxBundled: 'aucun taux publié',
   },
 
   pl: {
@@ -290,6 +335,19 @@ export const EXTRA: Record<string, Record<string, string>> = {
     totalMeans: 'Ile kosztuje ta część każdego składnika, którą zjada ten posiłek',
     totalMeansBody:
       'To nie paragon. Kupujesz cały makaron, a nie 160 g, których potrzeba — więc pierwsze zakupy są droższe, a reszta przechodzi na następny posiłek.',
+
+    /* ── The time budget ── */
+    timeOver: 'ponad twoje {m}',
+    timeOverWhy:
+      'Dłużej niż {m} minut, o które prosiłeś. Pokazuję to, zamiast udawać, że jest szybsze: {t} minut to prawdziwa liczba.',
+
+    /* ── The cupboard, honestly ── */
+    sampleKitchen:
+      'Ta szafka to dane przykładowe, żeby ekran miał co pokazać, zanim cokolwiek dodasz. Liczby, dni i wartość nie są pomiarem twojej kuchni — z listy zakupów schodzi tylko to, co zakłada sam przepis, i to, co odhaczysz sam.',
+    assumedHave:
+      'Przekreślone pozycje to nie twoja informacja, tylko założenie przepisu, że są w większości kuchni — dotknij którejś, żeby wróciła na listę.',
+    dietDerived:
+      'Bez orzechów, bez wieprzowiny i bez alkoholu wyliczam z listy składników każdego przepisu — nie widzę, co fabryka włożyła do słoika ani co dzieliło linię produkcyjną. Sprawdź etykietę, jeśli to ważne.',
 
     sampleStats:
       'Te osiem tygodni to dane przykładowe, żeby ten ekran miał co pokazać, zanim cokolwiek ugotujesz. Nie są twoje, nigdy nie opuszczają tego urządzenia, a pierwsze prawdziwe gotowanie je zastąpi.',
@@ -331,6 +389,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
       'Najpierw się zaloguj — przypomnienie musi być przypisane do konta, żeby dało się je wysłać.',
     offlineReady: 'Gotowe do użycia offline',
     sourceIdle: 'jeszcze niepodłączone',
+    sourceFx: 'dzisiejszy kurs funta do twojej waluty',
+    sourceFxBundled: 'kurs niepublikowany',
   },
 
   ur: {
@@ -366,6 +426,19 @@ export const EXTRA: Record<string, Record<string, string>> = {
     totalMeans: 'اس کھانے میں استعمال ہونے والے ہر جزو کے حصے کی قیمت',
     totalMeansBody:
       'یہ آپ کی رسید نہیں۔ آپ نوڈلز کا پورا پیکٹ خریدتے ہیں، صرف مطلوبہ ۱۶۰ گرام نہیں — اس لیے پہلی خریداری مہنگی رہتی ہے اور باقی اگلے کھانے کے کام آتا ہے۔',
+
+    /* ── The time budget ── */
+    timeOver: 'آپ کے {m} سے زیادہ',
+    timeOverWhy:
+      'یہ آپ کے مانگے ہوئے {m} منٹ سے زیادہ لیتا ہے۔ میں اسے تیز تر ظاہر کرنے کے بجائے دکھا رہا ہوں: اصل وقت {t} منٹ ہے۔',
+
+    /* ── The cupboard, honestly ── */
+    sampleKitchen:
+      'یہ الماری نمونے کا ڈیٹا ہے، تاکہ آپ کے کچھ شامل کرنے سے پہلے اس اسکرین پر دکھانے کو کچھ ہو۔ تعداد، دن اور قیمت آپ کے باورچی خانے کی پیمائش نہیں — خریداری کی فہرست سے صرف وہی نکلتا ہے جو ہر ترکیب فرض کرتی ہے اور جس پر آپ خود نشان لگاتے ہیں۔',
+    assumedHave:
+      'جن سطروں پر پہلے سے لکیر کھنچی ہے وہ آپ کی بتائی ہوئی نہیں — یہ ترکیب فرض کرتی ہے کہ زیادہ تر باورچی خانوں میں یہ چیزیں ہوتی ہیں۔ کسی کو چھوئیں تو وہ دوبارہ فہرست میں آ جائے گی۔',
+    dietDerived:
+      'بغیر گری دار میوہ، بغیر سؤر اور بغیر الکحل کا فیصلہ ہر ترکیب کے اجزاء پڑھ کر ہوتا ہے — مجھے یہ نظر نہیں آتا کہ کارخانے نے ڈبے میں کیا ڈالا یا کون سی چیزیں ایک ہی لائن پر بنیں۔ اگر معاملہ اہم ہے تو لیبل ضرور دیکھیں۔',
 
     sampleStats:
       'یہ آٹھ ہفتے نمونے کا ڈیٹا ہیں، تاکہ آپ کے کچھ پکانے سے پہلے اس اسکرین پر دکھانے کو کچھ ہو۔ یہ آپ کے نہیں، یہ کبھی اس آلے سے باہر نہیں جاتے، اور آپ کا پہلا اصل کھانا انہیں بدل دے گا۔',
@@ -405,6 +478,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     notifyNeedsAccount: 'پہلے لاگ اِن کریں — یاد دہانی بھیجنے کے لیے اکاؤنٹ سے منسلک ہونا ضروری ہے۔',
     offlineReady: 'آف لائن استعمال کے لیے تیار',
     sourceIdle: 'ابھی منسلک نہیں',
+    sourceFx: 'پاؤنڈ اور آپ کی کرنسی کے درمیان آج کی شرح',
+    sourceFxBundled: 'شرح شائع نہیں',
   },
 
   ar: {
@@ -440,6 +515,19 @@ export const EXTRA: Record<string, Record<string, string>> = {
     totalMeans: 'تكلفة حصّة هذه الوجبة من كل مكوّن',
     totalMeansBody:
       'ليست فاتورتك. أنت تشتري كيس المعكرونة كاملاً، لا الـ ١٦٠ غراماً التي تحتاجها — لذا تكون التسوّقة الأولى أغلى، والباقي ينتقل إلى الوجبة التالية.',
+
+    /* ── The time budget ── */
+    timeOver: 'أكثر من {m} التي حدّدتها',
+    timeOverWhy:
+      'أطول من {m} دقيقة طلبتها. أعرضه بدل التظاهر بأنه أسرع: {t} دقيقة هو الرقم الحقيقي.',
+
+    /* ── The cupboard, honestly ── */
+    sampleKitchen:
+      'هذه الخزانة بيانات نموذجية، حتى يكون لدى الشاشة ما تعرضه قبل أن تضيف شيئاً. الأعداد والأيام والقيمة ليست قياساً لمطبخك — قائمة تسوّقك لا تُسقط إلا ما تفترضه كل وصفة وما تؤشّر عليه بنفسك.',
+    assumedHave:
+      'الأسطر المشطوبة أصلاً هي ما تفترض هذه الوصفة وجوده في معظم المطابخ، لا ما أخبرتني به — المس أحدها ليعود إلى القائمة.',
+    dietDerived:
+      'خالٍ من المكسّرات، بلا لحم خنزير وبلا كحول تُستنتج من قراءة مكوّنات كل وصفة — لا أرى ما وضعه مصنع في عبوة، ولا ما تشارك خط إنتاج. راجع الملصق إن كان الأمر مهماً.',
 
     sampleStats:
       'هذه الأسابيع الثمانية بيانات نموذجية، حتى يكون لدى هذه الشاشة ما تعرضه قبل أن تطبخ شيئاً. ليست بياناتك، ولا تغادر هذا الجهاز أبداً، وأول طبخة حقيقية تحلّ محلّها.',
@@ -479,6 +567,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     notifyNeedsAccount: 'سجّل الدخول أولاً — التذكير يجب أن يرتبط بحساب حتى يُرسَل.',
     offlineReady: 'جاهز للاستخدام دون اتصال',
     sourceIdle: 'غير موصول بعد',
+    sourceFx: 'سعر صرف اليوم بين الجنيه الإسترليني وعملتك',
+    sourceFxBundled: 'لا سعر منشور',
   },
 };
 

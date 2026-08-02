@@ -236,6 +236,16 @@ Prices are arithmetic over bundled data: a baseline shelf price per ingredient, 
 multiplier, times the country cost index and exchange rate. No model is consulted, so it answers
 instantly and cannot invent a dish.
 
+**Exchange rates.** The `fx` in `COUNTRIES` is the floor, not a claim about today. On landing on
+Tonight, at most once a day, the app asks Frankfurter for the European Central Bank's daily
+reference set and merges in the currencies it covers — pounds, dollars, euros, rupees and lira
+among them. Naira, Pakistani rupees and dirhams are not in that set and stay on the bundled number
+for good. Nothing waits on the answer: there is no spinner and no error state, and offline, blocked
+or refused, every figure is exactly the one the app shipped with. A rate is never swapped in
+mid-shop either — an answer that arrives after you have left Tonight is cached for next time rather
+than moving a basket you are standing in front of. **You → Where these numbers come from** says
+which rate you are on: live, not published for your currency, or not connected yet.
+
 **Use my location** runs the browser's geolocation, reverse-geocodes through OpenStreetMap
 Nominatim, and pulls the actual supermarkets within 2.5 km from Overpass with their opening hours,
 tiering them by chain. Deny permission and it falls back to the country picker. Open Prices supplies
@@ -253,5 +263,7 @@ recipe data. Wiring them up is a follow-on.
 
 Language, country, tier lists, diets, budget, goal, nudge toggles, cook history and the streak are
 kept in `localStorage` under `pantry.v1`, so the app does not forget your onboarding on reload.
-**You → Start over** clears all of it. Nothing is sent anywhere; the plate photo is read into an
-object URL and never leaves the device.
+**You → Start over** clears all of it. The day's exchange rates sit in their own key,
+`pantry.fx.v1`, because a rate is not something you told the app: starting over forgets you, not
+what the pound did. Nothing is sent anywhere; the plate photo is read into an object URL and never
+leaves the device.

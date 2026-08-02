@@ -6,6 +6,7 @@
 //   Overpass  (OpenStreetMap)  nearby shops     keyless, ODbL
 //   Open Prices (Open Food Facts) real prices   keyless for reads, ODbL
 //   Open Food Facts            product lookup   keyless, ODbL
+//   Frankfurter (ECB reference) exchange rates  keyless, about thirty currencies
 //
 // No major UK/US supermarket publishes a developer API, so real shelf prices for
 // a named chain need a paid aggregator. setVendorKey() plugs one in; without it
@@ -197,6 +198,41 @@ export async function vendorPrice(ingredient, chainDomain) {
     if (!first) return null;
     return { value: first.price ?? first.promotional_price, currency: first.currency || 'GBP', source: chainDomain };
   } catch (_) { return null; }
+}
+
+/**
+ * GBP → everything else, from the European Central Bank's daily reference rates
+ * by way of Frankfurter: keyless, no quota, nothing to sign up for.
+ *
+ * The ECB set is about thirty currencies. Naira, Pakistani rupees and dirhams
+ * are not among them, so what comes back is deliberately partial and the caller
+ * merges it over the bundled rates rather than replacing them.
+ *
+ * Resolves {date, rates} or null. It never throws and never retries: a block, a
+ * refusal, a captive portal or a plane all mean null, and null means the app
+ * keeps the numbers it shipped with. Deliberately not wrapped in memo() — a
+ * null here means "not right now", and holding that in memory for a day would
+ * outlive the reason for it. The day-long cache is the caller's, on disk.
+ */
+export async function fxRates() {
+  try {
+    // A shorter leash than the default: nothing on screen is waiting for this.
+    const r = await timed('https://api.frankfurter.app/latest?from=GBP',
+      { headers: { Accept: 'application/json' } }, 7000);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const raw = j && j.rates;
+    // One currency we know is always in the set proves this is the payload and
+    // not a hotel login page being polite.
+    if (!raw || typeof raw.USD !== 'number') return null;
+    const rates = { GBP: 1 };
+    for (const k of Object.keys(raw)) {
+      if (typeof raw[k] === 'number' && raw[k] > 0) rates[k] = raw[k];
+    }
+    return { date: typeof j.date === 'string' ? j.date : '', rates };
+  } catch (_) {
+    return null;
+  }
 }
 
 export const SOURCES = [

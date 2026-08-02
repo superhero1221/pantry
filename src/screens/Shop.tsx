@@ -57,6 +57,7 @@ export function Shop({ v }: { v: Pantry }) {
       </div>
       <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#a19786;text-wrap:pretty')}>
         {v.xt('tapToToggle')}
+        {v.assumedOwned ? ' ' + v.xt('assumedHave') : ''}
         {v.canReport ? ' ' + v.xt('tapPrice') : ''}
       </p>
 

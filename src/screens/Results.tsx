@@ -130,6 +130,15 @@ export function Results({ v }: { v: Pantry }) {
         </div>
       </div>
 
+      {v.timeOverNote && (
+        <p
+          dir="auto"
+          style={css('margin:9px 22px 0;font-size:12.5px;line-height:1.5;color:#82796a;text-wrap:pretty')}
+        >
+          {v.timeOverNote}
+        </p>
+      )}
+
       <div style={css('margin:20px 22px 0')}>
         <Btn
           onClick={v.toShop}

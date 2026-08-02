@@ -46,4 +46,17 @@ export declare function priceBasket(
   countryCode: string,
 ): Promise<Record<string, Price>>;
 export declare function vendorPrice(ingredient: string, chainDomain: string): Promise<Price | null>;
+
+export interface Fx {
+  /** The ECB publication date these rates carry, 'YYYY-MM-DD'. Empty when the
+   *  answer did not say. */
+  date: string;
+  /** Local units per pound, by ISO 4217 code, and deliberately partial: only
+   *  what the ECB actually publishes. GBP itself is included, as 1. */
+  rates: Record<string, number>;
+}
+
+/** Null on any failure at all, which means "keep the bundled rates". */
+export declare function fxRates(): Promise<Fx | null>;
+
 export declare const SOURCES: { name: string; use: string; licence: string; url: string }[];

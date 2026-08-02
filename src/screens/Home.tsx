@@ -62,6 +62,7 @@ export function Home({ v }: { v: Pantry }) {
           <input
             value={v.budgetDraft}
             onChange={v.onBudgetDraft}
+            onKeyDown={v.onBudgetKey}
             placeholder="6.50"
             inputMode="decimal"
             aria-label={v.t.homeMoney}

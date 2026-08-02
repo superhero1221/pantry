@@ -34,15 +34,26 @@ export const DIETS = [
   { id: 'nut_free', label: 'Nut free' }, { id: 'no_pork', label: 'No pork' },
   { id: 'no_alcohol', label: 'No alcohol' },
 ];
+// `fx` is the rate the app runs on with no signal: a floor, not a claim about
+// today. Where the European Central Bank publishes a rate for `iso`, the live
+// layer swaps the real one in at the top of a session and these numbers are
+// never seen. Naira, Pakistani rupees and dirhams are not in that set, so those
+// three are only ever the number written here.
+//
+// These were set at the design handoff and they drift. The lira in particular
+// is believed well adrift by now, and is left alone rather than replaced with a
+// figure nobody here could check — a wrong number with known provenance beats
+// an invented one. Anyone with a network gets the real rate; the sources row in
+// You says which of the two you are looking at.
 export const COUNTRIES = {
-  GB: { name: 'United Kingdom', city: 'Birmingham', sym: '\u00a3', cur: 'pounds', fx: 1, idx: 1, tier: 'model' },
-  US: { name: 'United States', city: 'Chicago', sym: '$', cur: 'dollars', fx: 1.27, idx: 1.14, tier: 'model' },
-  IN: { name: 'India', city: 'Pune', sym: '\u20b9', cur: 'rupees', fx: 106, idx: 0.31, tier: 'local' },
-  NG: { name: 'Nigeria', city: 'Lagos', sym: '\u20a6', cur: 'naira', fx: 1780, idx: 0.52, tier: 'local' },
-  PK: { name: 'Pakistan', city: 'Lahore', sym: 'Rs', cur: 'rupees', fx: 352, idx: 0.36, tier: 'local' },
-  DE: { name: 'Germany', city: 'Berlin', sym: '\u20ac', cur: 'euros', fx: 1.18, idx: 1.02, tier: 'euro' },
-  AE: { name: 'United Arab Emirates', city: 'Dubai', sym: 'AED', cur: 'dirhams', fx: 4.66, idx: 1.09, tier: 'model' },
-  TR: { name: 'T\u00fcrkiye', city: 'Istanbul', sym: '\u20ba', cur: 'lira', fx: 43, idx: 0.47, tier: 'local' },
+  GB: { name: 'United Kingdom', city: 'Birmingham', sym: '\u00a3', cur: 'pounds', iso: 'GBP', fx: 1, idx: 1, tier: 'model' },
+  US: { name: 'United States', city: 'Chicago', sym: '$', cur: 'dollars', iso: 'USD', fx: 1.27, idx: 1.14, tier: 'model' },
+  IN: { name: 'India', city: 'Pune', sym: '\u20b9', cur: 'rupees', iso: 'INR', fx: 106, idx: 0.31, tier: 'local' },
+  NG: { name: 'Nigeria', city: 'Lagos', sym: '\u20a6', cur: 'naira', iso: 'NGN', fx: 1780, idx: 0.52, tier: 'local' },
+  PK: { name: 'Pakistan', city: 'Lahore', sym: 'Rs', cur: 'rupees', iso: 'PKR', fx: 352, idx: 0.36, tier: 'local' },
+  DE: { name: 'Germany', city: 'Berlin', sym: '\u20ac', cur: 'euros', iso: 'EUR', fx: 1.18, idx: 1.02, tier: 'euro' },
+  AE: { name: 'United Arab Emirates', city: 'Dubai', sym: 'AED', cur: 'dirhams', iso: 'AED', fx: 4.66, idx: 1.09, tier: 'model' },
+  TR: { name: 'T\u00fcrkiye', city: 'Istanbul', sym: '\u20ba', cur: 'lira', iso: 'TRY', fx: 43, idx: 0.47, tier: 'local' },
 };
 export const STORES_BY_COUNTRY = {
   GB: [

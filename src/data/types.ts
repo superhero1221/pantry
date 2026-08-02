@@ -57,6 +57,10 @@ export interface Country {
   city: string;
   sym: string;
   cur: string;
+  /** ISO 4217 code, so a published rate can be matched to the country. */
+  iso: string;
+  /** Local units per pound, as bundled. A floor for when there is no network,
+   *  not a claim about today — see the note above COUNTRIES. */
   fx: number;
   idx: number;
   tier: PriceSource;

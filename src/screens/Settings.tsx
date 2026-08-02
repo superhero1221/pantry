@@ -152,9 +152,9 @@ export function Settings({ v }: { v: Pantry }) {
               <span style={css('display:block;font-size:12px;color:#82796a;margin-top:3px')}>{s.use}</span>
             </span>
             <span style={css('flex:none;display:flex;align-items:center;gap:6px')}>
-              {!s.active && (
+              {s.note && (
                 <span style={css('font-size:10.5px;font-weight:700;color:#a19786;white-space:nowrap')}>
-                  {v.xt('sourceIdle')}
+                  {s.note}
                 </span>
               )}
               <span style={css('padding:4px 10px;border-radius:999px;background:#ebddc5;font-size:10.5px;font-weight:700;color:#645c50')}>

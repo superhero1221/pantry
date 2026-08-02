@@ -21,7 +21,7 @@ const at = (p) => BASE + p;
 const PRECACHE = [BASE, at('index.html'), at('manifest.webmanifest'), at('icon.svg')];
 
 /** Hosts whose answers are only worth having fresh. */
-const ALWAYS_NETWORK = /(supabase\.co|nominatim\.openstreetmap\.org|overpass-api\.de|prices\.openfoodfacts\.org|world\.openfoodfacts\.org)/;
+const ALWAYS_NETWORK = /(supabase\.co|nominatim\.openstreetmap\.org|overpass-api\.de|prices\.openfoodfacts\.org|world\.openfoodfacts\.org|api\.frankfurter\.app)/;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
