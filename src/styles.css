@@ -1,0 +1,203 @@
+/* Organic design-system tokens, vendored from
+   project/_ds/organic-d7ae8b8b-39e4-454d-865b-8b1a533a53c6/styles.css.
+   Screens carry the literal ramp values the design exported; these variables
+   drive the app shell and anything that needs to reach for a token by name. */
+:root {
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-text: #201e1d;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
+
+  --color-accent-100: #fff2eb;
+  --color-accent-200: #ffe1d0;
+  --color-accent-300: #ffc6a5;
+  --color-accent-400: #f6a06b;
+  --color-accent-500: #d67f48;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+  --color-accent-900: #402310;
+
+  --color-accent-2-100: #f0fae1;
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-400: #aebf92;
+  --color-accent-2-500: #8fa073;
+  --color-accent-2-600: #728157;
+  --color-accent-2-700: #56633f;
+  --color-accent-2-800: #3d472b;
+  --color-accent-2-900: #272e1b;
+
+  --font-heading: 'Caprasimo', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+
+  --shell-max: 480px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #efe3cd;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+a {
+  color: #8c491a;
+  text-decoration: none;
+}
+a:hover {
+  color: #b2622d;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+input,
+select {
+  font-family: inherit;
+}
+:focus-visible {
+  outline: 2px solid #c67139;
+  outline-offset: 2px;
+}
+::selection {
+  background: #ffe1d0;
+}
+
+/* Untranslated fragments inside a translated sentence keep their own direction,
+   so punctuation does not flip in Arabic and Urdu. */
+.pg-scroll h1,
+.pg-scroll h2,
+.pg-scroll p,
+.pg-scroll button,
+.pg-scroll span,
+.pg-scroll input {
+  unicode-bidi: plaintext;
+}
+
+.pg-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+.pg-scroll::-webkit-scrollbar {
+  display: none;
+}
+.pg-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pg-x::-webkit-scrollbar {
+  display: none;
+}
+
+[dir='rtl'] .pg-dir {
+  transform: scaleX(-1);
+}
+
+@keyframes pgUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pgPing {
+  0% {
+    transform: scale(0.35);
+    opacity: 0.85;
+  }
+  70% {
+    opacity: 0.06;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+@keyframes pgDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-70px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pgFlick {
+  0%,
+  100% {
+    transform: rotate(-2deg) scale(1);
+  }
+  50% {
+    transform: rotate(2deg) scale(1.07);
+  }
+}
+
+/* ── Shell ──────────────────────────────────────────────────────────────
+   Full viewport on a phone; a centred column on anything wider, lifted off
+   the warm ground the way the design's cards are lifted off the page. */
+.pg-page {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  background: radial-gradient(120% 80% at 12% 0%, #f7eeda 0%, #efe3cd 55%, #e6d8bd 100%);
+}
+.pg-shell {
+  position: relative;
+  width: 100%;
+  max-width: var(--shell-max);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #f5ead8;
+  overflow: hidden;
+}
+@media (min-width: 560px) {
+  .pg-page {
+    padding: 32px 24px;
+  }
+  .pg-shell {
+    min-height: min(920px, calc(100dvh - 64px));
+    height: min(920px, calc(100dvh - 64px));
+    border-radius: 34px;
+    box-shadow:
+      0 40px 90px rgba(46, 43, 37, 0.24),
+      0 4px 12px rgba(46, 43, 37, 0.12);
+  }
+}
+.pg-main {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.pg-nav {
+  flex: none;
+  padding: 8px 14px calc(10px + env(safe-area-inset-bottom));
+  background: rgba(245, 234, 216, 0.94);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(32, 30, 29, 0.08);
+}
