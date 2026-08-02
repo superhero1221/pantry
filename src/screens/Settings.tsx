@@ -2,6 +2,8 @@ import { css } from '../lib/css';
 import { A, Btn } from '../ui/Btn';
 import { Kicker } from '../ui/bits';
 import { Globe, Pin } from '../ui/Icon';
+import { Account } from '../ui/Account';
+import { Device } from '../ui/Device';
 import type { Pantry } from '../state/usePantry';
 
 export function Settings({ v }: { v: Pantry }) {
@@ -14,7 +16,9 @@ export function Settings({ v }: { v: Pantry }) {
         {v.t.setTitle}
       </h1>
 
-      <Kicker style={{ marginTop: 18 }}>{v.t.setDiet}</Kicker>
+      <Account v={v} />
+
+      <Kicker style={{ marginTop: 24 }}>{v.t.setDiet}</Kicker>
       <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
         {v.dietChips.map((d) => (
           <Btn key={d.key} onClick={d.toggle} css={d.style}>
@@ -129,6 +133,8 @@ export function Settings({ v }: { v: Pantry }) {
           </Btn>
         ))}
       </div>
+
+      <Device v={v} />
 
       <Kicker style={{ marginTop: 24 }}>{v.t.setSources}</Kicker>
       <div style={css('display:flex;flex-direction:column;gap:7px;margin-top:11px')}>

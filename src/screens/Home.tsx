@@ -110,6 +110,15 @@ export function Home({ v }: { v: Pantry }) {
       </Btn>
 
       <Btn
+        onClick={v.goPlan}
+        css="width:100%;height:46px;border-radius:999px;font-size:15px;font-weight:700;color:#56633f;background:#e1eecc;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px"
+        hover="background:#ccdbb2"
+      >
+        {v.xt('planTitle')}
+        <span style={css('font-size:12.5px;font-weight:600;opacity:.75')}>{v.planDays}</span>
+      </Btn>
+
+      <Btn
         onClick={v.goKitchen}
         css="width:100%;text-align:start;margin-top:18px;padding:16px 18px;border-radius:26px;background:#e1eecc;display:flex;gap:13px;align-items:center"
         hover="background:#ccdbb2"

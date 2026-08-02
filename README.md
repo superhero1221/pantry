@@ -15,6 +15,10 @@ npm run build      # typecheck + production build into dist/
 npm run preview
 ```
 
+Runs with no configuration at all — everything local, nothing sent anywhere.
+Copy `.env.example` to `.env.local` to switch on accounts, price reporting and
+push; see [Server bits](#server-bits) for what each one needs.
+
 ## What's here
 
 Fifteen screens, all client-side:
@@ -24,6 +28,7 @@ Fifteen screens, all client-side:
 | Onboarding | Welcome → Goals → Tier list (skill, then time) → Diet → Location |
 | Deciding | Tonight, Browse, Results |
 | Doing | Shop, Cook, After |
+| Planning | The week — days x meals, one shopping list |
 | Keeping track | Kitchen, Stats, Passport, You |
 
 The decisions behind them, from the design conversation:
@@ -46,6 +51,57 @@ The decisions behind them, from the design conversation:
   earned the right to ask. Every answer becomes a card you can delete; nothing is inferred and acted
   on quietly.
 
+## Accounts and sync
+
+Optional and reversible. Signed out, the app is what it always was: local, and
+nothing leaves the device. Signing in — email magic link, no password —
+moves your goal, tier lists, diets, budget, language, cook log, streak and
+cupboard into Postgres behind row-level security, so the same account works on
+your phone and your laptop.
+
+Local-first throughout. Sign in and whatever you already did on this device is
+adopted, not overwritten: cooks logged before you had an account are pushed up
+and merged by client id, so signing in twice cannot duplicate them. Profile
+writes are throttled, so a burst of taps on the tier list is one round trip.
+
+The eight weeks of sample cooks the app ships with are marked `seeded` and
+**never** reach anyone's account — they exist so the Stats screen is legible
+before you have cooked anything, and they step aside the moment there is a real
+cook.
+
+## Prices, for real this time
+
+The design was honest that most of its basket is modelled rather than measured.
+This is the path from one to the other: tap any line on the Shop screen, say
+what it actually cost and what size the pack was, and everyone shopping in that
+country gets a median instead of an estimate. Lines backed by real reports turn
+their source dot green, show how many people reported and when, and the basket
+total recomputes from them.
+
+Reads go through a `security definer` function that returns aggregates only. A
+plain select policy would expose who reported what and where they shop, which
+is not something this app should hand out.
+
+## The week
+
+Days x meals a day x how many you're feeding, filled from the same ranking
+Tonight uses — so your diets, your tier list and your goal all still apply,
+just seven times over. Swap any meal you don't fancy. The shopping list is the
+union of every dish scaled to your servings, with anything already in your
+cupboard struck out at zero, and a per-day figure next to the total.
+
+## Installing it
+
+It installs to your home screen and works with no signal, which is what a
+kitchen usually has. The service worker caches the shell, the language packs,
+the methods and the dish photographs on first visit; the only things that ever
+hit the network are the ones that are meaningless stale — shops near you, live
+prices, your account.
+
+The leftover nudge is a real Web Push notification the day after you cook
+something that keeps, composed in your language before it is queued. It is the
+only notification the app ever sends.
+
 ## Layout
 
 The design was drawn inside a 390×844 phone frame. This build drops the bezel, notch, status bar and
@@ -62,8 +118,11 @@ src/
   screens/             one file per screen
   ui/                  Btn/A (themed hover), Icon (Lucide at 2.75), Nav, PlateDrop, bits
   lib/css.ts           CSS declaration strings → React style objects
+  state/cloud.ts       session, sync, price medians, reminders
+  state/usePwa.ts      install prompt, notification permission, push subscription
   data/
     cookbook.js        recipes, countries, stores, history, passport, staples
+    extra-copy.ts      copy added after the handoff — English only, see below
     pantry-i18n.js     six languages, RTL included
     pantry-food.js     ingredient and micronutrient names, leftover verdicts
     pantry-live.js     geolocation, Nominatim, Overpass, Open Prices
@@ -93,17 +152,55 @@ Adding a language: copy the `en` block in `pantry-i18n.js`, translate the values
 missing there is silently dropped. The audit is one line:
 `Object.keys(PACKS[l]).filter(k => !(k in PACKS.en))` must be empty for every language.
 
-### Two strings the design never translated
+### What is not translated yet
 
-Carried over as-is rather than machine-translated:
+Three things, all deliberately left in English rather than machine-translated:
 
-1. `src/screens/Locate.tsx` — "Every price you see from here is in {currency}, at shops that
-   actually exist near you. Not right?" has no key in `pantry-i18n.js`, so it renders in English in
-   every language.
-2. `LEARNED_PING` in `src/data/cookbook.js` — the toast after answering a learning question ("Noted.
-   I will aim higher on protein…") is an English constant in the design.
+1. **Everything added after the handoff** — the account block, price reporting,
+   the planner and the install/notification prompts. It all lives in one file,
+   `src/data/extra-copy.ts`, about 45 strings. Anything that already had a key
+   (Save, Change, Next, a serving, minutes) goes through the real pack instead,
+   which is why a planned week shows Arabic dish names and difficulty words
+   inside English chrome.
+2. `src/screens/Locate.tsx` — "Every price you see from here is in {currency},
+   at shops that actually exist near you. Not right?" has no key in
+   `pantry-i18n.js`, so it renders in English in every language.
+3. `LEARNED_PING` in `src/data/cookbook.js` — the toast after answering a
+   learning question is an English constant in the design.
 
-Both need a key in all six languages to fix; say the word and they get one.
+`untranslated(lang)` in `extra-copy.ts` returns exactly what is missing for a
+language. Say the word and all three get a proper pass.
+
+## Server bits
+
+None of this is needed to run the app; each piece switches on a feature.
+
+**Database.** Migrations are in `supabase/migrations`, in order:
+
+| File | What it does |
+| --- | --- |
+| `…_profile_state.sql` | Adds this app's state to `profiles`, plus a signup trigger and RLS |
+| `…_cook_log.sql` | The cook log, and the amount/use-by columns the Kitchen needs |
+| `…_plan_meals.sql` | Explicit plan picks, so a saved week can be edited |
+| `…_price_reports.sql` | Store tier, indexes, and the `price_medians` aggregate function |
+| `…_push_and_reminders.sql` | Push subscriptions and the reminder queue |
+| `…_schedule_reminders.sql` | **Apply last** — pg_cron job, needs the two Vault secrets named in the file |
+
+Every one is idempotent, additive, and leaves the existing pantry-globe tables
+and the account already registered against them alone.
+
+**Edge function.** `supabase/functions/send-reminders` sends the due reminders
+as Web Push and retires subscriptions the browser reports as gone.
+
+```bash
+npx web-push generate-vapid-keys
+supabase functions deploy send-reminders
+supabase secrets set VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=… VAPID_SUBJECT=mailto:you@example.com
+```
+
+**Auth.** Magic link redirects to `window.location.origin`, so add both
+`http://localhost:5173` and the deployed origin to the project's redirect
+allow-list.
 
 ## Prices and location
 

@@ -11,6 +11,7 @@ import { Home } from './screens/Home';
 import { Kitchen } from './screens/Kitchen';
 import { Locate } from './screens/Locate';
 import { Passport } from './screens/Passport';
+import { Plan } from './screens/Plan';
 import { Results } from './screens/Results';
 import { Settings } from './screens/Settings';
 import { Shop } from './screens/Shop';
@@ -63,6 +64,7 @@ export default function App() {
           {v.isKitchen && <Kitchen v={v} />}
           {v.isStats && <Stats v={v} />}
           {v.isPassport && <Passport v={v} />}
+          {v.isPlan && <Plan v={v} />}
           {v.isSettings && <Settings v={v} />}
         </main>
 

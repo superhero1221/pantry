@@ -6,6 +6,7 @@ import type { Pantry } from '../state/usePantry';
 
 export function Shop({ v }: { v: Pantry }) {
   const legend: [string, string][] = [
+    ['#56633f', v.xt('legCommunity')],
     ['#728157', v.u.legMeasured],
     ['#f6a06b', v.u.legEurope],
     ['#c0b6a5', v.u.legModelled],
@@ -56,32 +57,46 @@ export function Shop({ v }: { v: Pantry }) {
       </div>
 
       <div style={css('margin-top:11px;border-radius:28px;background:#f9f4ed;padding:6px 16px')}>
-        {v.basket.map((i) => (
-          <div
-            key={i.key}
-            style={css('display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(32,30,29,.07)')}
-          >
-            <span
-              style={css(`flex:none;width:22px;height:22px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:${i.boxBg}`)}
-            >
-              {i.tick}
-            </span>
-            <span style={css('flex:1;min-width:0')}>
+        {v.basket.map((i) => {
+          const row = (
+            <>
               <span
-                style={css(`display:block;font-size:14.5px;font-weight:600;line-height:1.25;color:${i.nameFg};text-decoration:${i.strike}`)}
+                style={css(`flex:none;width:22px;height:22px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:${i.boxBg}`)}
               >
-                {i.name}
+                {i.tick}
               </span>
-              <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>{i.sub}</span>
-            </span>
-            <span style={css('flex:none;display:flex;align-items:center;gap:7px')}>
-              <span style={css(`width:7px;height:7px;border-radius:50%;background:${i.srcColor}`)} />
-              <span style={css(`min-width:46px;text-align:end;font-size:14px;font-weight:700;color:${i.priceFg}`)}>
-                {i.price}
+              <span style={css('flex:1;min-width:0;text-align:start')}>
+                <span
+                  style={css(`display:block;font-size:14.5px;font-weight:600;line-height:1.25;color:${i.nameFg};text-decoration:${i.strike}`)}
+                >
+                  {i.name}
+                </span>
+                <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
+                  {i.community
+                    ? `${i.community.reports} ${v.xt('priceCommunity')} · ${i.community.newest}`
+                    : i.sub}
+                </span>
               </span>
-            </span>
-          </div>
-        ))}
+              <span style={css('flex:none;display:flex;align-items:center;gap:7px')}>
+                <span style={css(`width:7px;height:7px;border-radius:50%;background:${i.srcColor}`)} />
+                <span style={css(`min-width:46px;text-align:end;font-size:14px;font-weight:700;color:${i.priceFg}`)}>
+                  {i.price}
+                </span>
+              </span>
+            </>
+          );
+          const shared =
+            'display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(32,30,29,.07);width:100%';
+          return v.canReport ? (
+            <Btn key={i.key} onClick={i.openReport} css={shared} hover="background:#f2ece2">
+              {row}
+            </Btn>
+          ) : (
+            <div key={i.key} style={css(shared)}>
+              {row}
+            </div>
+          );
+        })}
         <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:15px 0 13px')}>
           <span style={css('font-size:16px;font-weight:700')}>{v.t.shopTotal}</span>
           <span style={css("font-family:'Caprasimo',serif;font-size:28px")}>{v.basketTotal}</span>
@@ -109,6 +124,76 @@ export function Shop({ v }: { v: Pantry }) {
           {v.honestyLine}
         </p>
       </div>
+
+      {v.canReport && (
+        <div style={css('margin-top:12px;padding:16px 18px;border-radius:26px;background:#fff2eb')}>
+          <div dir="auto" style={css('font-size:14.5px;font-weight:700;color:#643312')}>
+            {v.xt('priceAsk')}
+          </div>
+          <p dir="auto" style={css('margin:6px 0 0;font-size:12.5px;line-height:1.5;color:#8c491a;text-wrap:pretty')}>
+            {v.xt('priceAskBody')}
+          </p>
+        </div>
+      )}
+
+      {v.reportOpen && (
+        <div style={css('margin-top:12px;padding:19px 20px;border-radius:28px;background:#ebddc5;animation:pgUp .28s ease-out both')}>
+          <div dir="auto" style={css('font-size:15.5px;font-weight:700;line-height:1.3')}>
+            {v.reportItemName}
+          </div>
+          <div style={css('display:flex;gap:9px;margin-top:12px')}>
+            <label style={css('flex:1;min-width:0')}>
+              <span style={css('display:block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#82796a;margin-bottom:6px')}>
+                {v.xt('priceWhat')}
+              </span>
+              <span style={css('display:flex;align-items:center;gap:6px;padding-inline:14px 12px;height:50px;border-radius:999px;background:#fff')}>
+                <span style={css("font-family:'Caprasimo',serif;font-size:18px;color:#c67139")}>
+                  {v.symbol}
+                </span>
+                <input
+                  value={v.reportPriceValue}
+                  onChange={v.onReportPrice}
+                  inputMode="decimal"
+                  placeholder="2.49"
+                  style={css('width:100%;min-width:0;border:0;outline:none;background:none;font-size:16px;font-weight:700')}
+                />
+              </span>
+            </label>
+            <label style={css('flex:1;min-width:0')}>
+              <span style={css('display:block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#82796a;margin-bottom:6px')}>
+                {v.xt('pricePack')}
+              </span>
+              <span style={css('display:flex;align-items:center;gap:6px;padding-inline:14px 12px;height:50px;border-radius:999px;background:#fff')}>
+                <input
+                  value={v.reportPackValue}
+                  onChange={v.onReportPack}
+                  inputMode="numeric"
+                  placeholder="500"
+                  style={css('width:100%;min-width:0;border:0;outline:none;background:none;font-size:16px;font-weight:700')}
+                />
+                <span style={css('font-size:13px;font-weight:700;color:#82796a')}>g</span>
+              </span>
+            </label>
+          </div>
+          <div style={css('display:flex;gap:9px;margin-top:14px')}>
+            <Btn
+              onClick={v.submitReport}
+              disabled={v.reportBusy}
+              css="flex:1;height:48px;border-radius:999px;background:#c67139;color:#fff;font-size:14.5px;font-weight:700"
+              hover="background:#b2622d"
+            >
+              {v.xt('priceSend')}
+            </Btn>
+            <Btn
+              onClick={v.closeReport}
+              css="flex:none;height:48px;padding:0 20px;border-radius:999px;background:#dcd3c4;color:#474238;font-size:14.5px;font-weight:700"
+              hover="background:#c0b6a5"
+            >
+              {v.u.notRight}
+            </Btn>
+          </div>
+        </div>
+      )}
 
       <Btn
         onClick={v.toCook}

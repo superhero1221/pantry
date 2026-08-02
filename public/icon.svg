@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#c67139" />
+  <text
+    x="256"
+    y="352"
+    text-anchor="middle"
+    font-family="Caprasimo, Georgia, serif"
+    font-size="272"
+    fill="#f5ead8"
+  >P</text>
+</svg>

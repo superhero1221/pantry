@@ -31,6 +31,22 @@ import type { HistoryRow, Recipe, Store, TechniqueCard } from '../data/types';
 import * as food from '../data/pantry-food';
 import * as i18n from '../data/pantry-i18n';
 import type { Shop, Price } from '../data/pantry-live';
+import { cloudEnabled, db } from '../lib/supabase';
+import { xt } from '../data/extra-copy';
+import {
+  pullCooks,
+  pullProfile,
+  pushCooks,
+  pushProfile,
+  priceMedians,
+  reportPrice,
+  scheduleReminder,
+  useSession,
+  useThrottled,
+  type CloudProfile,
+  type LocalCook,
+  type PriceMedian,
+} from './cloud';
 
 export type Screen =
   | 'welcome'
@@ -47,6 +63,7 @@ export type Screen =
   | 'kitchen'
   | 'stats'
   | 'passport'
+  | 'plan'
   | 'settings';
 
 type Waste = 'none' | 'some' | 'lots';
@@ -105,11 +122,21 @@ export interface PantryState {
   vendorKey: string;
   vendorDraft: string;
   browseCat: string;
-  history: HistoryRow[];
+  history: LocalCook[];
   profile: Record<string, string>;
   dismissed: Record<string, boolean>;
   photoSkipped: boolean;
   plate: string | null;
+  medians: Record<string, PriceMedian>;
+  reportFor: string | null;
+  reportPrice: string;
+  reportPack: string;
+  reportBusy: boolean;
+  planDays: number;
+  planMeals: number;
+  planServings: number;
+  plan: string[];
+  planSaved: boolean;
 }
 
 const INITIAL: PantryState = {
@@ -155,11 +182,23 @@ const INITIAL: PantryState = {
   vendorKey: '',
   vendorDraft: '',
   browseCat: 'all',
-  history: HISTORY,
+  // Eight weeks of sample cooks so the Stats screen is legible before you have
+  // cooked anything. Marked seeded so it never reaches anyone's account.
+  history: HISTORY.map((h) => ({ ...h, seeded: true })),
   profile: {},
   dismissed: {},
   photoSkipped: false,
   plate: null,
+  medians: {},
+  reportFor: null,
+  reportPrice: '',
+  reportPack: '',
+  reportBusy: false,
+  planDays: 5,
+  planMeals: 1,
+  planServings: 2,
+  plan: [],
+  planSaved: false,
 };
 
 /* ── What survives a reload ────────────────────────────────────────────────
@@ -182,6 +221,10 @@ const KEEP = [
   'dismissed',
   'streak',
   'vendorKey',
+  'planDays',
+  'planMeals',
+  'planServings',
+  'plan',
 ] as const;
 
 function load(): Partial<PantryState> {
@@ -274,6 +317,113 @@ export function usePantry() {
     },
     [setState],
   );
+
+  /* ── The account ────────────────────────────────────────────────────────
+     Local-first. Everything works signed out; signing in adopts whatever you
+     already did on this device, then keeps it in step across your others. */
+  const auth = useSession();
+  const hydrated = useRef<string | null>(null);
+
+  const asCloudProfile = (s: PantryState): Partial<CloudProfile> => ({
+    goal: s.profile.goal || null,
+    language: s.lang || 'en',
+    max_time: s.maxTime,
+    budget_amount: Number(s.budget.toFixed(2)),
+    streak: s.streak,
+    country: s.country || 'GB',
+    diets: s.diets,
+    skill_cards: s.skill,
+    time_cards: s.time,
+    learned: s.profile,
+    dismissed: s.dismissed,
+    nudges: s.toggles,
+    onboarded: s.seen,
+  });
+
+  useEffect(() => {
+    const uid = auth.userId;
+    if (!uid || hydrated.current === uid) return;
+    hydrated.current = uid;
+    let live = true;
+
+    (async () => {
+      const local = ref.current;
+      const [remote, cooks] = await Promise.all([pullProfile(uid), pullCooks(uid)]);
+      if (!live) return;
+
+      // Anything you cooked before signing in belongs to you; carry it up.
+      const mine = local.history.filter((c) => !c.seeded && c.clientId);
+      if (mine.length) await pushCooks(uid, mine);
+
+      const merged = new Map<string, LocalCook>();
+      for (const c of cooks) merged.set(c.clientId!, c);
+      for (const c of mine) if (!merged.has(c.clientId!)) merged.set(c.clientId!, c);
+      const history = [...merged.values()].sort((a, b) => b.at - a.at);
+
+      // A fresh account with an untouched device keeps the sample history so
+      // Stats is not an empty room; the moment either side has a real cook,
+      // the sample goes.
+      const useSample = history.length === 0;
+
+      if (!remote || !remote.onboarded) {
+        // The account has nothing to say yet — this device does.
+        await pushProfile(uid, asCloudProfile(local));
+        setState({ history: useSample ? local.history.filter((c) => c.seeded) : history });
+        return;
+      }
+
+      setState({
+        lang: remote.language || local.lang,
+        country: remote.country || local.country,
+        diets: remote.diets ?? local.diets,
+        maxTime: remote.max_time ?? local.maxTime,
+        budget: Number(remote.budget_amount ?? local.budget),
+        streak: remote.streak ?? local.streak,
+        skill: remote.skill_cards ?? local.skill,
+        time: remote.time_cards ?? local.time,
+        profile: remote.learned ?? local.profile,
+        dismissed: remote.dismissed ?? local.dismissed,
+        toggles: remote.nudges ?? local.toggles,
+        seen: remote.onboarded || local.seen,
+        history: useSample ? local.history.filter((c) => c.seeded) : history,
+      });
+    })();
+
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.userId, setState]);
+
+  useEffect(() => {
+    if (!auth.userId) hydrated.current = null;
+  }, [auth.userId]);
+
+  /* Writes are throttled so a burst of taps on the tier list is one round trip. */
+  const syncProfile = useThrottled<PantryState>((s) => {
+    if (auth.userId) pushProfile(auth.userId, asCloudProfile(s));
+  }, 2500);
+
+  useEffect(() => {
+    if (!auth.userId || hydrated.current !== auth.userId) return;
+    syncProfile(S);
+  }, [
+    auth.userId,
+    syncProfile,
+    S,
+    S.lang,
+    S.country,
+    S.diets,
+    S.maxTime,
+    S.budget,
+    S.streak,
+    S.skill,
+    S.time,
+    S.profile,
+    S.dismissed,
+    S.toggles,
+    S.seen,
+  ]);
 
   /* Dragging a technique card. The pointer listeners live on the window so a
      card can be dropped anywhere, including outside its row. */
@@ -474,7 +624,11 @@ export function usePantry() {
 
   /* ── The log, and the questions it earns the right to ask ─────────────── */
   const logCook = (r: Recipe, waste: Waste | null) => {
-    const row: HistoryRow = {
+    const row: LocalCook = {
+      clientId:
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : String(Date.now()) + Math.round(Date.now() % 9973),
       ago: 0,
       id: r.id,
       name: r.name,
@@ -489,7 +643,10 @@ export function usePantry() {
       waste: waste === 'lots' ? 0.5 : waste === 'some' ? 0.2 : 0,
       at: Date.now(),
     };
-    setState({ history: [row].concat(S.history) });
+    // The sample weeks step aside the moment there is a real one.
+    const kept = S.history.filter((c) => !c.seeded);
+    setState({ history: [row].concat(kept) });
+    if (auth.userId) pushCooks(auth.userId, [row]);
   };
 
   /** Every question is skippable, and every answer is a fact the user can
@@ -596,6 +753,41 @@ export function usePantry() {
       .map((k) => ({ k, v: S.profile[k] }))
       .filter((x) => LEARNED_TEXT[x.k + ':' + x.v] || LEARNED_TEXT[x.k]);
 
+  /* ── Community prices ───────────────────────────────────────────────────
+     A stable key per ingredient so two people reporting "Chicken breast" in
+     different languages land on the same row. Matching runs on the canonical
+     English name, exactly as cupboard matching does. */
+  const refOf = (name: string) =>
+    name
+      .split(',')[0]
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+  /** Grams implied by a shopping-list quantity, when it says so plainly. */
+  const gramsOf = (qty: string): number | null => {
+    const m = /^([\d.]+)\s*(g|kg|ml|l)\b/i.exec(qty.trim());
+    if (!m) return null;
+    const n = parseFloat(m[1]);
+    const unit = m[2].toLowerCase();
+    return unit === 'kg' || unit === 'l' ? n * 1000 : n;
+  };
+
+  useEffect(() => {
+    if (!cloudEnabled || S.screen !== 'shop') return;
+    const r = RECIPES.find((x) => x.id === ref.current.pickId) || RECIPES[0];
+    const refs = r.items.map((i) => refOf(i.n));
+    let live = true;
+    priceMedians(refs, ref.current.country || 'GB').then((m) => {
+      if (live) setState({ medians: m });
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [S.screen, S.pickId, S.country, setState]);
+
   /* ── Derived view values ──────────────────────────────────────────────── */
   const screen = S.screen;
   const cityNow = S.liveCity || c.city;
@@ -611,6 +803,15 @@ export function usePantry() {
   const per = buy / recipe.servings;
   const under = S.budget - buy;
   const lvl = skillLevel();
+
+  // What the basket costs once real reported prices replace the model.
+  const buyReal = recipe.items
+    .filter((i) => recipe.have.indexOf(i.n.split(',')[0]) < 0)
+    .reduce((a, i) => {
+      const seen = S.medians[refOf(i.n)];
+      const g = gramsOf(i.g);
+      return a + (seen && g ? (seen.median_per_kg * g) / 1000 : i.s * mult);
+    }, 0);
 
   const cardWord = (cd: TechniqueCard) => P.skill[cd.id] || P.times[cd.id] || cd.label;
   const tierWord = (t: { key: string; label: string }) =>
@@ -733,7 +934,8 @@ export function usePantry() {
     isStats: screen === 'stats',
     isPassport: screen === 'passport',
     isSettings: screen === 'settings',
-    showNav: ['home', 'kitchen', 'stats', 'passport', 'settings', 'browse'].indexOf(screen) >= 0,
+    showNav:
+      ['home', 'kitchen', 'stats', 'passport', 'settings', 'browse', 'plan'].indexOf(screen) >= 0,
 
     /* ── Onboarding ─────────────────────────────────────────────────────── */
     start: () => go('goal'),
@@ -1082,9 +1284,25 @@ export function usePantry() {
     }),
     basket: recipe.items.map((i) => {
       const owned = recipe.have.indexOf(i.n.split(',')[0]) >= 0;
+      const key = refOf(i.n);
+      const seen = S.medians[key];
+      // A community median beats the model, so when there is one it is what
+      // the line costs — and the dot turns green to say why.
+      const grams = gramsOf(i.g);
+      const community = seen && grams ? (seen.median_per_kg * grams) / 1000 : null;
       return {
         key: i.n,
+        ref: key,
         name: foodName(i.n),
+        community: seen
+          ? { reports: seen.reports, newest: seen.newest.slice(0, 10), amount: community }
+          : null,
+        openReport: () =>
+          setState({
+            reportFor: key,
+            reportPrice: '',
+            reportPack: grams ? String(grams) : '',
+          }),
         tick: owned ? '✓' : '',
         boxBg: owned ? '#8fa073' : '#eee7db',
         nameFg: owned ? '#82796a' : '#201e1d',
@@ -1092,8 +1310,14 @@ export function usePantry() {
         sub: owned
           ? word('already', 'already in your kitchen')
           : i.g + (i.opt ? ' · ' + word('optional', 'optional') : ''),
-        srcColor: i.src === 'local' ? '#728157' : i.src === 'euro' ? '#f6a06b' : '#c0b6a5',
-        price: owned ? fmt(0) : fmt(i.s * mult),
+        srcColor: seen
+          ? '#56633f'
+          : i.src === 'local'
+            ? '#728157'
+            : i.src === 'euro'
+              ? '#f6a06b'
+              : '#c0b6a5',
+        price: owned ? fmt(0) : community != null ? fmt(community) : fmt(i.s * mult),
         priceFg: owned ? '#a19786' : '#201e1d',
       };
     }),
@@ -1107,8 +1331,50 @@ export function usePantry() {
       recipe.have.length +
       ' ' +
       word('youHave', 'you have'),
-    basketTotal: fmt(buy),
+    basketTotal: fmt(buyReal),
     savedLine: fill(SL.saved, { a: fmt(saved), b: fmt(saved * 9) }),
+
+    /* ── Reporting a real price ─────────────────────────────────────────── */
+    reportOpen: !!S.reportFor,
+    reportItemName: (() => {
+      const item = recipe.items.find((i) => refOf(i.n) === S.reportFor);
+      return item ? foodName(item.n) : '';
+    })(),
+    reportPriceValue: S.reportPrice,
+    reportPackValue: S.reportPack,
+    reportBusy: S.reportBusy,
+    canReport: cloudEnabled && !!auth.userId,
+    onReportPrice: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPrice: e.target.value }),
+    onReportPack: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPack: e.target.value }),
+    closeReport: () => setState({ reportFor: null }),
+    submitReport: async () => {
+      const price = parseFloat(S.reportPrice);
+      const pack = parseFloat(S.reportPack);
+      if (!auth.userId || !S.reportFor || !(price > 0) || !(pack > 0)) return;
+      setState({ reportBusy: true });
+      const store = stores.find((x) => x.id === S.store);
+      // Prices are entered in the local currency, and stored in it — the
+      // median function never mixes currencies because it groups by country.
+      const res = await reportPrice({
+        userId: auth.userId,
+        ref: S.reportFor,
+        price,
+        currency: c.cur,
+        packGrams: pack,
+        storeName: store?.name,
+        storeTier: store?.tier,
+        country: cc,
+      });
+      setState({ reportBusy: false, reportFor: null, reportPrice: '', reportPack: '' });
+      if (res.ok) {
+        ping(xt(lg, 'priceThanks'));
+        const fresh = await priceMedians(
+          recipe.items.map((i) => refOf(i.n)),
+          cc,
+        );
+        setState({ medians: fresh });
+      }
+    },
     honestyLine: fill(c.tier === 'local' ? SL.measured : SL.modelled, { c: countryName }),
     toCook: () => go('cook', { step: 0, timerRun: false, timerLeft: 0 }),
 
@@ -1193,7 +1459,22 @@ export function usePantry() {
     remindCta: vs('remind', 'Nudge me at 12:30 tomorrow'),
     setReminder: () => {
       setState({ reminded: true });
-      ping(vs('remindPing', 'Tomorrow 12:30 — {d} is still good.', { d: dish(recipe) }));
+      const line = vs('remindPing', 'Tomorrow 12:30 — {d} is still good.', { d: dish(recipe) });
+      ping(line);
+      // Signed in, this is a real notification tomorrow lunchtime rather than a
+      // toast you can only see if the app is already open.
+      if (auth.userId) {
+        const due = new Date();
+        due.setDate(due.getDate() + 1);
+        due.setHours(12, 30, 0, 0);
+        scheduleReminder({
+          userId: auth.userId,
+          title: 'Pantry',
+          body: line,
+          lang: lg,
+          dueAt: due,
+        });
+      }
     },
     offerShrink: !!w && w.pct > 0 && S.shrink === null,
     shrinkTitle: w && w.pct >= 40 ? vs('shrinkBig', '') : vs('shrinkSmall', ''),
@@ -1376,6 +1657,168 @@ export function usePantry() {
       pick: () => go('results', { pickId: x.id, query: x.name, showMicro: false }),
     })),
 
+    /* ── The week ───────────────────────────────────────────────────────── */
+    isPlan: screen === 'plan',
+    goPlan: () => go('plan'),
+    planDays: S.planDays,
+    planMeals: S.planMeals,
+    planServings: S.planServings,
+    planSavedNote: S.planSaved,
+    planDayChips: [3, 5, 7].map((d) => ({
+      key: String(d),
+      label: String(d),
+      style: (S.planDays === d ? PILL_ON : PILL_OFF) + 'flex:none;min-width:56px;justify-content:center;text-align:center;',
+      pick: () => setState({ planDays: d, plan: [], planSaved: false }),
+    })),
+    planMealChips: [1, 2].map((m) => ({
+      key: String(m),
+      label: String(m),
+      style: (S.planMeals === m ? PILL_ON : PILL_OFF) + 'flex:none;min-width:56px;justify-content:center;text-align:center;',
+      pick: () => setState({ planMeals: m, plan: [], planSaved: false }),
+    })),
+    planServingChips: [1, 2, 4].map((n) => ({
+      key: String(n),
+      label: String(n),
+      style: (S.planServings === n ? PILL_ON : PILL_OFF) + 'flex:none;min-width:56px;justify-content:center;text-align:center;',
+      pick: () => setState({ planServings: n, planSaved: false }),
+    })),
+    planEmpty: S.plan.length === 0,
+    /** Fill the week from the same ranking Tonight uses, so your diets, your
+     *  tier list and your goal all still apply — just seven times over. */
+    buildPlan: () => {
+      const pool = ranked();
+      if (!pool.length) return;
+      const want = S.planDays * S.planMeals;
+      const offset = Math.floor(Math.random() * pool.length);
+      const picks: string[] = [];
+      for (let i = 0; i < want; i += 1) picks.push(pool[(offset + i) % pool.length].id);
+      setState({ plan: picks, planSaved: false });
+    },
+    planCells: S.plan.map((id, i) => {
+      const r = RECIPES.find((x) => x.id === id) || RECIPES[0];
+      const pool = ranked();
+      return {
+        key: i + ':' + id,
+        day: Math.floor(i / S.planMeals) + 1,
+        showDay: i % S.planMeals === 0,
+        dayLabel: word('planDay', 'Day') + ' ' + (Math.floor(i / S.planMeals) + 1),
+        name: dish(r),
+        pic: r.pic,
+        meta:
+          cuisineWord(r.cuisine) + ' · ' + r.total + ' ' + word('minutes', 'min') + ' · ' + diffWord(r.diff),
+        price: fmt((toBuy(r, mult) / r.servings) * S.planServings),
+        open: () => go('results', { pickId: id, showMicro: false }),
+        swap: (e: ReactMouseEvent) => {
+          e.stopPropagation();
+          const used = new Set(S.plan);
+          const next = pool.find((x) => !used.has(x.id)) || pool[(pool.indexOf(r) + 1) % pool.length];
+          const copy = S.plan.slice();
+          copy[i] = next.id;
+          setState({ plan: copy, planSaved: false });
+        },
+      };
+    }),
+    planList: (() => {
+      type Line = { key: string; name: string; uses: number; cost: number; owned: boolean };
+      const map = new Map<string, Line>();
+      for (const id of S.plan) {
+        const r = RECIPES.find((x) => x.id === id);
+        if (!r) continue;
+        const scale = S.planServings / r.servings;
+        for (const item of r.items) {
+          const owned = r.have.indexOf(item.n.split(',')[0]) >= 0;
+          const line = map.get(item.n) || {
+            key: item.n,
+            name: foodName(item.n),
+            uses: 0,
+            cost: 0,
+            owned: true,
+          };
+          line.uses += 1;
+          line.cost += item.s * mult * scale;
+          // Only struck out if every dish that wants it already has it.
+          line.owned = line.owned && owned;
+          map.set(item.n, line);
+        }
+      }
+      return [...map.values()]
+        .sort((a, b) => Number(a.owned) - Number(b.owned) || b.cost - a.cost)
+        .map((l) => ({
+          key: l.key,
+          name: l.name,
+          sub:
+            l.uses > 1
+              ? l.uses + ' ' + word('planUses', 'meals')
+              : word('planUse', '1 meal'),
+          price: l.owned ? fmt(0) : fmt(l.cost),
+          owned: l.owned,
+          nameFg: l.owned ? '#82796a' : '#201e1d',
+          strike: l.owned ? 'line-through' : 'none',
+          boxBg: l.owned ? '#8fa073' : '#eee7db',
+          tick: l.owned ? '✓' : '',
+          priceFg: l.owned ? '#a19786' : '#201e1d',
+        }));
+    })(),
+    planTotal: (() => {
+      let total = 0;
+      const counted = new Set<string>();
+      for (const id of S.plan) {
+        const r = RECIPES.find((x) => x.id === id);
+        if (!r) continue;
+        const scale = S.planServings / r.servings;
+        for (const item of r.items) {
+          if (r.have.indexOf(item.n.split(',')[0]) >= 0) continue;
+          counted.add(item.n);
+          total += item.s * mult * scale;
+        }
+      }
+      return fmt(total);
+    })(),
+    planPerDay: (() => {
+      let total = 0;
+      for (const id of S.plan) {
+        const r = RECIPES.find((x) => x.id === id);
+        if (!r) continue;
+        total += toBuy(r, mult) * (S.planServings / r.servings);
+      }
+      return fmt(S.planDays ? total / S.planDays : 0);
+    })(),
+    savePlan: async () => {
+      if (!auth.userId || !db || !S.plan.length) return;
+      const { data, error } = await db
+        .from('saved_plans')
+        .insert({
+          user_id: auth.userId,
+          label: xt(lg, 'planTitle'),
+          days: S.planDays,
+          meals_per_day: S.planMeals,
+          servings: S.planServings,
+          country: cc,
+          diets: S.diets,
+        })
+        .select('id')
+        .single();
+      if (error || !data) {
+        console.warn('savePlan', error?.message);
+        return;
+      }
+      const rows = S.plan.map((id, i) => ({
+        plan_id: data.id as string,
+        user_id: auth.userId!,
+        day: Math.floor(i / S.planMeals),
+        slot: i % S.planMeals,
+        recipe_id: id,
+        servings: S.planServings,
+      }));
+      const { error: err2 } = await db.from('plan_meals').insert(rows);
+      if (err2) {
+        console.warn('savePlan meals', err2.message);
+        return;
+      }
+      setState({ planSaved: true });
+      ping(xt(lg, 'planSaved'));
+    },
+
     /* ── Settings ───────────────────────────────────────────────────────── */
     kitchenSub: X.kitchenSub,
     nudgesLabel: X.nudges,
@@ -1447,6 +1890,20 @@ export function usePantry() {
     /* ── Copy that appears on more than one screen ──────────────────────── */
     t: T,
     u: U,
+
+    /* Copy added after the handoff — English until translated. */
+    xt: (k: string) => xt(lg, k),
+
+    /* ── The account ─────────────────────────────────────────────────────── */
+    cloudEnabled,
+    authStatus: auth.status,
+    authError: auth.error,
+    signedIn: !!auth.userId,
+    userId: auth.userId,
+    email: auth.email,
+    signIn: auth.signIn,
+    signOut: auth.signOut,
+
     nav: navItems.map((n) => ({
       key: n.id,
       label: T[n.t] || n.label,
