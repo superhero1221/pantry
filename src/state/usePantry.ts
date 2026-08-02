@@ -2015,7 +2015,29 @@ export function usePantry() {
         chipBg: i === 0 ? '#c67139' : '#ebddc5',
         chipFg: i === 0 ? '#fff' : '#645c50',
       })),
-    passportNudge: hs('passportNudge', '', { a: fmt(0.71) }),
+    /* This line used to read "84 countries you have never cooked from. The
+       cheapest one you are missing is Ethiopia — misir wot lands at £0.71 a
+       serving." Every number and both names were invented: 84 was the dead 91
+       minus the seven on the passport, and neither Ethiopia nor misir wot is in
+       the cookbook, so the app was recommending a dish it cannot cook. It is
+       counted and named off the data now, and there is nothing to say once you
+       have cooked from everywhere. */
+    passportNudge: (() => {
+      const cooked = new Set(
+        RECIPES.filter((r) => PASSPORT.some((p) => p.dish === r.name)).map((r) => r.code),
+      );
+      const missing = RECIPES.filter((r) => !cooked.has(r.code));
+      if (!missing.length) return '';
+      // Per serving at the cheapest tier, the same basis the passport rows use.
+      const per = (r: Recipe) => (r.items.reduce((s, i) => s + i.s, 0) * 0.82) / r.servings;
+      const cheapest = missing.reduce((a, r) => (per(r) < per(a) ? r : a));
+      return fill(xt(lg, 'passportNudgeReal'), {
+        n: new Set(missing.map((r) => r.code)).size,
+        c: P.cn[cheapest.code] || COUNTRIES[cheapest.code]?.name || cheapest.code,
+        d: dish(cheapest),
+        a: fmt(per(cheapest)),
+      });
+    })(),
     passportSub: X.passportSub,
 
     /* ── Stats ──────────────────────────────────────────────────────────── */

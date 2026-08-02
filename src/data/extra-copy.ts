@@ -77,7 +77,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Sample data ── */
     sampleStats:
       'These eight weeks are sample data, so this screen has something to show before you have cooked anything. They are not yours, they never leave this device, and your first real cook replaces them.',
-    samplePassport: 'Sample data. This screen does not track what you have actually cooked yet.',
+    samplePassport: 'The flags and dishes below are sample data — this screen does not yet track where you have really cooked from. The money kept out of takeaways is real, and comes from your own log.',
 
     /* ── Planner ── */
     planTitle: 'The week',
@@ -122,6 +122,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     tierPlaceIn: 'Put the selected card in this row: {t}',
     stepBack: 'Previous step',
+    passportNudgeReal:
+      '{n} countries in here you have never cooked from. The cheapest you are missing is {c} — {d} lands at {a} a serving.',
   },
 
   es: {
@@ -180,7 +182,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
 
     sampleStats:
       'Estas ocho semanas son datos de ejemplo, para que esta pantalla tenga algo que mostrar antes de que cocines nada. No son tuyos, no salen de este dispositivo, y tu primera comida real los sustituye.',
-    samplePassport: 'Datos de ejemplo. Esta pantalla todavía no refleja lo que has cocinado.',
+    samplePassport: 'Las banderas y los platos de abajo son datos de ejemplo: esta pantalla aún no refleja de dónde has cocinado de verdad. El dinero que no fue a comida a domicilio sí es real, y sale de tu propio registro.',
 
     planTitle: 'La semana',
     planSub:
@@ -225,6 +227,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     tierPlaceIn: 'Pon la tarjeta seleccionada en esta fila: {t}',
     stepBack: 'Paso anterior',
+    passportNudgeReal:
+      '{n} países de este recetario de los que nunca has cocinado. El más barato que te falta es {c}: {d} sale a {a} la ración.',
   },
 
   fr: {
@@ -283,7 +287,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
 
     sampleStats:
       'Ces huit semaines sont des données d’exemple, pour que cet écran ait quelque chose à montrer avant que vous ayez cuisiné. Elles ne sont pas les vôtres, elles ne quittent jamais cet appareil, et votre premier vrai plat les remplace.',
-    samplePassport: 'Données d’exemple. Cet écran ne suit pas encore ce que vous avez cuisiné.',
+    samplePassport: 'Les drapeaux et les plats ci-dessous sont des données d’exemple : cet écran ne suit pas encore d’où vous avez vraiment cuisiné. L’argent gardé hors des plats à emporter est réel, et vient de votre propre journal.',
 
     planTitle: 'La semaine',
     planSub:
@@ -328,6 +332,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     tierPlaceIn: 'Mettre la carte sélectionnée dans cette rangée : {t}',
     stepBack: 'Étape précédente',
+    passportNudgeReal:
+      '{n} pays d’ici dont vous n’avez jamais rien cuisiné. Le moins cher qui vous manque est {c} : {d} revient à {a} la portion.',
   },
 
   pl: {
@@ -386,7 +392,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
 
     sampleStats:
       'Te osiem tygodni to dane przykładowe, żeby ten ekran miał co pokazać, zanim cokolwiek ugotujesz. Nie są twoje, nigdy nie opuszczają tego urządzenia, a pierwsze prawdziwe gotowanie je zastąpi.',
-    samplePassport: 'Dane przykładowe. Ten ekran jeszcze nie śledzi tego, co ugotowałeś.',
+    samplePassport: 'Flagi i dania poniżej to dane przykładowe — ten ekran jeszcze nie śledzi, skąd naprawdę gotowałeś. Pieniądze niewydane na jedzenie na wynos są prawdziwe i pochodzą z twojego własnego dziennika.',
 
     planTitle: 'Tydzień',
     planSub:
@@ -431,6 +437,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     tierPlaceIn: 'Umieść wybraną kartę w tym rzędzie: {t}',
     stepBack: 'Poprzedni krok',
+    passportNudgeReal:
+      '{n} krajów z tej książki, z których nigdy nie gotowałeś. Najtańszy, którego ci brakuje, to {c} — {d} wychodzi {a} za porcję.',
   },
 
   ur: {
@@ -487,7 +495,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
 
     sampleStats:
       'یہ آٹھ ہفتے نمونے کا ڈیٹا ہیں، تاکہ آپ کے کچھ پکانے سے پہلے اس اسکرین پر دکھانے کو کچھ ہو۔ یہ آپ کے نہیں، یہ کبھی اس آلے سے باہر نہیں جاتے، اور آپ کا پہلا اصل کھانا انہیں بدل دے گا۔',
-    samplePassport: 'نمونے کا ڈیٹا۔ یہ اسکرین ابھی آپ کے پکائے ہوئے کا حساب نہیں رکھتی۔',
+    samplePassport: 'نیچے کے جھنڈے اور کھانے نمونے کا ڈیٹا ہیں — یہ اسکرین ابھی یہ نہیں جانتی کہ آپ نے واقعی کہاں کا کھانا پکایا۔ باہر سے کھانا منگوانے پر جو پیسہ بچا وہ اصلی ہے اور آپ کے اپنے ریکارڈ سے آتا ہے۔',
 
     planTitle: 'ہفتہ',
     planSub:
@@ -530,6 +538,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     tierPlaceIn: 'منتخب کارڈ اس قطار میں رکھیں: {t}',
     stepBack: 'پچھلا مرحلہ',
+    passportNudgeReal:
+      'اس کتاب میں {n} ممالک ایسے ہیں جن کا کھانا آپ نے کبھی نہیں پکایا۔ ان میں سب سے سستا {c} ہے — {d} فی حصہ {a} پڑتا ہے۔',
   },
 
   ar: {
@@ -586,7 +596,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
 
     sampleStats:
       'هذه الأسابيع الثمانية بيانات نموذجية، حتى يكون لدى هذه الشاشة ما تعرضه قبل أن تطبخ شيئاً. ليست بياناتك، ولا تغادر هذا الجهاز أبداً، وأول طبخة حقيقية تحلّ محلّها.',
-    samplePassport: 'بيانات نموذجية. هذه الشاشة لا تتابع ما طبخته فعلاً بعد.',
+    samplePassport: 'الأعلام والأطباق أدناه بيانات نموذجية — هذه الشاشة لا تتابع بعد من أين طبخت فعلاً. أما المال الذي وفّرته على الطلبات الخارجية فحقيقي، ومصدره سجلّك أنت.',
 
     planTitle: 'الأسبوع',
     planSub:
@@ -629,6 +639,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     tierPlaceIn: 'ضع البطاقة المختارة في هذا الصف: {t}',
     stepBack: 'الخطوة السابقة',
+    passportNudgeReal:
+      '{n} بلداً في هذا الكتاب لم تطبخ من مطبخها قط. أرخص ما يفوتك {c} — {d} يكلّف {a} للحصة.',
   },
 };
 
