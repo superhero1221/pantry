@@ -43,6 +43,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceReported: 'reported',
     legCommunity: 'Reported by people shopping here',
 
+    /* ── The cupboard ── */
+    haveIt: 'in your kitchen',
+    tapToToggle: 'Tap anything you already have — it comes off the total and stays off.',
+    tapPrice: 'Tap a price to correct it.',
+
     /* ── Planner ── */
     planTitle: 'The week',
     planSub:

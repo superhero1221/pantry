@@ -22,6 +22,9 @@ export interface Step {
   text: string;
   m?: number;
   tip?: string;
+  /** A photograph of this step, when one has been shot. Without it the cook
+   *  screen draws the technique instead. */
+  pic?: string;
 }
 
 export interface Recipe {

@@ -55,17 +55,33 @@ export function Shop({ v }: { v: Pantry }) {
         <Kicker>{v.t.shopList}</Kicker>
         <div style={css('font-size:12.5px;color:#82796a')}>{v.listSummary}</div>
       </div>
+      <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#a19786;text-wrap:pretty')}>
+        {v.xt('tapToToggle')}
+        {v.canReport ? ' ' + v.xt('tapPrice') : ''}
+      </p>
 
       <div style={css('margin-top:11px;border-radius:28px;background:#f9f4ed;padding:6px 16px')}>
-        {v.basket.map((i) => {
-          const row = (
-            <>
+        {v.basket.map((i) => (
+          <div
+            key={i.key}
+            style={css('display:flex;gap:4px;align-items:stretch;border-bottom:1px solid rgba(32,30,29,.07)')}
+          >
+            {/* Tap the line to say you already have it. Your answer sticks. */}
+            <Btn
+              onClick={i.toggle}
+              aria-pressed={i.owned}
+              css="flex:1;min-width:0;display:flex;gap:11px;align-items:center;padding:11px 6px 11px 0;text-align:start;border-radius:14px"
+              hover="background:#f2ece2"
+            >
               <span
-                style={css(`flex:none;width:22px;height:22px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:${i.boxBg}`)}
+                style={css(
+                  `flex:none;width:22px;height:22px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .15s;background:${i.boxBg}` +
+                    (i.owned ? '' : ';box-shadow:inset 0 0 0 1.5px #dcd3c4'),
+                )}
               >
-                {i.tick}
+                {i.tick && <Check size={14} stroke="#fff" width={3.4} />}
               </span>
-              <span style={css('flex:1;min-width:0;text-align:start')}>
+              <span style={css('flex:1;min-width:0')}>
                 <span
                   style={css(`display:block;font-size:14.5px;font-weight:600;line-height:1.25;color:${i.nameFg};text-decoration:${i.strike}`)}
                 >
@@ -77,26 +93,30 @@ export function Shop({ v }: { v: Pantry }) {
                     : i.sub}
                 </span>
               </span>
-              <span style={css('flex:none;display:flex;align-items:center;gap:7px')}>
+            </Btn>
+
+            {v.canReport ? (
+              <Btn
+                onClick={i.openReport}
+                aria-label={v.xt('priceAsk')}
+                css="flex:none;display:flex;align-items:center;gap:7px;padding:11px 4px 11px 8px;border-radius:14px"
+                hover="background:#ffe1d0"
+              >
+                <span style={css(`width:7px;height:7px;border-radius:50%;background:${i.srcColor}`)} />
+                <span style={css(`min-width:46px;text-align:end;font-size:14px;font-weight:700;color:${i.priceFg}`)}>
+                  {i.price}
+                </span>
+              </Btn>
+            ) : (
+              <span style={css('flex:none;display:flex;align-items:center;gap:7px;padding-inline-start:8px')}>
                 <span style={css(`width:7px;height:7px;border-radius:50%;background:${i.srcColor}`)} />
                 <span style={css(`min-width:46px;text-align:end;font-size:14px;font-weight:700;color:${i.priceFg}`)}>
                   {i.price}
                 </span>
               </span>
-            </>
-          );
-          const shared =
-            'display:flex;gap:11px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(32,30,29,.07);width:100%';
-          return v.canReport ? (
-            <Btn key={i.key} onClick={i.openReport} css={shared} hover="background:#f2ece2">
-              {row}
-            </Btn>
-          ) : (
-            <div key={i.key} style={css(shared)}>
-              {row}
-            </div>
-          );
-        })}
+            )}
+          </div>
+        ))}
         <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:15px 0 13px')}>
           <span style={css('font-size:16px;font-weight:700')}>{v.t.shopTotal}</span>
           <span style={css("font-family:'Caprasimo',serif;font-size:28px")}>{v.basketTotal}</span>

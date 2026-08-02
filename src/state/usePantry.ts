@@ -33,6 +33,7 @@ import * as i18n from '../data/pantry-i18n';
 import type { Shop, Price } from '../data/pantry-live';
 import { cloudEnabled, db } from '../lib/supabase';
 import { asset } from '../lib/asset';
+import { techniqueOf } from '../lib/technique';
 import { xt } from '../data/extra-copy';
 import {
   pullCooks,
@@ -132,6 +133,9 @@ export interface PantryState {
   dismissed: Record<string, boolean>;
   photoSkipped: boolean;
   plate: string | null;
+  /** Explicit "I have this" / "I do not" overrides, keyed by canonical name.
+   *  Absent means "no opinion" and the default below decides. */
+  owned: Record<string, boolean>;
   medians: Record<string, PriceMedian>;
   reportFor: string | null;
   reportPrice: string;
@@ -194,6 +198,7 @@ const INITIAL: PantryState = {
   dismissed: {},
   photoSkipped: false,
   plate: null,
+  owned: {},
   medians: {},
   reportFor: null,
   reportPrice: '',
@@ -230,6 +235,7 @@ const KEEP = [
   'planMeals',
   'planServings',
   'plan',
+  'owned',
 ] as const;
 
 function load(): Partial<PantryState> {
@@ -257,6 +263,10 @@ function initialState(): PantryState {
   if (s.seen) s.screen = 'home';
   return s;
 }
+
+/** Canonical ingredient key — the name before the first comma, which is what
+ *  the recipe `have` lists and the cupboard both match on. */
+const keyOf = (name: string) => name.split(',')[0].trim();
 
 export function usePantry() {
   const [S, setS] = useState<PantryState>(initialState);
@@ -509,14 +519,39 @@ export function usePantry() {
 
   const recipe: Recipe = RECIPES.find((r) => r.id === S.pickId) || RECIPES[0];
 
+  /**
+   * What you said, then what the recipe assumes. Your answer always wins and
+   * it sticks — that is the difference between a checklist and a cupboard.
+   *
+   * Deliberately NOT seeded from the Kitchen screen's store-cupboard list:
+   * folding all eighteen staples in marks eleven of Pad Thai's fifteen lines
+   * as owned and drops the basket to 42p, which is a number nobody believes.
+   * The recipe's own assumption is the honest starting point; anything else
+   * you own is one tap away and stays tapped.
+   */
+  const isOwned = useCallback(
+    (r: Recipe, name: string) => {
+      const k = keyOf(name);
+      return k in S.owned ? S.owned[k] : r.have.indexOf(k) >= 0;
+    },
+    [S.owned],
+  );
+
+  const toggleOwned = useCallback(
+    (r: Recipe, name: string) => {
+      const k = keyOf(name);
+      setState({ owned: { ...ref.current.owned, [k]: !isOwned(r, name) } });
+    },
+    [isOwned, setState],
+  );
+
   const toBuy = useCallback(
     (r: Recipe, m: number = mult) =>
-      r.items
-        .filter((i) => r.have.indexOf(i.n.split(',')[0]) < 0)
-        .reduce((a, i) => a + i.s * m, 0),
-    [mult],
+      r.items.filter((i) => !isOwned(r, i.n)).reduce((a, i) => a + i.s * m, 0),
+    [mult, isOwned],
   );
   const allIn = (r: Recipe) => r.items.reduce((a, i) => a + i.s * mult, 0);
+  void allIn;
 
   /* ── The tier lists ───────────────────────────────────────────────────── */
   const skillLevel = () => {
@@ -811,7 +846,7 @@ export function usePantry() {
 
   // What the basket costs once real reported prices replace the model.
   const buyReal = recipe.items
-    .filter((i) => recipe.have.indexOf(i.n.split(',')[0]) < 0)
+    .filter((i) => !isOwned(recipe, i.n))
     .reduce((a, i) => {
       const seen = S.medians[refOf(i.n)];
       const g = gramsOf(i.g);
@@ -1288,7 +1323,7 @@ export function usePantry() {
       };
     }),
     basket: recipe.items.map((i) => {
-      const owned = recipe.have.indexOf(i.n.split(',')[0]) >= 0;
+      const owned = isOwned(recipe, i.n);
       const key = refOf(i.n);
       const seen = S.medians[key];
       // A community median beats the model, so when there is one it is what
@@ -1302,6 +1337,8 @@ export function usePantry() {
         community: seen
           ? { reports: seen.reports, newest: seen.newest.slice(0, 10), amount: community }
           : null,
+        owned,
+        toggle: () => toggleOwned(recipe, i.n),
         openReport: () =>
           setState({
             reportFor: key,
@@ -1327,15 +1364,13 @@ export function usePantry() {
       };
     }),
     shopSubLine: stores.length + ' ' + SH.shopSub + ' ' + cityNow + '. ' + SH.sameBasket,
-    listSummary:
-      recipe.items.length -
-      recipe.have.length +
-      ' ' +
-      word('toBuy', 'to buy') +
-      ' · ' +
-      recipe.have.length +
-      ' ' +
-      word('youHave', 'you have'),
+    listSummary: (() => {
+      const have = recipe.items.filter((i) => isOwned(recipe, i.n)).length;
+      return (
+        recipe.items.length - have + ' ' + word('toBuy', 'to buy') +
+        ' · ' + have + ' ' + word('youHave', 'you have')
+      );
+    })(),
     basketTotal: fmt(buyReal),
     savedLine: fill(SL.saved, { a: fmt(saved), b: fmt(saved * 9) }),
 
@@ -1388,6 +1423,10 @@ export function usePantry() {
     stepCount: S.step + 1 + ' ' + word('stepOf', 'of') + ' ' + recipe.method.length,
     cookPct: Math.round(((S.step + 1) / recipe.method.length) * 100) + '%',
     stepText: recipe.method[S.step]?.text || '',
+    /** A photograph if the recipe carries one for this step, otherwise the
+     *  drawing of whatever the step is asking you to do. */
+    stepPic: recipe.method[S.step]?.pic ? asset(recipe.method[S.step].pic!) : null,
+    stepTechnique: techniqueOf(recipe.method[S.step]?.text || ''),
     stepTip: recipe.method[S.step]?.tip || null,
     stepMins: recipe.method[S.step]?.m ? recipe.method[S.step].m + ' ' + word('minutes', 'min') : null,
     canTime: !!recipe.method[S.step]?.m && !S.timerRun,
@@ -1731,7 +1770,7 @@ export function usePantry() {
         if (!r) continue;
         const scale = S.planServings / r.servings;
         for (const item of r.items) {
-          const owned = r.have.indexOf(item.n.split(',')[0]) >= 0;
+          const owned = isOwned(r, item.n);
           const line = map.get(item.n) || {
             key: item.n,
             name: foodName(item.n),
@@ -1772,7 +1811,7 @@ export function usePantry() {
         if (!r) continue;
         const scale = S.planServings / r.servings;
         for (const item of r.items) {
-          if (r.have.indexOf(item.n.split(',')[0]) >= 0) continue;
+          if (isOwned(r, item.n)) continue;
           counted.add(item.n);
           total += item.s * mult * scale;
         }

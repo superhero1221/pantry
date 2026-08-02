@@ -2,6 +2,7 @@ import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { Kicker } from '../ui/bits';
 import { Bulb, Check, ChevronLeft, Clock, X } from '../ui/Icon';
+import { StepArt } from '../ui/StepArt';
 import type { Pantry } from '../state/usePantry';
 
 export function Cook({ v }: { v: Pantry }) {
@@ -46,9 +47,26 @@ export function Cook({ v }: { v: Pantry }) {
           )}
         </div>
 
+        {/* What this step looks like. A photograph when the dish has been shot,
+            otherwise a drawing of the technique — either way something to find
+            your place against after you look up from the pan. */}
+        <div
+          style={css('margin-top:16px;border-radius:26px;background:#f9f4ed;display:flex;align-items:center;justify-content:center;overflow:hidden;height:122px')}
+        >
+          {v.stepPic ? (
+            <img
+              src={v.stepPic}
+              alt=""
+              style={css('width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.86) contrast(.96)')}
+            />
+          ) : (
+            <StepArt technique={v.stepTechnique} size={146} />
+          )}
+        </div>
+
         <p
           dir="auto"
-          style={css('font-size:23px;line-height:1.38;font-weight:500;margin:18px 0 0;letter-spacing:-.2px;text-wrap:pretty')}
+          style={css('font-size:23px;line-height:1.38;font-weight:500;margin:16px 0 0;letter-spacing:-.2px;text-wrap:pretty')}
         >
           {v.stepText}
         </p>
