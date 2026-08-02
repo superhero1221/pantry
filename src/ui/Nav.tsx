@@ -5,7 +5,7 @@ import type { Pantry } from '../state/usePantry';
 export function Nav({ v }: { v: Pantry }) {
   return (
     <nav className="pg-nav">
-      <div style={css('display:flex;gap:4px')}>
+      <div className="pg-navlist" style={css('display:flex;gap:4px')}>
         {v.nav.map((n) => (
           <Btn
             key={n.key}

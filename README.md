@@ -131,9 +131,28 @@ not the routing.
 ## Layout
 
 The design was drawn inside a 390×844 phone frame. This build drops the bezel, notch, status bar and
-the designer's desk panel, and ships the screens themselves: full-viewport on a phone, a centred
-480px column lifted off the warm ground on anything wider. Every value inside the screens — colour,
-radius, size, spacing — is what the design exported.
+the designer's desk panel, and ships the screens themselves. Every value inside a screen — colour,
+radius, size, spacing — is what the design exported, at every width.
+
+| | Shell | Navigation | Dish grid |
+| --- | --- | --- | --- |
+| **Phone**, under 560px | full viewport | tabs along the bottom | one column |
+| **Tablet**, 560–1023px | 640px card, floating | tabs along the bottom | two abreast |
+| **Desktop**, 1024px and up | 1120px, two panes | a rail down the start edge | three abreast |
+
+The width goes to navigation, not to stretching the design across it. A tab bar along the bottom is
+a thumb idiom — on a mouse it becomes a rail — and the screens keep the measure they were drawn at,
+560px, centred in the pane. A 14px line of body text 800px wide is unreadable however much room
+there is going spare. Only screens that are grids of cards rather than prose take more, and they ask
+for it by name (`.pg-wide`).
+
+The rail is `flex-direction: row-reverse` rather than a nav-first DOM order, which buys two things:
+the nav stays last in the markup, so it comes last for a screen reader and in tab order; and because
+flex direction follows the writing direction, the same rule puts the rail on the left in English and
+on the right in Arabic with nothing extra written.
+
+Card counts come from `auto-fit` against a 260px minimum rather than a fixed count per breakpoint,
+so an odd window size gets a sensible answer instead of the nearest guess about a device.
 
 ## Structure
 

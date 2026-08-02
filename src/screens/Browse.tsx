@@ -5,7 +5,7 @@ import type { Pantry } from '../state/usePantry';
 
 export function Browse({ v }: { v: Pantry }) {
   return (
-    <div style={css('padding:14px 22px 26px')}>
+    <div className="pg-wide" style={css('padding:14px 22px 26px')}>
       <h1
         dir="auto"
         style={css("font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.04;margin:0;letter-spacing:-.4px")}
@@ -24,7 +24,9 @@ export function Browse({ v }: { v: Pantry }) {
         ))}
       </div>
 
-      <div style={css('display:flex;flex-direction:column;gap:9px;margin-top:16px')}>
+      {/* Layout lives in .pg-cards, not here: an inline display wins over a
+          stylesheet, so a media query could never turn this into a grid. */}
+      <div className="pg-cards" style={css('margin-top:16px')}>
         {v.browseList.map((x) => (
           <Btn
             key={x.key}
