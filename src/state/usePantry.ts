@@ -30,7 +30,7 @@ import {
 import type { HistoryRow, Recipe, Store, TechniqueCard } from '../data/types';
 import * as food from '../data/pantry-food';
 import * as i18n from '../data/pantry-i18n';
-import type { Shop, Price } from '../data/pantry-live';
+import type { Shop } from '../data/pantry-live';
 import { cloudEnabled, db } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
@@ -123,8 +123,6 @@ export interface PantryState {
   liveArea: string | null;
   liveShops: Shop[] | null;
   liveCoords: { lat: number; lon: number } | null;
-  livePrices: Record<string, Price> | null;
-  priceStatus: 'idle' | 'loading' | 'live' | 'empty';
   vendorKey: string;
   vendorDraft: string;
   browseCat: string;
@@ -186,8 +184,6 @@ const INITIAL: PantryState = {
   liveArea: null,
   liveShops: null,
   liveCoords: null,
-  livePrices: null,
-  priceStatus: 'idle',
   vendorKey: '',
   vendorDraft: '',
   browseCat: 'all',
@@ -619,19 +615,6 @@ export function usePantry() {
   /* ── Real location, real shops ────────────────────────────────────────── */
   const live = () => import('../data/pantry-live');
 
-  const refreshPrices = useCallback(async () => {
-    const r = RECIPES.find((x) => x.id === ref.current.pickId) || RECIPES[0];
-    setState({ priceStatus: 'loading' });
-    try {
-      const L = await live();
-      const names = r.items.map((i) => i.n.split(',')[0]);
-      const got = await L.priceBasket(names, ref.current.country || 'GB');
-      setState({ livePrices: got, priceStatus: Object.keys(got).length ? 'live' : 'empty' });
-    } catch {
-      setState({ priceStatus: 'empty' });
-    }
-  }, [setState]);
-
   const useMyLocation = useCallback(async () => {
     setState({ liveStatus: 'locating', liveErr: null, locating: true });
     try {
@@ -651,7 +634,6 @@ export function usePantry() {
       const shops = await L.nearbyShops(pos.lat, pos.lon);
       setState({ liveShops: shops, liveStatus: shops.length ? 'live' : 'noshops' });
       if (shops.length) setState({ store: 'live0' });
-      refreshPrices();
     } catch (e) {
       setState({
         liveStatus: 'error',
@@ -660,7 +642,7 @@ export function usePantry() {
         located: true,
       });
     }
-  }, [refreshPrices, setState]);
+  }, [setState]);
 
   /* ── The log, and the questions it earns the right to ask ─────────────── */
   const logCook = (r: Recipe, waste: Waste | null) => {
@@ -1928,10 +1910,20 @@ export function usePantry() {
     saveVendor: async () => {
       setState({ vendorKey: S.vendorDraft });
       const L = await live();
+      // Stored and handed to the live layer, which has no aggregator behind it
+      // yet — the note under the field says exactly that.
       L.setVendorKey(S.vendorDraft);
       ping(S.vendorDraft ? vs('keyOn', 'Key saved.') : vs('keyOff', 'Key cleared.'));
     },
-    sources: SOURCES.map((s, n) => ({ ...s, key: s.name, use: P.us[n] || s.use })),
+    /* Nominatim and Overpass run for real when you grant location. The other
+       three are honest provenance for data that is not wired in yet, and the
+       screen says which is which rather than implying all five are live. */
+    sources: SOURCES.map((s, n) => ({
+      ...s,
+      key: s.name,
+      use: P.us[n] || s.use,
+      active: /nominatim|overpass/i.test(s.name),
+    })),
 
     /* ── Copy that appears on more than one screen ──────────────────────── */
     t: T,

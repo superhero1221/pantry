@@ -11,7 +11,8 @@ design conversation that produced it.
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm run build      # typecheck + production build into dist/
+npm run build      # typecheck, test, then production build into dist/
+npm run test       # vitest
 npm run preview
 ```
 
@@ -152,49 +153,53 @@ Adding a language: copy the `en` block in `pantry-i18n.js`, translate the values
 missing there is silently dropped. The audit is one line:
 `Object.keys(PACKS[l]).filter(k => !(k in PACKS.en))` must be empty for every language.
 
-### What is not translated yet
+### What is not translated
 
-Three things, all deliberately left in English rather than machine-translated:
+All six languages are complete — the designed screens through
+`pantry-i18n.js`, everything added afterwards through
+`src/data/extra-copy.ts`. A test asserts that every key exists in every
+language and that no language carries a key English does not, so a gap fails
+the build rather than shipping silently. The translations of the added copy
+have not been reviewed by a native speaker.
 
-1. **Everything added after the handoff** — the account block, price reporting,
-   the planner and the install/notification prompts. It all lives in one file,
-   `src/data/extra-copy.ts`, about 45 strings. Anything that already had a key
-   (Save, Change, Next, a serving, minutes) goes through the real pack instead,
-   which is why a planned week shows Arabic dish names and difficulty words
-   inside English chrome.
-2. `src/screens/Locate.tsx` — "Every price you see from here is in {currency},
-   at shops that actually exist near you. Not right?" has no key in
-   `pantry-i18n.js`, so it renders in English in every language.
-3. `LEARNED_PING` in `src/data/cookbook.js` — the toast after answering a
-   learning question is an English constant in the design.
+One deliberate holdout remains: **recipe methods stay in English**, with a note
+at the top of the cook screen explaining why in your language. A mistranslated
+instruction about when to pull prawns off the heat is worse than an English
+one. Interface copy carries no such risk, so it is translated.
 
-`untranslated(lang)` in `extra-copy.ts` returns exactly what is missing for a
-language. Say the word and all three get a proper pass.
+## Where the numbers come from, and what they mean
 
-## Deploying
+- **The basket total is not a till receipt.** Prices are pro-rata: the 12 g of
+  garlic a recipe uses, not the bulb you have to buy. The Shop screen says so
+  under the total. Real pack sizes would change this from an honest estimate to
+  an actual forecast; that data is not in the app.
+- **Eight countries can be priced**, four of them from measured market surveys
+  and the rest modelled from pack prices. The coverage note says exactly that.
+- **The Passport denominator is the eleven countries the cookbook covers**, not
+  the countries that can be priced — two different numbers that were once
+  wrongly the same one.
+- **The eight weeks of history are sample data**, flagged as such on Stats
+  until your first real cook replaces them, and never written to an account.
+- **Of the five data sources listed in Settings, two are live** — Nominatim and
+  Overpass, when you grant location. The other three are marked
+  "not connected yet" rather than implied to be running.
 
-The repo ships a GitHub Pages workflow (`.github/workflows/pages.yml`). Push to
-`main`, then **Settings → Pages → Source: GitHub Actions**, and it builds and
-publishes itself on every push. It works out its own base path, so a project
-site at `/<repo>/` and a user site at the root both work untouched — every
-asset resolves through `BASE_URL` and the service worker scopes itself to
-wherever it lands.
+## Tests
 
-Put the three `VITE_*` values from `.env.example` in **Settings → Secrets and
-variables → Actions** to switch on accounts, price reporting and push. Without
-them the deploy still works, just local-only.
+```bash
+npm run test
+```
 
-Vercel or Netlify instead: import the repo, framework Vite, build `npm run
-build`, output `dist`, and set the same three variables. Leave `BASE_PATH`
-unset — both serve from the root.
+Covers the pure layers, which is where the mistakes actually were:
 
-### One file, no server
+- the CSS declaration parser, including the one shape it cannot handle
+- technique matching, with the "soak … drain them well" case that broke it,
+  and a guard on how many steps fall through to the generic drawing
+- data integrity: every dish has its photograph, no recipe claims you own
+  something it never asks for, every logged cook resolves to a real dish
+- translation completeness across all six languages, in both directions
 
-`npm run standalone` folds the whole app — bundle, styles, photographs, fonts —
-into a single HTML file that runs from a `file://` path with no network at all.
-Useful for handing someone the app to look at.
-
-## Server bits
+## Server bits## Server bits
 
 None of this is needed to run the app; each piece switches on a feature.
 

@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -17,6 +18,10 @@ export default defineConfig({
   plugins: [react()],
   server: { host: true },
   define: standalone ? { 'import.meta.env.VITE_STANDALONE': '"1"' } : {},
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+  },
   build: {
     cssCodeSplit: !standalone,
     rollupOptions: standalone ? { output: { inlineDynamicImports: true } } : {},
