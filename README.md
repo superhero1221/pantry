@@ -46,8 +46,9 @@ The decisions behind them, from the design conversation:
   zero, with an honest note about which prices are measured and which are modelled.
 - **Cook** — one step, 23px type, timers, and an "I've lost the thread" button that tells you what
   is on the hob.
-- **After** — an optional photo of the plate, a waste read, the portion-shrink offer with your
-  approval, the can-this-be-saved verdict, and the streak.
+- **After** — an optional photo of the plate, a waste read, the can-this-be-saved verdict, and the
+  streak — which is real: consecutive days with a cook in the log, not a number the app made up.
+  The cook is logged the moment the last step is done; the waste answer annotates it.
 - **Stats** — eight weeks of spend, top dishes, difficulty spread, and the questions the log has
   earned the right to ask. Every answer becomes a card you can delete; nothing is inferred and acted
   on quietly.
@@ -340,8 +341,9 @@ No UK, US or EU supermarket publishes a public price API, and their terms prohib
 together — in the UK and EU a price catalogue is also protected by database right, quite apart from
 copyright. So the real prices in here come from the two routes that are actually open: Open Prices,
 crowdsourced under ODbL and read without a key or an account, and the app's own reports, which are
-what someone paid in a shop near you. **You → Supermarket price key** holds a slot for a paid
-aggregator, for anyone who wants named-chain prices and has a licence to use them.
+what someone paid in a shop near you. There used to be a third slot — a field for a paid
+aggregator's key — but nothing ever read the key, so the field made a promise no code kept and it
+has been removed. A vendor integration, if one ever lands, arrives as working code or not at all.
 
 Open Prices is real but patchy — 27 of the cookbook's 93 ingredient lines have a checked category
 tag, and coverage varies by country on top of that. Every line says which of the three it is.
@@ -353,8 +355,10 @@ data. Wiring them up is a follow-on.
 
 ## What persists
 
-Language, country, tier lists, diets, budget, goal, nudge toggles, cook history and the streak are
-kept in `localStorage` under `pantry.v1`, so the app does not forget your onboarding on reload.
+Language, country, tier lists, diets, budget, goal, nudge toggles and the cook history are kept in
+`localStorage` under `pantry.v1`, so the app does not forget your onboarding on reload. The streak
+is not stored anywhere — it is read off the cook history every render, which is why it cannot drift
+from the truth.
 **You → Start over** clears all of it. The day's exchange rates sit in their own key,
 `pantry.fx.v1`, because a rate is not something you told the app: starting over forgets you, not
 what the pound did. Nothing is sent anywhere; the plate photo is read into an object URL and never
