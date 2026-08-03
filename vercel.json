@@ -18,6 +18,25 @@
   ],
   "headers": [
     {
+      "comment": "Mirror of the /* block in public/_headers — change one, change the other. style-src-attr is the load-bearing directive: css() becomes a React style prop, so the whole app is inline style ATTRIBUTES, which CSP Level 3 governs with style-src-attr rather than style-src. style-src-elem stays locked to 'self'; the plain style-src line is the fallback for browsers too old for the granular pair, so they degrade to a weaker policy rather than to an unstyled page. No wss: — nothing calls db.channel(), so Supabase realtime never opens a socket.",
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.frankfurter.app https://nominatim.openstreetmap.org https://overpass-api.de https://prices.openfoodfacts.org https://world.openfoodfacts.org https://*.supabase.co; upgrade-insecure-requests"
+        },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), display-capture=(), browsing-topics=()"
+        },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" }
+      ]
+    },
+    {
       "comment": "The worker decides when everything else updates, so it must never be the stale thing.",
       "source": "/sw.js",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
@@ -33,11 +52,18 @@
     {
       "comment": "Content-hashed by the build, so they can be cached forever.",
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "same-site" }
+      ]
     },
     {
+      "comment": "same-site, not same-origin, so apex and www both keep working. This does not stop anyone copying a photograph; it stops another site using it from your server.",
       "source": "/pix/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" },
+        { "key": "Cross-Origin-Resource-Policy", "value": "same-site" }
+      ]
     }
   ]
 }

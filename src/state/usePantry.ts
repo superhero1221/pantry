@@ -38,6 +38,7 @@ import { techniqueOf } from '../lib/technique';
 import { DERIVED, meetsDiet } from '../lib/diets';
 import { fromLocal, toLocal } from '../lib/money';
 import { xt } from '../data/extra-copy';
+import { exportBackup, readBackup, readStore, STORE_KEY } from '../lib/backup';
 import {
   pullCooks,
   pullProfile,
@@ -78,7 +79,9 @@ export type Screen =
   | 'stats'
   | 'passport'
   | 'plan'
-  | 'settings';
+  | 'settings'
+  | 'privacy'
+  | 'terms';
 
 type Waste = 'none' | 'some' | 'lots';
 
@@ -126,6 +129,14 @@ export interface PantryState {
   waste: Waste | null;
   /** A plan save is in flight — the button is a no-op until it lands. */
   planSaving: boolean;
+  /** The last Set was refused. Set only by commitBudget, cleared by the next
+   *  keystroke: the field states the range once and then shuts up. */
+  budgetErr: boolean;
+  /** Open Prices and the community medians are two independent lookups, so
+   *  they get two flags. One boolean would let whichever finished first turn
+   *  off the other one's spinner. The bag ORs them into `pricesBusy`. */
+  openBusy: boolean;
+  medianBusy: boolean;
   /** The log row this cook went in as, so the waste answer annotates it
    *  rather than creating it. Reset when a new cook starts; never persisted. */
   cookLogId: string | null;
@@ -202,6 +213,9 @@ const INITIAL: PantryState = {
   lostOpen: false,
   waste: null,
   planSaving: false,
+  budgetErr: false,
+  openBusy: false,
+  medianBusy: false,
   cookLogId: null,
   reminded: false,
   notif: null,
@@ -245,7 +259,9 @@ const INITIAL: PantryState = {
    Only what the user actually told the app: their languages, their tier
    lists, their diets, what they cooked. Never the transient screen state.
    "Start over" in Settings clears the lot. */
-const STORE_KEY = 'pantry.v1';
+// STORE_KEY itself now lives in lib/backup.ts, imported above: the crash
+// screen and the export both have to name it, and neither can afford to
+// import this file.
 const KEEP = [
   'seen',
   'skill',
@@ -267,26 +283,77 @@ const KEEP = [
   'extras',
 ] as const;
 
+const isObj = (x: unknown) => !!x && typeof x === 'object' && !Array.isArray(x);
+const isNum = (x: unknown) => typeof x === 'number' && Number.isFinite(x);
+
+/** The most one dinner is allowed to cost, in the pounds-and-pence baseline.
+ *  Not a judgement about your money: past this, every "under budget" figure on
+ *  the results screen is a number nobody reads and the chip stops being a chip.
+ *  It bounds what commitBudget will accept and what an imported file may carry,
+ *  so a file cannot smuggle in what the keyboard refuses. */
+const MAX_BASE = 1000;
+
+/** The value each kept key is allowed to be. The boot read never needed this —
+ *  nothing but save() below writes that key. An imported file is a different
+ *  proposition, so both now go through the same gate, and a key of the wrong
+ *  shape is dropped rather than handed to a screen that will call .map on it. */
+const SHAPE: Record<string, (x: unknown) => boolean> = {
+  seen: (x) => typeof x === 'boolean',
+  skill: isObj,
+  time: isObj,
+  diets: Array.isArray,
+  country: (x) => x === null || typeof x === 'string',
+  budget: (x) => isNum(x) && (x as number) > 0 && (x as number) <= MAX_BASE,
+  maxTime: isNum,
+  lang: (x) => typeof x === 'string',
+  toggles: isObj,
+  history: Array.isArray,
+  profile: isObj,
+  dismissed: isObj,
+  planDays: isNum,
+  planMeals: isNum,
+  planServings: isNum,
+  plan: Array.isArray,
+  owned: isObj,
+  extras: isObj,
+};
+
+/**
+ * What this build still keeps out of a stored blob, whatever wrote it — the
+ * boot read and an imported file both come through here, so a file can never
+ * carry in something a reload would not have kept.
+ *
+ * Copied key by key from KEEP, never spread. Blobs written by earlier builds
+ * carry retired keys — streak, vendorKey, the shrink and shop toggles — and an
+ * unfiltered spread would resurrect them into state, back into storage on the
+ * next save, and up into the cloud profile, forever. A file someone hands you
+ * can carry anything at all, including `__proto__`: JSON.parse makes that an
+ * ordinary own property rather than the setter, and this loop only ever reads
+ * the eighteen names it was given, so neither route reaches anything.
+ */
+function pick(blob: Record<string, unknown>): Partial<PantryState> {
+  const out: Record<string, unknown> = {};
+  for (const k of KEEP) if (k in blob && SHAPE[k](blob[k])) out[k] = blob[k];
+  if (isObj(out.toggles)) {
+    out.toggles = { leftover: (out.toggles as Record<string, boolean>).leftover ?? true };
+  }
+  return out as Partial<PantryState>;
+}
+
 function load(): Partial<PantryState> {
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = readStore();
     if (!raw) return {};
-    const blob = JSON.parse(raw) as Record<string, unknown>;
-    // Only what this build still keeps. Blobs written by earlier builds carry
-    // retired keys — streak, vendorKey, the shrink and shop toggles — and an
-    // unfiltered spread would resurrect them into state, back into storage on
-    // the next save, and up into the cloud profile, forever. Old flags die
-    // here instead.
-    const out: Record<string, unknown> = {};
-    for (const k of KEEP) if (k in blob) out[k] = blob[k];
-    if (out.toggles && typeof out.toggles === 'object') {
-      out.toggles = { leftover: (out.toggles as Record<string, boolean>).leftover ?? true };
-    }
-    return out as Partial<PantryState>;
+    return pick(JSON.parse(raw) as Record<string, unknown>);
   } catch {
     return {};
   }
 }
+
+/** How many cooks came back with an imported file, carried across the reload
+ *  that applies it. A toast cannot survive a reload, and writing one to state
+ *  before the reload would put the old profile straight back over the file. */
+const IMPORTED_KEY = 'pantry.imported.v1';
 
 function save(s: PantryState) {
   try {
@@ -334,10 +401,23 @@ function initialState(): PantryState {
   // through the setup starts at the welcome whatever the hash claims, and
   // someone who has finished it is never dropped back into it by one left over
   // from last time.
-  const at = s.seen && typeof window !== 'undefined' ? parseHash(window.location.hash) : null;
-  if (at && ONBOARDING.indexOf(at.screen) < 0) {
+  // The small print is the one exception to "finish the setup first": you have
+  // to be able to read what an app does with you before you agree to any of it.
+  const at = typeof window !== 'undefined' ? parseHash(window.location.hash) : null;
+  if (at && (s.seen || LEGAL.indexOf(at.screen) >= 0) && ONBOARDING.indexOf(at.screen) < 0) {
     s.screen = at.screen;
     if (at.pickId) s.pickId = at.pickId;
+  }
+  // /privacy and /terms, normalised to the hash before anything renders, so the
+  // address bar never ends up saying /privacy#/settings two taps later.
+  const path = legalPath();
+  if (path) {
+    s.screen = path;
+    try {
+      window.history.replaceState({ pg: 0 }, '', BASE + '#/' + path);
+    } catch {
+      /* opaque origin — the hash the router writes next says the same thing */
+    }
   }
   return s;
 }
@@ -408,10 +488,45 @@ const COUNTRY_NAMES: Record<string, string> = {
 const SCREENS: Screen[] = [
   'welcome', 'goal', 'tier', 'diet', 'locate', 'home', 'browse', 'results',
   'shop', 'cook', 'after', 'kitchen', 'stats', 'passport', 'plan', 'settings',
+  'privacy', 'terms',
 ];
 const DISH_SCREENS: Screen[] = ['results', 'shop', 'cook', 'after'];
 /** The setup is walked, never linked to. */
 const ONBOARDING: Screen[] = ['welcome', 'goal', 'tier', 'diet', 'locate'];
+/** The opposite of ONBOARDING: the two screens anyone may open, setup or no
+ *  setup. A privacy policy that only a signed-up user can read is not one. */
+const LEGAL: Screen[] = ['privacy', 'terms'];
+
+/** Both documents are also reachable at a plain path, because an app-store
+ *  listing cannot carry a fragment. No host rule is needed — /privacy already
+ *  falls through to index.html the way every stray deep link does, and the
+ *  worker answers it from the cached shell with no signal. This turns the path
+ *  it arrived at into the hash the router speaks, in place and before the first
+ *  render, so nothing downstream ever learns a path was involved. */
+const BASE = import.meta.env.BASE_URL || '/';
+const LEGAL_PATHS: Record<string, Screen> = { privacy: 'privacy', terms: 'terms' };
+
+function legalPath(): Screen | null {
+  if (typeof window === 'undefined') return null;
+  const p = window.location.pathname;
+  const rest = (p.indexOf(BASE) === 0 ? p.slice(BASE.length) : p.replace(/^\//, '')).replace(/\/$/, '');
+  return LEGAL_PATHS[rest] ?? null;
+}
+
+/** Section order for each document. The copy itself is 'privLocalH' and
+ *  'privLocalB' in extra-copy.ts, so adding a section is one entry here and
+ *  two keys there — and the translation test keeps enforcing all six. */
+const PRIV_SECTIONS = [
+  'privLocal', 'privAccount', 'privDiet', 'privWhere', 'privPhoto',
+  'privPush', 'privPrice', 'privOthers', 'privNever', 'privRights', 'privContact',
+];
+const TERM_SECTIONS = [
+  'termWhat', 'termPrice', 'termAllergen', 'termCook', 'termAccount',
+  'termLicence', 'termChange',
+];
+
+/** One address for both documents, so there is one place to change it. */
+const LEGAL_CONTACT = 'privacy@pantryglobe.com';
 
 const hashFor = (screen: Screen, pickId: string) =>
   '#/' + screen + (DISH_SCREENS.indexOf(screen) >= 0 ? '/' + pickId : '');
@@ -524,7 +639,10 @@ export function usePantry() {
     const onPop = () => {
       const cur = ref.current;
       const at = parseHash(window.location.hash);
-      const to = at && (cur.seen || ONBOARDING.indexOf(at.screen) >= 0) ? at : null;
+      const to =
+        at && (cur.seen || ONBOARDING.indexOf(at.screen) >= 0 || LEGAL.indexOf(at.screen) >= 0)
+          ? at
+          : null;
       const next: Screen = to ? to.screen : cur.seen ? 'home' : 'welcome';
       const pick = (to && to.pickId) || cur.pickId;
       // An entry this visit is not allowed to be on — the setup, to someone who
@@ -576,6 +694,24 @@ export function usePantry() {
     },
     [setState],
   );
+
+  /* A file was loaded a moment ago, on the far side of the reload that applied
+     it. The count rides across in sessionStorage because the import is not
+     allowed to touch React state — `save(S)` runs on every change and would
+     write the old profile straight back over the file it just placed. Read
+     once, cleared immediately, so a second reload does not announce it twice.
+     The language is already the imported one: initialState() read it. */
+  useEffect(() => {
+    let n: string | null = null;
+    try {
+      n = sessionStorage.getItem(IMPORTED_KEY);
+      if (n !== null) sessionStorage.removeItem(IMPORTED_KEY);
+    } catch {
+      /* no session storage, no confirmation — the data arrived regardless */
+    }
+    if (n !== null) ping(xt(ref.current.lang || 'en', 'dataImported').split('{n}').join(n));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── The account ────────────────────────────────────────────────────────
      Local-first. Everything works signed out; signing in adopts whatever you
@@ -789,11 +925,42 @@ export function usePantry() {
   const sameMoney = (a: number, b: number) => fmt(a) === fmt(b);
   const budgetIsCustom = !BUDGETS.some((b) => sameMoney(S.budget, b));
 
+  /** The smallest amount fmt() can print as itself. It rounds to whole units
+   *  where a pound buys forty of something and to hundredths where it does not,
+   *  so the floor is one naira and one penny — a property of the currency, not
+   *  of today's rate, which is why it reads c.fx and not fx. Type 0.001 today
+   *  and the screen says "£0.00" and means it. */
+  const minLocal = c.fx >= 40 ? 1 : 0.01;
+  /** The ceiling in the same local money, scaled the way every other price is,
+   *  so it is £1,000 in Birmingham and ₦925,600 in Lagos rather than a
+   *  pounds-shaped number imposed on naira. */
+  const maxLocal = MAX_BASE * c.idx * fx;
+
   const commitBudget = () => {
     const v = parseFloat(S.budgetDraft);
+    // Both ends, in the money it was typed in. `v > 0` alone let £999999999
+    // through, which wraps the chip row onto its own line and stretches every
+    // "under your budget" figure downstream, and let 0.001 through, which
+    // renders as £0.00 — the app showing you a number you did not ask for.
+    // parseFloat('Infinity') is Infinity, and Infinity > 0 was true, so that
+    // got in too.
+    //
+    // Refused, not clamped: quietly turning 999999999 into 1000 would be the
+    // app claiming you asked for something you did not. The budget stays where
+    // it was, what you typed stays in the field, and the screen says the range
+    // once — see budgetRangeLine.
+    if (!Number.isFinite(v) || v < minLocal || v > maxLocal) {
+      setState({ budgetErr: true });
+      return;
+    }
     // Divide by the rate it was displayed at, not the bundled one, or a budget
     // typed in local money is stored as a different amount than it read.
-    if (v > 0) setState({ budget: v / (c.idx * fx), budgetOtherOpen: false, budgetDraft: '' });
+    setState({
+      budget: v / (c.idx * fx),
+      budgetOtherOpen: false,
+      budgetDraft: '',
+      budgetErr: false,
+    });
   };
 
   const storeList = useCallback((): Store[] => {
@@ -1196,11 +1363,19 @@ export function usePantry() {
     const r = RECIPES.find((x) => x.id === ref.current.pickId) || RECIPES[0];
     const refs = r.items.map((i) => refOf(i.n));
     let live = true;
-    priceMedians(refs, ref.current.country || 'GB').then((m) => {
-      if (live) setState({ medians: m });
-    });
+    setState({ medianBusy: true });
+    priceMedians(refs, ref.current.country || 'GB')
+      .then((m) => {
+        if (live) setState({ medians: m, medianBusy: false });
+      })
+      // A bare .then was an unhandled rejection waiting to happen, and the
+      // flag it leaves behind would say "checking" forever.
+      .catch(() => {
+        if (live) setState({ medianBusy: false });
+      });
     return () => {
       live = false;
+      setState({ medianBusy: false });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S.screen, S.pickId, S.country, setState]);
@@ -1216,6 +1391,8 @@ export function usePantry() {
     const cc = ref.current.country || 'GB';
     const want = COUNTRIES[cc]?.iso;
     let alive = true;
+
+    setState({ openBusy: true });
 
     (async () => {
       try {
@@ -1236,11 +1413,14 @@ export function usePantry() {
         if (Object.keys(out).length) setState({ openPrices: out });
       } catch {
         /* offline, blocked, or nobody has logged one — the model still works */
+      } finally {
+        if (alive) setState({ openBusy: false });
       }
     })();
 
     return () => {
       alive = false;
+      setState({ openBusy: false });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S.screen, S.pickId, S.country, setState]);
@@ -1467,6 +1647,10 @@ export function usePantry() {
     dir,
     lang: lg,
     notif: S.notif,
+    /* For the error boundary's reset key, and nothing else so far: a screen
+       change has to be able to clear a screen that threw. */
+    screen,
+    pickId: S.pickId,
 
     isWelcome: screen === 'welcome',
     isGoal: screen === 'goal',
@@ -1483,6 +1667,28 @@ export function usePantry() {
     isStats: screen === 'stats',
     isPassport: screen === 'passport',
     isSettings: screen === 'settings',
+
+    /* ── The small print ─────────────────────────────────────────────────
+       One component renders both documents; which one is a function of the
+       screen, not a prop, so Legal.tsx stays as empty-headed as the rest. */
+    isLegal: LEGAL.indexOf(screen) >= 0,
+    legalTitle: xt(lg, screen === 'terms' ? 'termTitle' : 'privTitle'),
+    legalUpdated: xt(lg, 'legalUpdated'),
+    legalIntro: xt(lg, screen === 'terms' ? 'termIntro' : 'privIntro'),
+    legalContact: LEGAL_CONTACT,
+    legalSections: (screen === 'terms' ? TERM_SECTIONS : PRIV_SECTIONS).map((k) => ({
+      key: k,
+      heading: xt(lg, k + 'H'),
+      // Paragraphs are newlines inside one key rather than one key each: the
+      // translator sees the whole thought, and the test still counts one key.
+      body: xt(lg, k + 'B').split('\n').filter(Boolean),
+    })),
+    legalKicker: xt(lg, 'legalKicker'),
+    legalLinks: [
+      { key: 'privacy', name: xt(lg, 'privacyRow'), sub: xt(lg, 'privacyRowSub'), go: () => go('privacy') },
+      { key: 'terms', name: xt(lg, 'termsRow'), sub: xt(lg, 'termsRowSub'), go: () => go('terms') },
+    ],
+
     showNav:
       ['home', 'kitchen', 'stats', 'passport', 'settings', 'browse', 'plan'].indexOf(screen) >= 0,
 
@@ -1511,6 +1717,8 @@ export function usePantry() {
       if (screen === 'diet') return go('tier', { tierStep: 1 });
       if (screen === 'locate') return go('diet');
       if (screen === 'shop') return go('results');
+      // Arrived by link, so there is no stack. Back goes where the link lives.
+      if (LEGAL.indexOf(screen) >= 0) return go('settings');
       return go('home');
     },
     goHome: () => go('home'),
@@ -1739,13 +1947,24 @@ export function usePantry() {
           label: HH.otherChip || 'Other',
           on: S.budgetOtherOpen,
           style: (S.budgetOtherOpen ? PILL_ON : PILL_OFF) + 'flex:none;',
-          pick: () => setState({ budgetOtherOpen: !S.budgetOtherOpen }),
+          pick: () => setState({ budgetOtherOpen: !S.budgetOtherOpen, budgetErr: false }),
         },
       ]),
     budgetOtherOpen: S.budgetOtherOpen,
     budgetDraft: S.budgetDraft,
     symbol: c.sym,
-    onBudgetDraft: (e: ChangeEvent<HTMLInputElement>) => setState({ budgetDraft: e.target.value }),
+    /* Typing is not an error state. Whatever the last Set said, the next
+       keystroke clears it — the field states the range once and then shuts up
+       rather than turning red while you are halfway through a number. */
+    onBudgetDraft: (e: ChangeEvent<HTMLInputElement>) =>
+      setState({ budgetDraft: e.target.value, budgetErr: false }),
+    budgetErr: S.budgetErr,
+    /* Both ends through fmt(), so the range is stated in the money you are
+       typing in: pennies in Birmingham, whole naira in Lagos. */
+    budgetRangeLine: fill(xt(lg, 'budgetRange'), {
+      a: fmt(localToBase(minLocal)),
+      b: fmt(MAX_BASE),
+    }),
     commitBudget,
     /* Enter is the Set button — the same function, so the two cannot drift.
        Escape abandons what you typed and leaves the budget where it was. */
@@ -1755,7 +1974,7 @@ export function usePantry() {
         commitBudget();
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        setState({ budgetOtherOpen: false, budgetDraft: '' });
+        setState({ budgetOtherOpen: false, budgetDraft: '', budgetErr: false });
       }
     },
     timeChips: [
@@ -2011,14 +2230,31 @@ export function usePantry() {
     reportPriceValue: S.reportPrice,
     reportPackValue: S.reportPack,
     reportBusy: S.reportBusy,
+    /* Two lookups, one question. The basket used to reprice itself under your
+       finger — line prices and the total both move — with a seven-pixel dot
+       changing colour as the only tell. This says it is looking, for exactly as
+       long as it is looking, and says nothing at all the rest of the time. */
+    pricesBusy: S.openBusy || S.medianBusy,
     canReport: cloudEnabled && !!auth.userId,
     onReportPrice: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPrice: e.target.value }),
     onReportPack: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPack: e.target.value }),
     closeReport: () => setState({ reportFor: null }),
     submitReport: async () => {
       const price = parseFloat(S.reportPrice);
-      const pack = parseFloat(S.reportPack);
-      if (!auth.userId || !S.reportFor || !(price > 0) || !(pack > 0)) return;
+      // Whole grams. A pack is a thing on a shelf, not a measurement.
+      const pack = Math.round(parseFloat(S.reportPack));
+      // Read through the ref, like savePlan: setState is a request, so a second
+      // tap arriving before the next render would see reportBusy still false
+      // and send the same price twice.
+      if (!auth.userId || !S.reportFor || ref.current.reportBusy) return;
+      // The same bounds the table enforces, checked here so that the ordinary
+      // mistake — a stray zero, grams typed as kilos — comes back as a
+      // sentence rather than as a rejected insert. `> 0` alone let 999999
+      // through, which is one row that owns the median for everybody.
+      if (!(price > 0 && price <= 10000 && pack >= 1 && pack <= 50000)) {
+        ping(xt(lg, 'priceOutOfRange'));
+        return;
+      }
       setState({ reportBusy: true });
       const store = stores.find((x) => x.id === S.store);
       // Prices are entered in the local currency, and stored in it — the
@@ -2041,6 +2277,21 @@ export function usePantry() {
           cc,
         );
         setState({ medians: fresh });
+      } else {
+        // A refusal that closes the panel in silence reads as success, which
+        // is the app telling someone their price went in when it did not.
+        // The two the table raises deliberately carry their own SQLSTATE;
+        // anything else is a network or a policy problem and says so.
+        ping(
+          xt(
+            lg,
+            res.code === '23505'
+              ? 'priceAlready'
+              : res.code === '54000'
+                ? 'priceTooMany'
+                : 'priceFailed',
+          ),
+        );
       }
     },
     honestyLine: fill(c.tier === 'local' ? SL.measured : SL.modelled, { c: countryName }),
@@ -2382,6 +2633,10 @@ export function usePantry() {
     planMeals: S.planMeals,
     planServings: S.planServings,
     planSavedNote: S.planSaved,
+    /* planSaving already existed and already guarded the double tap; the button
+       simply never read it, so a two-table Supabase insert looked like nothing
+       had happened. */
+    planBusy: S.planSaving,
     planDayChips: [3, 5, 7].map((d) => ({
       key: String(d),
       label: String(d),
@@ -2615,6 +2870,66 @@ export function usePantry() {
       knobX: S.toggles[t.k] ? '23px' : '3px',
       flip: () => setState({ toggles: { ...S.toggles, [t.k]: !S.toggles[t.k] } }),
     })),
+    /* ── Your data, in your hands ───────────────────────────────────────────
+       Everything above lives in one key in one browser. Clear the browser and
+       it is gone: there is no copy anywhere else unless you asked for one. */
+    exportData: () => exportBackup(readStore()),
+    importData: (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files && e.target.files[0];
+      // Emptied whatever happens next, or picking the same file twice fires
+      // change only once.
+      e.target.value = '';
+      if (!file) return;
+      file
+        .text()
+        .then((text) => {
+          const got = readBackup(text);
+          if (!got.ok) {
+            // Two refusals, two different truths. A newer file is not
+            // half-opened: taking the keys this build recognises and dropping
+            // the rest would look like it worked, and then the next state
+            // change would write the pruned blob back over it — an import that
+            // quietly deletes half your history.
+            ping(xt(lg, got.why === 'future' ? 'dataFutureFile' : 'dataBadFile'));
+            return;
+          }
+          // Through the same filter the boot read uses. A file can carry
+          // anything; only the eighteen keys in KEEP, each of the right shape,
+          // get past here.
+          const keep = pick(got.data);
+          const cooks = Array.isArray(keep.history)
+            ? (keep.history as LocalCook[]).filter((h) => h && !h.seeded).length
+            : 0;
+          try {
+            sessionStorage.setItem(IMPORTED_KEY, String(cooks));
+          } catch {
+            /* no confirmation, then — the data still arrives */
+          }
+          try {
+            localStorage.setItem(STORE_KEY, JSON.stringify(keep));
+          } catch {
+            ping(xt(lg, 'dataBadFile'));
+            return;
+          }
+          // Storage, then reload, and nothing set on React state in between:
+          // `save(S)` runs on every state change and would write the old
+          // profile straight back over the file just placed. The reload also
+          // makes initialState() the only thing that ever turns a blob into
+          // state, so an import behaves exactly like opening the app tomorrow
+          // rather than being a second hydration path that can drift from
+          // load(); it clears everything outside KEEP, all of which is stale
+          // against an imported profile; and it lets the sign-in merge run
+          // once in its usual order instead of racing a mid-session setS.
+          window.location.reload();
+        })
+        .catch(() => ping(xt(lg, 'dataBadFile')));
+    },
+    /* Said only when it is true. After the reload the sign-in merge carries
+       your imported cooks up — history is merged, and it is the irreplaceable
+       part — but a profile the account already has wins on settings. Better to
+       say so than to quietly hand back a file that half took. */
+    importCloudNote: auth.userId ? xt(lg, 'dataImportCloud') : '',
+
     restart: () => {
       try {
         localStorage.removeItem(STORE_KEY);

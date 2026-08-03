@@ -126,3 +126,21 @@ export const CameraOff = (p: IconProps) => (
     <path d="M3 6.5V18a2 2 0 0 0 2 2h13" />
   </svg>
 );
+
+/** Out of the app and onto your disk, and back again. Neither carries .pg-dir:
+ *  down is down in every script. */
+export const Download = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <path d="M12 15V3" />
+  </svg>
+);
+
+export const Upload = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <path d="M12 3v12" />
+  </svg>
+);

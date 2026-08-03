@@ -1,0 +1,30 @@
+<!-- Source of truth for public/og.png. Edit this, then: node scripts/make-og-image.mjs
+     Nothing here is loaded at runtime — the link preview is the rasterised PNG.
+     The two @font-face rules are injected by the generator from public/fonts,
+     so this file stays readable and the fonts stay the ones the app ships. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <style>/* fonts injected here */</style>
+
+  <rect width="1200" height="630" fill="#f5ead8" />
+
+  <!-- The same two blobs the welcome screen draws, cropped by the frame. -->
+  <circle cx="1120" cy="80" r="190" fill="#e1eecc" opacity=".75" />
+  <circle cx="980" cy="300" r="88" fill="#ffc6a5" opacity=".8" />
+
+  <rect x="80" y="92" width="104" height="104" rx="32" fill="#c67139" />
+  <text x="132" y="166" text-anchor="middle" font-family="Caprasimo" font-size="58" fill="#f5ead8">P</text>
+
+  <text x="80" y="318" font-family="Caprasimo" font-size="116" fill="#474238" letter-spacing="-1.5">Pantry</text>
+
+  <text x="80" y="380" font-family="Figtree" font-size="34" font-weight="500" fill="#474238">Tell it what you fancy and what’s in your pocket.</text>
+  <text x="80" y="426" font-family="Figtree" font-size="34" font-weight="500" fill="#82796a">One decision at a time, priced where you actually stand.</text>
+
+  <!-- Pill geometry is computed by the generator from real font metrics. -->
+  <g id="pills" font-family="Figtree" font-size="25" font-weight="600" data-x="80" data-y="496" data-h="56" data-pad="30" data-gap="16">
+    <g class="pill"><rect fill="#ebddc5" /><text fill="#474238">No account needed</text></g>
+    <g class="pill"><rect fill="#ebddc5" /><text fill="#474238">Opens with no signal</text></g>
+    <g class="pill"><rect fill="#ebddc5" /><text fill="#474238">Six languages</text></g>
+  </g>
+
+  <text x="80" y="600" font-family="Figtree" font-size="25" font-weight="600" fill="#8fa073">pantryglobe.com</text>
+</svg>

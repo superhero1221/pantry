@@ -1,11 +1,22 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { Boundary } from './ui/Boundary';
+import { installCrashNet } from './lib/crash';
 import './styles.css';
+
+// Before anything renders. A net that goes up after the fall is decoration.
+installCrashNet();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {/* The outer boundary. usePantry() runs inside App's own render, so if the
+        state layer throws there is no shell to render a message into — this
+        one brings its own .pg-page/.pg-shell. The inner one, in App, keeps the
+        shell and the nav when it is only a screen that broke. */}
+    <Boundary shell>
+      <App />
+    </Boundary>
   </StrictMode>,
 );
 

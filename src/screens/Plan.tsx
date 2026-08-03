@@ -159,10 +159,14 @@ export function Plan({ v }: { v: Pantry }) {
           {v.signedIn ? (
             <Btn
               onClick={v.savePlan}
-              css="width:100%;height:52px;border-radius:999px;background:#ebddc5;font-size:15px;font-weight:700;color:#474238;margin-top:16px"
+              disabled={v.planBusy}
+              css={
+                'width:100%;height:52px;border-radius:999px;background:#ebddc5;font-size:15px;font-weight:700;color:#474238;margin-top:16px' +
+                (v.planBusy ? ';opacity:.62' : '')
+              }
               hover="background:#dcd3c4"
             >
-              {v.planSavedNote ? x('planSaved') : x('planSave')}
+              {v.planBusy ? x('planSaving') : v.planSavedNote ? x('planSaved') : x('planSave')}
             </Btn>
           ) : (
             <p

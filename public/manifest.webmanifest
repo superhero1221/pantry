@@ -1,6 +1,9 @@
 {
+  "id": "/",
   "name": "Pantry",
   "short_name": "Pantry",
+  "lang": "en",
+  "dir": "ltr",
   "description": "Tell it what you fancy and what's in your pocket. One decision at a time, priced where you actually stand.",
   "start_url": "./",
   "scope": "./",
@@ -9,6 +12,29 @@
   "background_color": "#f5ead8",
   "theme_color": "#f5ead8",
   "categories": ["food", "lifestyle", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Tonight",
+      "short_name": "Tonight",
+      "description": "Pick tonight's dinner",
+      "url": "./#/tonight",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "The week",
+      "short_name": "The week",
+      "description": "The week's plan",
+      "url": "./#/week",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Kitchen",
+      "short_name": "Kitchen",
+      "description": "What is in the cupboard",
+      "url": "./#/kitchen",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
   "icons": [
     { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

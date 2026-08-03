@@ -1,5 +1,54 @@
 # Netlify headers. Kept in step with vercel.json — change one, change the other.
 
+# Security headers, on everything.
+#
+# The CSP is one line because _headers has no continuation syntax. Read in
+# order, it says:
+#
+#   script-src 'self'        dist/index.html has no inline <script> — Vite
+#                            emits a module tag and a modulepreload link, and
+#                            the preload polyfill compiles into the entry
+#                            chunk. So no nonce and no hash is needed.
+#   style-src-attr           THE ONE THAT MATTERS. css() returns a React style
+#     'unsafe-inline'        prop, so every screen is built out of inline style
+#                            ATTRIBUTES, and CSP Level 3 governs those with
+#                            style-src-attr. Setting only style-src 'self'
+#                            would strip the styling off the entire app,
+#                            because style-src is the fallback for it.
+#   style-src-elem 'self'    <style> and <link rel=stylesheet> stay locked to
+#                            this origin — the loosening above buys attributes
+#                            only, not elements.
+#   style-src 'self'         For browsers too old for the granular pair
+#     'unsafe-inline'        (Safari before 15.4). They degrade to a weaker
+#                            policy rather than to an unstyled page.
+#   img-src data: blob:      data: for the standalone build's inlined icon and
+#                            photographs, blob: for the plate photo, which is
+#                            an object URL and is never uploaded anywhere.
+#   font-src 'self' data:    public/fonts here, inlined woff2 in standalone.
+#   connect-src              The five hosts the app really calls, and the
+#                            Supabase project when one is configured. No wss:
+#                            — nothing calls db.channel(), so realtime never
+#                            opens a socket. Add wss://*.supabase.co the day
+#                            something subscribes, and not before.
+#   form-action 'none'       There is not one <form> in src/.
+#
+# The single-file build (scripts/build-standalone.mjs) inlines the bundle and
+# the stylesheet into the document. No CSP worth having will run it. It is a
+# file:// artefact — hand it over as a file, do not host it under this policy.
+/*
+  Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self' https://api.frankfurter.app https://nominatim.openstreetmap.org https://overpass-api.de https://prices.openfoodfacts.org https://world.openfoodfacts.org https://*.supabase.co; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=(), display-capture=(), browsing-topics=()
+  X-Frame-Options: DENY
+  Cross-Origin-Opener-Policy: same-origin
+
+# Geolocation stays allowed: it is the feature. Camera is denied and the plate
+# photo still works — PlateDrop is <input type="file" accept="image/*"> with no
+# capture attribute, and a file picker's "Take Photo" is a native OS flow that
+# Permissions-Policy does not gate. Nothing in src/ calls getUserMedia.
+
 # The worker decides when everything else updates, so it must never be the
 # stale thing. It calls skipWaiting(), and its VERSION does not change between
 # deploys, so it takes over the moment the browser sees bytes that differ — a
@@ -16,6 +65,11 @@
 # Content-hashed by the build, so they can be cached forever.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Cross-Origin-Resource-Policy: same-site
 
+# same-site, not same-origin, so the apex and www both keep working. This does
+# not stop anyone copying a photograph; it stops another site using it from
+# your server, which is the only part a header can reach.
 /pix/*
   Cache-Control: public, max-age=31536000, immutable
+  Cross-Origin-Resource-Policy: same-site

@@ -68,6 +68,7 @@ export function Home({ v }: { v: Pantry }) {
             placeholder="6.50"
             inputMode="decimal"
             aria-label={v.t.homeMoney}
+            aria-invalid={v.budgetErr}
             style={css('flex:1;min-width:0;border:0;outline:none;background:none;font-size:18px;font-weight:700')}
           />
           <Btn
@@ -77,6 +78,20 @@ export function Home({ v }: { v: Pantry }) {
             {v.u.setBtn}
           </Btn>
         </div>
+      )}
+      {/* Only after you pressed Set on something the app cannot show you, and
+          only until the next keystroke. role="status" rather than "alert": it
+          exists because you pressed a button, so it does not need to interrupt
+          anybody. A field that goes red while you are still halfway through a
+          number is nagging, not helping. */}
+      {v.budgetOtherOpen && v.budgetErr && (
+        <p
+          role="status"
+          dir="auto"
+          style={css('margin:8px 4px 0;font-size:12.5px;line-height:1.5;font-weight:600;color:#8c491a;text-wrap:pretty')}
+        >
+          {v.budgetRangeLine}
+        </p>
       )}
 
       <Kicker style={{ marginTop: 22 }}>{v.t.homeTime}</Kicker>

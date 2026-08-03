@@ -54,7 +54,13 @@ export function Shop({ v }: { v: Pantry }) {
 
       <div style={css('display:flex;align-items:baseline;justify-content:space-between;margin-top:26px')}>
         <Kicker>{v.t.shopList}</Kicker>
-        <div style={css('font-size:12.5px;color:#82796a')}>{v.listSummary}</div>
+        {/* Real prices arrive a beat after the modelled ones and move every
+            line and the total with them, with a seven-pixel dot changing
+            colour as the only tell. This slot says it is looking while it is
+            looking, and goes back to the count when it is done. */}
+        <div aria-live="polite" style={css('font-size:12.5px;color:#82796a')}>
+          {v.pricesBusy ? v.xt('pricesChecking') : v.listSummary}
+        </div>
       </div>
       <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#a19786;text-wrap:pretty')}>
         {v.xt('tapToToggle')}
@@ -153,6 +159,11 @@ export function Shop({ v }: { v: Pantry }) {
         <p dir="auto" style={css('margin:11px 0 0;font-size:12px;line-height:1.5;color:#82796a;text-wrap:pretty')}>
           {v.honestyLine}
         </p>
+        {/* The store list is OpenStreetMap and the medians are Open Prices.
+            Both are ODbL, and ODbL wants the notice where the data is. */}
+        <p dir="auto" style={css('margin:6px 0 0;font-size:11px;line-height:1.45;color:#a19786;text-wrap:pretty')}>
+          {v.xt('creditShort')}
+        </p>
       </div>
 
       {v.canReport && (
@@ -209,10 +220,13 @@ export function Shop({ v }: { v: Pantry }) {
             <Btn
               onClick={v.submitReport}
               disabled={v.reportBusy}
-              css="flex:1;height:48px;border-radius:999px;background:#c67139;color:#fff;font-size:14.5px;font-weight:700"
+              css={
+                'flex:1;height:48px;border-radius:999px;background:#c67139;color:#fff;font-size:14.5px;font-weight:700' +
+                (v.reportBusy ? ';opacity:.62' : '')
+              }
               hover="background:#b2622d"
             >
-              {v.xt('priceSend')}
+              {v.reportBusy ? v.xt('priceSending') : v.xt('priceSend')}
             </Btn>
             <Btn
               onClick={v.closeReport}

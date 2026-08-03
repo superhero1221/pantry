@@ -1,0 +1,34 @@
+Pantry
+Copyright (C) 2026 the Pantry authors
+
+SPDX-License-Identifier: AGPL-3.0-only
+
+------------------------------------------------------------------------------
+THIS FILE IS NOT YET COMPLETE. IT NEEDS THE LICENCE TEXT PASTED IN BELOW.
+------------------------------------------------------------------------------
+
+The licence chosen for this project is the GNU Affero General Public License,
+version 3, and no later version. That choice is deliberate and is explained in
+CREDITS.md: Pantry is a web app, so it is *served* rather than *distributed*,
+and the ordinary GPL's obligations would never trigger. The AGPL's section 13
+is the clause that does — it says that if you run a modified copy as a service
+other people use over a network, you have to offer them the source of what you
+are running. For an app whose whole value is that it can be honest about where
+its numbers come from, that is the right condition to attach.
+
+The full text was deliberately not written from memory. Reproducing a licence
+approximately is worse than not shipping one at all, because a licence that
+differs from the canonical text in some small way is a licence nobody can rely
+on, including you. Fetch the real thing and replace everything above this line
+and this notice with it:
+
+    curl -o LICENSE https://www.gnu.org/licenses/agpl-3.0.txt
+
+Then add the copyright line back at the top, and this file is done.
+
+Until that is finished, the position is: the code in this repository is offered
+under AGPL-3.0-only as identified by the SPDX line above, and the canonical
+terms are those published at https://www.gnu.org/licenses/agpl-3.0.html
+
+The data and the photographs are NOT covered by this licence, and are not the
+authors' to relicense. See CREDITS.md, which names each source and its terms.

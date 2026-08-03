@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  One URL, because there is one URL. Every screen in Pantry is state behind a
+  hash, and a hash is never sent to the server, so https://pantryglobe.com/ is
+  the entire crawlable surface. Listing #/kitchen or #/plan here would not turn
+  them into pages; it would just be a sitemap that lies.
+
+  No <lastmod>: a date typed by hand is a date that goes stale, and a stale one
+  is worse than none at all. No <changefreq> or <priority> — Google ignores
+  both and has said so for years.
+
+  This file earns very little. A homepage is found without help. It is here so
+  that Search Console has something to report against, and so the canonical
+  spelling of the domain is written down somewhere other than a dashboard.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://pantryglobe.com/</loc>
+  </url>
+</urlset>

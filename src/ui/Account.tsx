@@ -87,7 +87,9 @@ export function Account({ v }: { v: Pantry }) {
                   css="height:42px;padding:0 18px;border-radius:999px;background:#c67139;color:#fff;font-size:14px;font-weight:700;white-space:nowrap"
                   hover="background:#b2622d"
                 >
-                  {v.authStatus === 'loading' ? x('syncing') : x('sendLink')}
+                  {/* Not "Syncing" — nothing is syncing yet. One email is being
+                      sent, and that is what it should say. */}
+                  {v.authStatus === 'loading' ? x('sendingLink') : x('sendLink')}
                 </Btn>
               </div>
               {v.authError && (

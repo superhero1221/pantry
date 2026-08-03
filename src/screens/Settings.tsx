@@ -1,7 +1,7 @@
 import { css } from '../lib/css';
 import { A, Btn } from '../ui/Btn';
 import { Kicker } from '../ui/bits';
-import { Globe, Pin } from '../ui/Icon';
+import { ChevronRight, Download, Globe, Pin, Upload } from '../ui/Icon';
 import { Account } from '../ui/Account';
 import { Device } from '../ui/Device';
 import type { Pantry } from '../state/usePantry';
@@ -150,9 +150,119 @@ export function Settings({ v }: { v: Pantry }) {
           </A>
         ))}
       </div>
+      {/* The pills above say which licence each source carries. That is a
+          label, not a notice: ODbL §4.3 wants it said that the app contains
+          information from the source and under what terms, and OpenStreetMap's
+          attribution guideline wants the literal words "© OpenStreetMap
+          contributors" where a reader will see them. This is that, in the
+          reader's own language, and `creditShort` repeats the shortest form of
+          it on Locate and on Shop where the data is actually on screen. */}
+      <Kicker style={{ marginTop: 24 }}>{v.xt('creditsLabel')}</Kicker>
+      <div style={css('margin-top:10px;padding:16px 18px;border-radius:26px;background:#f9f4ed;display:flex;flex-direction:column;gap:9px')}>
+        <p dir="auto" style={css('margin:0;font-size:12.5px;line-height:1.55;color:#645c50;text-wrap:pretty')}>
+          {v.xt('creditOsm')}
+        </p>
+        <p dir="auto" style={css('margin:0;font-size:12.5px;line-height:1.55;color:#645c50;text-wrap:pretty')}>
+          {v.xt('creditOpenFood')}
+        </p>
+        <p dir="auto" style={css('margin:0;font-size:12.5px;line-height:1.55;color:#645c50;text-wrap:pretty')}>
+          {v.xt('creditOther')}
+        </p>
+        <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:3px')}>
+          <A
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener"
+            css="padding:6px 13px;border-radius:999px;background:#ebddc5;font-size:11.5px;font-weight:700;color:#645c50;text-decoration:none"
+            hover="background:#dcd3c4"
+          >
+            openstreetmap.org/copyright
+          </A>
+          <A
+            href="https://opendatacommons.org/licenses/odbl/1-0/"
+            target="_blank"
+            rel="noopener"
+            css="padding:6px 13px;border-radius:999px;background:#ebddc5;font-size:11.5px;font-weight:700;color:#645c50;text-decoration:none"
+            hover="background:#dcd3c4"
+          >
+            ODbL 1.0
+          </A>
+        </div>
+      </div>
+
       <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#82796a;margin:12px 2px 0;text-wrap:pretty')}>
         {v.u.picNote}
       </p>
+
+      {/* Everything Pantry knows about you is one key in this browser. Clear
+          the browser and it is gone — there is no copy anywhere else unless
+          you asked for one. These two rows are the way out and the way back,
+          and they sit here rather than anywhere else because the row below
+          them is the one that throws it all away. */}
+      <Kicker style={{ marginTop: 24 }}>{v.xt('dataTitle')}</Kicker>
+      <Btn
+        onClick={v.exportData}
+        css="width:100%;margin-top:10px;padding:16px 18px;border-radius:26px;background:#f9f4ed;display:flex;gap:12px;align-items:center;text-align:start"
+        hover="background:#eee7db"
+      >
+        <Download size={22} stroke="#645c50" style={{ flex: 'none' }} />
+        <span style={css('flex:1;min-width:0')}>
+          <span style={css('display:block;font-size:15px;font-weight:700')}>{v.xt('dataExport')}</span>
+          <span dir="auto" style={css('display:block;font-size:12.5px;line-height:1.45;color:#82796a;margin-top:3px;text-wrap:pretty')}>
+            {v.xt('dataExportSub')}
+          </span>
+        </span>
+      </Btn>
+
+      {/* A label, not a Btn: the control that opens a file picker is the file
+          input itself, and Btn is a <button>. The input is clipped rather than
+          display:none, so it keeps its place in the tab order and gives the row
+          its accessible name — this row has to be reachable without a mouse
+          like every other one on this screen. */}
+      <label style={css('width:100%;margin-top:8px;padding:16px 18px;border-radius:26px;background:#f9f4ed;display:flex;gap:12px;align-items:center;text-align:start;cursor:pointer')}>
+        <input
+          type="file"
+          accept="application/json,.json"
+          onChange={v.importData}
+          style={css('position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0')}
+        />
+        <Upload size={22} stroke="#645c50" style={{ flex: 'none' }} />
+        <span style={css('flex:1;min-width:0')}>
+          <span style={css('display:block;font-size:15px;font-weight:700')}>{v.xt('dataImport')}</span>
+          <span dir="auto" style={css('display:block;font-size:12.5px;line-height:1.45;color:#82796a;margin-top:3px;text-wrap:pretty')}>
+            {v.xt('dataImportSub')}
+          </span>
+        </span>
+      </label>
+      {v.importCloudNote && (
+        <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#82796a;margin:9px 2px 0;text-wrap:pretty')}>
+          {v.importCloudNote}
+        </p>
+      )}
+
+      {/* Deliberately directly above Start over: the policy's deletion section
+          is about that button, so the reader meets the explanation first. */}
+      <Kicker style={{ marginTop: 24 }}>{v.legalKicker}</Kicker>
+      <div style={css('display:flex;flex-direction:column;gap:7px;margin-top:11px')}>
+        {v.legalLinks.map((l) => (
+          <Btn
+            key={l.key}
+            onClick={l.go}
+            css="display:flex;gap:11px;align-items:center;padding:14px 16px;border-radius:24px;background:#f9f4ed;width:100%;text-align:start"
+            hover="background:#eee7db"
+          >
+            <span style={css('flex:1;min-width:0')}>
+              <span dir="auto" style={css('display:block;font-size:14px;font-weight:700;color:#201e1d')}>
+                {l.name}
+              </span>
+              <span dir="auto" style={css('display:block;font-size:12px;color:#82796a;margin-top:3px')}>
+                {l.sub}
+              </span>
+            </span>
+            <ChevronRight size={18} stroke="#a19786" style={{ flex: 'none' }} />
+          </Btn>
+        ))}
+      </div>
 
       <Btn
         onClick={v.restart}

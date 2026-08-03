@@ -5,6 +5,12 @@
 # is what a Netlify Drop uploads — a netlify.toml at the repo root is never
 # part of a drag-and-drop deploy. This file is only what a Git-connected build
 # needs to know, so that no rule has two homes to drift between.
+#
+# Do not add a [[headers]] block here. Netlify applies both this file and
+# public/_headers, and where the two touch the same path this one wins — so a
+# block added here would silently override the Content-Security-Policy without
+# raising an error anywhere. Headers go in public/_headers, and their mirror
+# goes in vercel.json.
 
 [build]
   command = "npm run build"

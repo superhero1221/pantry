@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { css } from './lib/css';
 import { usePantry } from './state/usePantry';
+import { Boundary } from './ui/Boundary';
 import { Nav } from './ui/Nav';
 import { After } from './screens/After';
 import { Browse } from './screens/Browse';
@@ -9,6 +10,7 @@ import { Diet } from './screens/Diet';
 import { Goal } from './screens/Goal';
 import { Home } from './screens/Home';
 import { Kitchen } from './screens/Kitchen';
+import { Legal } from './screens/Legal';
 import { Locate } from './screens/Locate';
 import { Passport } from './screens/Passport';
 import { Plan } from './screens/Plan';
@@ -53,7 +55,15 @@ export default function App() {
         )}
 
         <main className="pg-main pg-scroll" style={css('text-align:start')}>
-          {v.isWelcome && <Welcome v={v} />}
+          {/* One screen throwing takes the screen, not the shell: the nav rail
+              below stays tappable, and because the key is the screen, walking
+              to another tab is itself the recovery — the boundary remounts and
+              the error clears. Screens hold no state of their own, so a
+              remount costs nothing. Rendering nothing but its children, this
+              adds no element between .pg-main and the screen, so the desktop
+              measure rule still lands. */}
+          <Boundary lang={v.lang} dir={v.dir} resetKey={v.screen + '/' + v.pickId}>
+            {v.isWelcome && <Welcome v={v} />}
           {v.isGoal && <Goal v={v} />}
           {v.isTier && <Tier v={v} />}
           {v.isDiet && <Diet v={v} />}
@@ -68,7 +78,9 @@ export default function App() {
           {v.isStats && <Stats v={v} />}
           {v.isPassport && <Passport v={v} />}
           {v.isPlan && <Plan v={v} />}
-          {v.isSettings && <Settings v={v} />}
+            {v.isSettings && <Settings v={v} />}
+          {v.isLegal && <Legal v={v} />}
+          </Boundary>
         </main>
 
         {v.showNav && <Nav v={v} />}

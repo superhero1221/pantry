@@ -219,7 +219,7 @@ export async function reportPrice(input: {
   country: string;
 }) {
   const db = await getDb();
-  if (!db) return { ok: false, error: 'Not connected' };
+  if (!db) return { ok: false, error: 'Not connected', code: '' };
   const { error } = await db.from('price_reports').insert({
     user_id: input.userId,
     ref: input.ref,
@@ -230,7 +230,13 @@ export async function reportPrice(input: {
     store_tier: input.storeTier ?? null,
     country: input.country,
   });
-  return error ? { ok: false, error: error.message } : { ok: true };
+  // The SQLSTATE, not the message: the table refuses an insert for three
+  // different reasons (54000 too fast, 23505 already reported today, 23514
+  // outside the bounds) and the caller has to say which in the reader's own
+  // language. The message itself is English and is for a log, not a screen.
+  return error
+    ? { ok: false, error: error.message, code: error.code ?? '' }
+    : { ok: true, error: '', code: '' };
 }
 
 /* ── Reminders ────────────────────────────────────────────────────────── */

@@ -86,6 +86,12 @@ export function Locate({ v }: { v: Pantry }) {
               <p dir="auto" style={css('margin:7px 0 0;font-size:13.5px;line-height:1.5;color:#3d472b;opacity:.85;text-wrap:pretty')}>
                 {v.liveShopLine}
               </p>
+              {/* This card is a place name from Nominatim and a shop count
+                  from Overpass. ODbL wants the notice where the data is, not
+                  filed under Settings, so it goes here too. */}
+              <p dir="auto" style={css('margin:9px 0 0;font-size:11px;line-height:1.45;color:#3d472b;opacity:.7;text-wrap:pretty')}>
+                {v.xt('creditShort')}
+              </p>
             </div>
           )}
 

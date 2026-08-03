@@ -4,3 +4,7 @@
 
 User-agent: *
 Allow: /
+
+# One entry, for the one URL. It tells Search Console which spelling of the
+# domain is the real one; it does not make anything more findable.
+Sitemap: https://pantryglobe.com/sitemap.xml
