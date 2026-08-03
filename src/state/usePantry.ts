@@ -270,7 +270,19 @@ const KEEP = [
 function load(): Partial<PantryState> {
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    return raw ? (JSON.parse(raw) as Partial<PantryState>) : {};
+    if (!raw) return {};
+    const blob = JSON.parse(raw) as Record<string, unknown>;
+    // Only what this build still keeps. Blobs written by earlier builds carry
+    // retired keys — streak, vendorKey, the shrink and shop toggles — and an
+    // unfiltered spread would resurrect them into state, back into storage on
+    // the next save, and up into the cloud profile, forever. Old flags die
+    // here instead.
+    const out: Record<string, unknown> = {};
+    for (const k of KEEP) if (k in blob) out[k] = blob[k];
+    if (out.toggles && typeof out.toggles === 'object') {
+      out.toggles = { leftover: (out.toggles as Record<string, boolean>).leftover ?? true };
+    }
+    return out as Partial<PantryState>;
   } catch {
     return {};
   }
@@ -1349,6 +1361,19 @@ export function usePantry() {
   /** Read off the log every render, never stored — see streakFrom. */
   const streakDays = streakFrom(S.history);
 
+  /** The row this evening's cook of this dish went in as. The transient id
+   *  when the session survived; otherwise the most recent real row for the
+   *  same recipe within six hours — a reload on the After screen loses
+   *  transient state, and losing it must neither discard the waste answer nor
+   *  log the same dinner twice on the way back through the last step. */
+  const currentCookId = (): string | null => {
+    if (S.cookLogId) return S.cookLogId;
+    const row = S.history.find(
+      (c) => !c.seeded && c.id === recipe.id && Date.now() - c.at < 6 * 36e5,
+    );
+    return row?.clientId ?? null;
+  };
+
   /* The passport used to be a static array forever — cook from Mexico and it
      never noticed. Real cooks drive it now: one row per country, counted, with
      the cheapest per-serving dish carrying the flag. The shipped rows only
@@ -2066,7 +2091,7 @@ export function usePantry() {
         // annotates the same row; walking away no longer un-cooks dinner.
         // (It used to log only when the waste question was answered, so a
         // closed tab on the After screen lost the meal.)
-        const id = S.cookLogId ?? logCook(recipe, null);
+        const id = currentCookId() ?? logCook(recipe, null);
         return go('after', { waste: null, reminded: false, cookLogId: id });
       }
       setState({ step: S.step + 1, timerRun: false, timerLeft: 0, lostOpen: false });
@@ -2101,12 +2126,15 @@ export function usePantry() {
       pick: () => {
         // The cook is already in the log; this annotates it. The same row goes
         // back up to the cloud, where the upsert on client id overwrites.
+        // currentCookId re-finds the row after a reload has dropped the
+        // transient id, so the answer still lands on the right dinner.
+        const target = currentCookId();
         const pct = x.k === 'lots' ? 0.5 : x.k === 'some' ? 0.2 : 0;
         const history = S.history.map((c) =>
-          c.clientId && c.clientId === S.cookLogId ? { ...c, waste: pct } : c,
+          c.clientId && c.clientId === target ? { ...c, waste: pct } : c,
         );
         setState({ waste: x.k, history });
-        const row = history.find((c) => c.clientId === S.cookLogId);
+        const row = history.find((c) => c.clientId === target);
         if (auth.userId && row) pushCooks(auth.userId, [row]);
       },
     })),
@@ -2150,7 +2178,10 @@ export function usePantry() {
     /* The clean-plate line used to claim "roughly £6.40 saved" — a hardcoded
        literal, whoever you were and whatever you cooked. The money claim is
        gone; a clean plate is worth stating without inventing its price. */
-    streakSub: w && w.pct === 0 ? xt(lg, 'streakCleanReal') : vs('streakKeep', ''),
+    /* The old line said "keep a clean plate tomorrow and it is a week" — the
+       clean-plate streak it belonged to is gone; the flame now counts days you
+       cooked, so the line does too. */
+    streakSub: w && w.pct === 0 ? xt(lg, 'streakCleanReal') : xt(lg, 'streakGoOn'),
     streakDots: (HH.week || ['M', 'T', 'W', 'T', 'F', 'S', 'S']).map((d, i) => ({
       key: i,
       label: d,
@@ -2488,11 +2519,17 @@ export function usePantry() {
     })(),
     savePlan: async () => {
       // The in-flight flag is a double-tap guard as much as UI: two quick taps
-      // used to insert the same week twice.
-      if (!auth.userId || !S.plan.length || S.planSaving) return;
-      const db = await getDb();
-      if (!db) return;
+      // used to insert the same week twice. It is read through the ref and set
+      // before the first await, because the first save also loads the Supabase
+      // client — hundreds of milliseconds in which a second tap would sail
+      // past a flag that only flipped afterwards.
+      if (!auth.userId || !S.plan.length || ref.current.planSaving) return;
       setState({ planSaving: true });
+      const db = await getDb();
+      if (!db) {
+        setState({ planSaving: false });
+        return;
+      }
       const { data, error } = await db
         .from('saved_plans')
         .insert({
