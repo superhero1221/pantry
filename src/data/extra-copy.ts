@@ -91,7 +91,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planBuild: 'Build me a week',
     planRebuild: 'Shuffle it',
     planSave: 'Save this week',
-    planSaved: 'Saved. It will be here on your other devices too.',
+    planSaved: 'Saved to your account.',
     planEmpty: 'Nothing planned yet. Pick your days and I will fill them.',
     planSwap: 'Swap',
     planList: 'Everything you need',
@@ -127,6 +127,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     passportNudgeReal:
       '{n} countries in here you have never cooked from. The cheapest you are missing is {c} — {d} lands at {a} a serving.',
     streakCleanReal: 'Nothing binned tonight — the plate came back clean.',
+    locStart: 'Where are you cooking?',
+    storeModelled: 'typical prices for this kind of shop here',
+    pantryLineSample: '{n} things a kitchen usually has',
+    pantrySubSample: 'A starting assumption, not a scan of your shelves',
+    morning: 'Morning',
+    afternoon: 'Afternoon',
+    planSaveFailed: 'Could not save the plan — check your connection and try again.',
+    savedAssumes: 'That assumes about nine shops a month.',
   },
 
   es: {
@@ -198,7 +206,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planBuild: 'Prepárame una semana',
     planRebuild: 'Cambiar',
     planSave: 'Guardar esta semana',
-    planSaved: 'Guardada. También estará en tus otros dispositivos.',
+    planSaved: 'Guardado en tu cuenta.',
     planEmpty: 'Nada planeado aún. Elige tus días y yo los relleno.',
     planSwap: 'Cambiar',
     planList: 'Todo lo que necesitas',
@@ -235,6 +243,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     passportNudgeReal:
       '{n} países de este recetario de los que nunca has cocinado. El más barato que te falta es {c}: {d} sale a {a} la ración.',
     streakCleanReal: 'Nada a la basura esta noche: el plato volvió limpio.',
+    locStart: '¿Dónde cocinas?',
+    storeModelled: 'precios típicos de este tipo de tienda aquí',
+    pantryLineSample: '{n} cosas que suele haber en una cocina',
+    pantrySubSample: 'Una suposición inicial, no un escaneo de tus estantes',
+    morning: 'Buenos días',
+    afternoon: 'Buenas tardes',
+    planSaveFailed: 'No se pudo guardar el plan. Comprueba tu conexión e inténtalo de nuevo.',
+    savedAssumes: 'Eso supone unas nueve compras al mes.',
   },
 
   fr: {
@@ -306,7 +322,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planBuild: 'Composez-moi une semaine',
     planRebuild: 'Remélanger',
     planSave: 'Enregistrer cette semaine',
-    planSaved: 'Enregistrée. Elle sera aussi sur vos autres appareils.',
+    planSaved: 'Enregistré dans votre compte.',
     planEmpty: 'Rien de prévu. Choisissez vos jours et je les remplis.',
     planSwap: 'Changer',
     planList: 'Tout ce qu’il vous faut',
@@ -343,6 +359,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     passportNudgeReal:
       '{n} pays d’ici dont vous n’avez jamais rien cuisiné. Le moins cher qui vous manque est {c} : {d} revient à {a} la portion.',
     streakCleanReal: 'Rien à la poubelle ce soir — l\'assiette est revenue vide.',
+    locStart: 'Où cuisinez-vous ?',
+    storeModelled: 'prix typiques de ce type de magasin ici',
+    pantryLineSample: '{n} choses qu\'une cuisine a d\'habitude',
+    pantrySubSample: 'Une hypothèse de départ, pas un scan de vos étagères',
+    morning: 'Bonjour',
+    afternoon: 'Bon après-midi',
+    planSaveFailed: 'Impossible d\'enregistrer le plan — vérifiez votre connexion et réessayez.',
+    savedAssumes: 'Cela suppose environ neuf courses par mois.',
   },
 
   pl: {
@@ -414,7 +438,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planBuild: 'Ułóż mi tydzień',
     planRebuild: 'Przetasuj',
     planSave: 'Zapisz ten tydzień',
-    planSaved: 'Zapisany. Będzie też na twoich innych urządzeniach.',
+    planSaved: 'Zapisano na twoim koncie.',
     planEmpty: 'Nic jeszcze nie zaplanowane. Wybierz dni, a ja je wypełnię.',
     planSwap: 'Zamień',
     planList: 'Wszystko, czego potrzebujesz',
@@ -451,6 +475,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     passportNudgeReal:
       '{n} krajów z tej książki, z których nigdy nie gotowałeś. Najtańszy, którego ci brakuje, to {c} — {d} wychodzi {a} za porcję.',
     streakCleanReal: 'Nic nie wylądowało dziś w koszu — talerz wrócił czysty.',
+    locStart: 'Gdzie gotujesz?',
+    storeModelled: 'typowe ceny dla tego rodzaju sklepu tutaj',
+    pantryLineSample: '{n} rzeczy, które zwykle są w kuchni',
+    pantrySubSample: 'Założenie na start, nie skan twoich półek',
+    morning: 'Dzień dobry',
+    afternoon: 'Dzień dobry',
+    planSaveFailed: 'Nie udało się zapisać planu — sprawdź połączenie i spróbuj ponownie.',
+    savedAssumes: 'To przy założeniu około dziewięciu zakupów miesięcznie.',
   },
 
   ur: {
@@ -520,7 +552,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planBuild: 'میرے لیے ایک ہفتہ ترتیب دیں',
     planRebuild: 'دوبارہ ملائیں',
     planSave: 'یہ ہفتہ محفوظ کریں',
-    planSaved: 'محفوظ ہو گیا۔ یہ آپ کے دوسرے آلات پر بھی ہوگا۔',
+    planSaved: 'آپ کے اکاؤنٹ میں محفوظ ہو گیا۔',
     planEmpty: 'ابھی کچھ طے نہیں۔ اپنے دن چنیں، میں انہیں بھر دوں گا۔',
     planSwap: 'بدلیں',
     planList: 'جو کچھ آپ کو چاہیے',
@@ -555,6 +587,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     passportNudgeReal:
       'اس کتاب میں {n} ممالک ایسے ہیں جن کا کھانا آپ نے کبھی نہیں پکایا۔ ان میں سب سے سستا {c} ہے — {d} فی حصہ {a} پڑتا ہے۔',
     streakCleanReal: 'آج رات کچھ ضائع نہیں ہوا — پلیٹ صاف واپس آئی۔',
+    locStart: 'آپ کہاں کھانا پکا رہے ہیں؟',
+    storeModelled: 'یہاں اس قسم کی دکان کی عام قیمتیں',
+    pantryLineSample: '{n} چیزیں جو عموماً باورچی خانے میں ہوتی ہیں',
+    pantrySubSample: 'ایک ابتدائی مفروضہ، آپ کی الماریوں کا جائزہ نہیں',
+    morning: 'صبح بخیر',
+    afternoon: 'دوپہر بخیر',
+    planSaveFailed: 'منصوبہ محفوظ نہیں ہو سکا — اپنا کنکشن دیکھیں اور دوبارہ کوشش کریں۔',
+    savedAssumes: 'یہ مہینے میں تقریباً نو بار خریداری کے مفروضے پر ہے۔',
   },
 
   ar: {
@@ -624,7 +664,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planBuild: 'رتّب لي أسبوعاً',
     planRebuild: 'أعِد الخلط',
     planSave: 'احفظ هذا الأسبوع',
-    planSaved: 'حُفظ. سيكون على أجهزتك الأخرى أيضاً.',
+    planSaved: 'حُفظ في حسابك.',
     planEmpty: 'لا شيء مخطط بعد. اختر أيامك وسأملؤها.',
     planSwap: 'بدّل',
     planList: 'كل ما تحتاجه',
@@ -659,6 +699,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     passportNudgeReal:
       '{n} بلداً في هذا الكتاب لم تطبخ من مطبخها قط. أرخص ما يفوتك {c} — {d} يكلّف {a} للحصة.',
     streakCleanReal: 'لا شيء في القمامة الليلة — عاد الطبق نظيفاً.',
+    locStart: 'أين تطبخ؟',
+    storeModelled: 'أسعار معتادة لهذا النوع من المتاجر هنا',
+    pantryLineSample: '{n} أشياء يضمّها مطبخ عادةً',
+    pantrySubSample: 'افتراض للبداية، لا مسح لرفوفك',
+    morning: 'صباح الخير',
+    afternoon: 'مساء الخير',
+    planSaveFailed: 'تعذّر حفظ الخطة — تحقّق من اتصالك وحاول مجدداً.',
+    savedAssumes: 'هذا بافتراض نحو تسع تسوّقات في الشهر.',
   },
 };
 

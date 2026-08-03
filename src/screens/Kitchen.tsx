@@ -1,7 +1,6 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { Kicker } from '../ui/bits';
-import { Receipt } from '../ui/Icon';
 import type { Pantry } from '../state/usePantry';
 
 export function Kitchen({ v }: { v: Pantry }) {
@@ -82,14 +81,9 @@ export function Kitchen({ v }: { v: Pantry }) {
         ))}
       </div>
 
-      <Btn
-        onClick={v.noop}
-        css="width:100%;height:52px;border-radius:999px;background:#ebddc5;font-size:15px;font-weight:700;color:#474238;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:8px"
-        hover="background:#dcd3c4"
-      >
-        <Receipt size={19} stroke="#645c50" />
-        {v.scanLabel}
-      </Btn>
+      {/* "Scan a receipt" used to sit here and ping a toast admitting it was
+          a sketch. A button that confesses when pressed is still a button
+          that does nothing — gone until there is a scanner behind it. */}
     </div>
   );
 }

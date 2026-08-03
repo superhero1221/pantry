@@ -111,42 +111,20 @@ export function After({ v }: { v: Pantry }) {
                 {v.remindCta}
               </Btn>
             )}
+            {v.remindNeedsAccount && (
+              <p
+                dir="auto"
+                style={css('margin:12px 2px 0;font-size:12.5px;line-height:1.5;color:#56633f;opacity:.85;text-wrap:pretty')}
+              >
+                {v.remindNeedsAccountLine}
+              </p>
+            )}
           </div>
 
-          {v.offerShrink && (
-            <div style={css('margin-top:12px;padding:19px 20px;border-radius:28px;background:#fff2eb')}>
-              <div dir="auto" style={css('font-size:16px;font-weight:700;line-height:1.3;color:#643312')}>
-                {v.shrinkTitle}
-              </div>
-              <p dir="auto" style={css('margin:7px 0 0;font-size:13.5px;line-height:1.5;color:#8c491a;text-wrap:pretty')}>
-                {v.shrinkBody}
-              </p>
-              <div style={css('display:flex;gap:9px;margin-top:14px')}>
-                <Btn
-                  onClick={v.acceptShrink}
-                  css="flex:1;height:48px;border-radius:999px;background:#c67139;color:#fff;font-size:14.5px;font-weight:700"
-                  hover="background:#b2622d"
-                >
-                  {v.u.shrinkYes}
-                </Btn>
-                <Btn
-                  onClick={v.declineShrink}
-                  css="flex:1;height:48px;border-radius:999px;background:#ffe1d0;color:#8c491a;font-size:14.5px;font-weight:700"
-                  hover="background:#ffc6a5"
-                >
-                  {v.u.shrinkNo}
-                </Btn>
-              </div>
-            </div>
-          )}
-          {v.shrinkDone && (
-            <div
-              dir="auto"
-              style={css('margin-top:12px;padding:19px 20px;border-radius:28px;background:#e1eecc;font-size:14px;line-height:1.5;color:#3d472b;text-wrap:pretty')}
-            >
-              {v.shrinkDoneText}
-            </div>
-          )}
+          {/* The portion-shrink offer that used to sit here made three
+              promises — resize the next cook, undo any time, stop asking —
+              and no code kept any of them. An offer the app cannot honour is
+              not a feature, so it is gone rather than half-built. */}
 
           <div style={css('margin-top:12px;padding:20px;border-radius:28px;background:#201e1d;color:#f5ead8')}>
             <div style={css('display:flex;align-items:center;gap:12px')}>

@@ -37,8 +37,10 @@ export function Locate({ v }: { v: Pantry }) {
 
       {v.located && (
         <div style={css('animation:pgUp .4s ease-out both')}>
+          {/* "Found you" is only true after a real fix. Until then it is a
+              question, and the card below is an assumption you can change. */}
           <h2 dir="auto" style={css(H2)}>
-            {v.t.locFound}
+            {v.liveOn ? v.t.locFound : v.xt('locStart')}
           </h2>
 
           <div style={css('margin-top:16px;padding:20px;border-radius:28px;background:#ebddc5;display:flex;gap:14px;align-items:center')}>

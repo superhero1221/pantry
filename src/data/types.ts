@@ -71,8 +71,10 @@ export interface Store {
   name: string;
   tier: string;
   mult: number;
-  km: number;
-  closes: string;
+  /** Only present on shops Overpass actually found — a modelled comparison
+   *  card has no honest distance or closing time to print. */
+  km?: number;
+  closes?: string;
   real?: boolean;
 }
 

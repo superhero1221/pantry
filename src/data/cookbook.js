@@ -57,51 +57,51 @@ export const COUNTRIES = {
 };
 export const STORES_BY_COUNTRY = {
   GB: [
-    { id: 'gb1', name: 'Aldi', tier: 'discount', mult: 0.82, km: 0.6, closes: '22:00' },
-    { id: 'gb2', name: 'Tesco Superstore', tier: 'standard', mult: 1, km: 1.1, closes: '00:00' },
-    { id: 'gb3', name: "Sainsbury's Local", tier: 'convenience', mult: 1.15, km: 0.3, closes: '23:00' },
+    { id: 'gb1', name: 'Aldi', tier: 'discount', mult: 0.82 },
+    { id: 'gb2', name: 'Tesco Superstore', tier: 'standard', mult: 1 },
+    { id: 'gb3', name: "Sainsbury's Local", tier: 'convenience', mult: 1.15 },
   ],
   US: [
-    { id: 'us1', name: 'Aldi', tier: 'discount', mult: 0.82, km: 1.4, closes: '21:00' },
-    { id: 'us2', name: 'Kroger', tier: 'standard', mult: 1, km: 2.2, closes: '23:00' },
-    { id: 'us3', name: '7-Eleven', tier: 'convenience', mult: 1.24, km: 0.4, closes: '00:00' },
+    { id: 'us1', name: 'Aldi', tier: 'discount', mult: 0.82 },
+    { id: 'us2', name: 'Kroger', tier: 'standard', mult: 1 },
+    { id: 'us3', name: '7-Eleven', tier: 'convenience', mult: 1.24 },
   ],
   IN: [
-    { id: 'in1', name: 'DMart', tier: 'discount', mult: 0.84, km: 2.1, closes: '22:00' },
-    { id: 'in2', name: 'Reliance Fresh', tier: 'standard', mult: 1, km: 0.9, closes: '22:30' },
-    { id: 'in3', name: 'Kirana on the corner', tier: 'convenience', mult: 1.12, km: 0.2, closes: '21:00' },
+    { id: 'in1', name: 'DMart', tier: 'discount', mult: 0.84 },
+    { id: 'in2', name: 'Reliance Fresh', tier: 'standard', mult: 1 },
+    { id: 'in3', name: 'Kirana on the corner', tier: 'convenience', mult: 1.12 },
   ],
   NG: [
-    { id: 'ng1', name: 'Local market stall', tier: 'discount', mult: 0.78, km: 1.6, closes: '18:00' },
-    { id: 'ng2', name: 'Ebeano Supermarket', tier: 'standard', mult: 1, km: 2.4, closes: '21:00' },
-    { id: 'ng3', name: 'Shoprite', tier: 'premium', mult: 1.12, km: 3.8, closes: '21:00' },
+    { id: 'ng1', name: 'Local market stall', tier: 'discount', mult: 0.78 },
+    { id: 'ng2', name: 'Ebeano Supermarket', tier: 'standard', mult: 1 },
+    { id: 'ng3', name: 'Shoprite', tier: 'premium', mult: 1.12 },
   ],
   PK: [
-    { id: 'pk1', name: 'Metro Cash & Carry', tier: 'wholesale', mult: 0.78, km: 4.2, closes: '23:00' },
-    { id: 'pk2', name: 'Imtiaz Super Market', tier: 'standard', mult: 1, km: 1.8, closes: '00:30' },
-    { id: 'pk3', name: 'Karyana next door', tier: 'convenience', mult: 1.1, km: 0.2, closes: '22:00' },
+    { id: 'pk1', name: 'Metro Cash & Carry', tier: 'wholesale', mult: 0.78 },
+    { id: 'pk2', name: 'Imtiaz Super Market', tier: 'standard', mult: 1 },
+    { id: 'pk3', name: 'Karyana next door', tier: 'convenience', mult: 1.1 },
   ],
   DE: [
-    { id: 'de1', name: 'Aldi S\u00fcd', tier: 'discount', mult: 0.82, km: 0.7, closes: '20:00' },
-    { id: 'de2', name: 'REWE', tier: 'standard', mult: 1, km: 1.2, closes: '22:00' },
-    { id: 'de3', name: 'Edeka Nah und Gut', tier: 'convenience', mult: 1.14, km: 0.4, closes: '20:00' },
+    { id: 'de1', name: 'Aldi S\u00fcd', tier: 'discount', mult: 0.82 },
+    { id: 'de2', name: 'REWE', tier: 'standard', mult: 1 },
+    { id: 'de3', name: 'Edeka Nah und Gut', tier: 'convenience', mult: 1.14 },
   ],
   AE: [
-    { id: 'ae1', name: 'Lulu Hypermarket', tier: 'discount', mult: 0.88, km: 3.1, closes: '00:00' },
-    { id: 'ae2', name: 'Carrefour', tier: 'standard', mult: 1, km: 1.5, closes: '23:00' },
-    { id: 'ae3', name: 'Union Coop', tier: 'standard', mult: 1.05, km: 0.9, closes: '23:00' },
+    { id: 'ae1', name: 'Lulu Hypermarket', tier: 'discount', mult: 0.88 },
+    { id: 'ae2', name: 'Carrefour', tier: 'standard', mult: 1 },
+    { id: 'ae3', name: 'Union Coop', tier: 'standard', mult: 1.05 },
   ],
   TR: [
-    { id: 'tr1', name: 'B\u0130M', tier: 'discount', mult: 0.78, km: 0.5, closes: '21:00' },
-    { id: 'tr2', name: '\u015eOK', tier: 'discount', mult: 0.84, km: 0.7, closes: '21:00' },
-    { id: 'tr3', name: 'Migros', tier: 'standard', mult: 1, km: 1.3, closes: '22:00' },
+    { id: 'tr1', name: 'B\u0130M', tier: 'discount', mult: 0.78 },
+    { id: 'tr2', name: '\u015eOK', tier: 'discount', mult: 0.84 },
+    { id: 'tr3', name: 'Migros', tier: 'standard', mult: 1 },
   ],
 };
 export const GOALS = ['lose', 'gain', 'muscle', 'recomp', 'cheap', 'energy', 'none'];
 export const STORES = [
-  { id: 'aldi', name: 'Aldi Small Heath', tier: 'discount', mult: 0.82, km: 0.6, closes: '22:00' },
-  { id: 'tesco', name: 'Tesco Superstore', tier: 'standard', mult: 1, km: 1.1, closes: '00:00' },
-  { id: 'sains', name: "Sainsbury's Local", tier: 'convenience', mult: 1.15, km: 0.3, closes: '23:00' },
+  { id: 'aldi', name: 'Aldi Small Heath', tier: 'discount', mult: 0.82 },
+  { id: 'tesco', name: 'Tesco Superstore', tier: 'standard', mult: 1 },
+  { id: 'sains', name: "Sainsbury's Local", tier: 'convenience', mult: 1.15 },
 ];
 export const I = (g, n, s, src, opt) => ({ g, n, s, src, opt: !!opt });
 

@@ -89,26 +89,11 @@ export function Settings({ v }: { v: Pantry }) {
         ))}
       </div>
 
-      <Kicker style={{ marginTop: 24 }}>{v.t.setKey}</Kicker>
-      <div style={css('margin-top:10px;display:flex;align-items:center;gap:9px;padding-inline:16px 6px;height:54px;border-radius:999px;border:2px solid #dcd3c4;background:#fff')}>
-        <input
-          value={v.vendorDraft}
-          onChange={v.onVendorDraft}
-          placeholder={v.t.setKeyHint}
-          aria-label={v.t.setKey}
-          style={css('flex:1;min-width:0;border:0;outline:none;background:none;font-size:14.5px;font-weight:600')}
-        />
-        <Btn
-          onClick={v.saveVendor}
-          css="height:42px;padding:0 18px;border-radius:999px;background:#c67139;color:#fff;font-size:14px;font-weight:700"
-          hover="background:#b2622d"
-        >
-          {v.t.save}
-        </Btn>
-      </div>
-      <p dir="auto" style={css('font-size:12.5px;line-height:1.55;color:#82796a;margin:9px 2px 0;text-wrap:pretty')}>
-        {v.u.apiNote}
-      </p>
+      {/* The supermarket price key that used to sit here promised that
+          "named-chain shelf prices replace the estimate" — and no code ever
+          read the key. A field that stores a secret and changes nothing is
+          worse than no field. The three real price sources are on the Shop
+          screen, each labelled. */}
 
       <Kicker style={{ marginTop: 24 }}>{v.nudgesLabel}</Kicker>
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:10px')}>

@@ -124,7 +124,8 @@ export interface PantryState {
   timerRun: boolean;
   lostOpen: boolean;
   waste: Waste | null;
-  shrink: boolean | null;
+  /** A plan save is in flight — the button is a no-op until it lands. */
+  planSaving: boolean;
   /** The log row this cook went in as, so the waste answer annotates it
    *  rather than creating it. Reset when a new cook starts; never persisted. */
   cookLogId: string | null;
@@ -141,8 +142,6 @@ export interface PantryState {
   liveArea: string | null;
   liveShops: Shop[] | null;
   liveCoords: { lat: number; lon: number } | null;
-  vendorKey: string;
-  vendorDraft: string;
   browseCat: string;
   history: LocalCook[];
   profile: Record<string, string>;
@@ -202,13 +201,13 @@ const INITIAL: PantryState = {
   timerRun: false,
   lostOpen: false,
   waste: null,
-  shrink: null,
+  planSaving: false,
   cookLogId: null,
   reminded: false,
   notif: null,
   drag: null,
   sel: null,
-  toggles: { leftover: true, shrink: true, shop: false },
+  toggles: { leftover: true },
   lang: null,
   langOpen: false,
   liveStatus: 'idle',
@@ -217,8 +216,6 @@ const INITIAL: PantryState = {
   liveArea: null,
   liveShops: null,
   liveCoords: null,
-  vendorKey: '',
-  vendorDraft: '',
   browseCat: 'all',
   // Eight weeks of sample cooks so the Stats screen is legible before you have
   // cooked anything. Marked seeded so it never reaches anyone's account.
@@ -262,7 +259,6 @@ const KEEP = [
   'history',
   'profile',
   'dismissed',
-  'vendorKey',
   'planDays',
   'planMeals',
   'planServings',
@@ -1330,7 +1326,6 @@ export function usePantry() {
     lots: { head: word('lotsLeft', 'Around half left.'), body: V.wasteLots, pct: 45 },
   };
   const w = S.waste ? wasteMap[S.waste] : null;
-  const shrinkSave = w ? (per * w.pct) / 100 : 0;
 
   const dietOn = (id: string) => S.diets.indexOf(id) >= 0;
   const dietWords = i18n.diets(lg);
@@ -1497,7 +1492,6 @@ export function usePantry() {
     goKitchen: () => go('kitchen'),
     goPassport: () => go('passport'),
     goBrowse: () => go('browse'),
-    noop: () => ping(vs('receiptPing', 'Receipt scanning is a sketch for now — the price engine is what is real.')),
 
     /* ── Tier list ──────────────────────────────────────────────────────── */
     dot1: S.tierStep === 0 ? '#c67139' : '#dcd3c4',
@@ -1623,10 +1617,11 @@ export function usePantry() {
     dietNote:
       (S.diets.some((d) => DERIVED.indexOf(d) >= 0) ? xt(lg, 'dietDerived') + ' ' : '') +
       (S.diets.length ? vs('dietSome', '') : vs('dietNone', '')),
-    toLocate: () => {
-      go('locate', { locating: true, located: false });
-      window.setTimeout(() => setState({ locating: false, located: true }), 1900);
-    },
+    /* Straight to the question. This used to stage a 1.9-second radar sweep
+       with a setTimeout and then announce "Found you" — no lookup ever ran.
+       The radar still exists, for the real one: tap "use my location" and
+       useMyLocation drives the same animation while genuinely looking. */
+    toLocate: () => go('locate', { locating: false, located: true }),
 
     /* ── Location ───────────────────────────────────────────────────────── */
     locating: S.locating,
@@ -1663,7 +1658,13 @@ export function usePantry() {
     useLocation: useMyLocation,
 
     /* ── Home ───────────────────────────────────────────────────────────── */
-    greeting: word('evening', 'Evening'),
+    /* By the clock, not a hardcoded "Evening" at nine in the morning. */
+    greeting: (() => {
+      const h = new Date().getHours();
+      if (h < 12) return xt(lg, 'morning');
+      if (h < 17) return xt(lg, 'afternoon');
+      return word('evening', 'Evening');
+    })(),
     /* Zero is not shown rather than dressed up: the flame chip only appears
        once there is a real day to count. */
     streak: streakDays + ' ' + (HH.daysWord || 'days'),
@@ -1759,8 +1760,12 @@ export function usePantry() {
         showMicro: false,
       });
     },
-    pantryLine: hs('inKitchen', '{n} things already in your kitchen', { n: STAPLES.length + PERISH.length }),
-    pantryNudge: vs('nudge', 'Beansprouts and coriander want using in the next 3 days'),
+    /* Non-possessive on purpose: the card used to say "23 things already in
+       YOUR kitchen" over a shipped list, with a static beansprouts nudge that
+       named produce nobody had bought. The Kitchen screen's banner owns the
+       full honesty; this card matches it in one line. */
+    pantryLine: fill(xt(lg, 'pantryLineSample'), { n: STAPLES.length + PERISH.length }),
+    pantryNudge: xt(lg, 'pantrySubSample'),
 
     /* ── Results ────────────────────────────────────────────────────────── */
     isCopycat: !!recipe.copycat,
@@ -1871,10 +1876,13 @@ export function usePantry() {
         name: s.name,
         tier: P.shops[s.tier] || s.tier,
         price: fmt(t),
-        meta:
-          s.km +
-          ' km · ' +
-          (s.real ? s.closes || SH.hoursUnknown : SH.openTill + ' ' + s.closes),
+        /* A shop Overpass found carries its measured distance and hours. A
+           fallback card used to invent both — "0.6 km · open till 22:00" for
+           a shop nobody looked up — and now says what it actually is: a
+           typical price for that kind of shop here. */
+        meta: s.real
+          ? s.km + ' km · ' + (s.closes || SH.hoursUnknown)
+          : xt(lg, 'storeModelled'),
         delta: t <= base + 0.001 ? T.shopCheapest : '+' + fmt(t - base),
         tagBg: on ? '#c67139' : '#eee7db',
         tagFg: on ? '#fff' : '#82796a',
@@ -1961,7 +1969,13 @@ export function usePantry() {
     assumedOwned: recipe.items.some(
       (i) => !(keyOf(i.n) in S.owned) && recipe.have.indexOf(keyOf(i.n)) >= 0,
     ),
-    savedLine: fill(SL.saved, { a: fmt(saved), b: fmt(asShown(saved) * 9) }),
+    /* The "{b} you did not spend twice" figure is this saving times nine
+       shops — an assumption, so the sentence now names it instead of passing
+       the product off as a measurement. */
+    savedLine:
+      fill(SL.saved, { a: fmt(saved), b: fmt(asShown(saved) * 9) }) +
+      ' ' +
+      xt(lg, 'savedAssumes'),
 
     /* ── Reporting a real price ─────────────────────────────────────────── */
     reportOpen: !!S.reportFor,
@@ -2053,7 +2067,7 @@ export function usePantry() {
         // (It used to log only when the waste question was answered, so a
         // closed tab on the After screen lost the meal.)
         const id = S.cookLogId ?? logCook(recipe, null);
-        return go('after', { waste: null, shrink: null, reminded: false, cookLogId: id });
+        return go('after', { waste: null, reminded: false, cookLogId: id });
       }
       setState({ step: S.step + 1, timerRun: false, timerLeft: 0, lostOpen: false });
     },
@@ -2098,44 +2112,40 @@ export function usePantry() {
     })),
     wasteHeadline: w ? w.head : '',
     wasteBody: w ? w.body : '',
-    resetWaste: () => setState({ waste: null, shrink: null }),
+    resetWaste: () => setState({ waste: null }),
     keepBg: recipe.keeps ? '#e1eecc' : '#eee7db',
     keepIconBg: recipe.keeps ? '#8fa073' : '#c0b6a5',
     keepIcon: recipe.keeps ? '✓' : '✕',
     keepFg: recipe.keeps ? '#3d472b' : '#645c50',
     keepTitle: (food.keepText(lg, recipe.id) || [recipe.keepTitle, recipe.keepBody])[0],
     keepBody: (food.keepText(lg, recipe.id) || [recipe.keepTitle, recipe.keepBody])[1],
-    canRemind: recipe.keeps && !S.reminded && S.waste !== 'none',
+    /* The button only exists when tapping it schedules a real notification:
+       leftovers worth keeping, the nudge toggle on, and a signed-in account
+       for the reminder to be attached to. It used to show for everyone and,
+       signed out, set a flag, toast "Tomorrow 12:30 —", and then nothing on
+       earth would fire — a promise with no machinery behind it. Signed out,
+       the honest line says what it needs instead. */
+    canRemind:
+      recipe.keeps && !S.reminded && S.waste !== 'none' && !!S.toggles.leftover && !!auth.userId,
+    remindNeedsAccount:
+      recipe.keeps && !S.reminded && S.waste !== 'none' && !!S.toggles.leftover && !auth.userId && cloudEnabled,
+    remindNeedsAccountLine: xt(lg, 'notifyNeedsAccount'),
     remindCta: vs('remind', 'Nudge me at 12:30 tomorrow'),
     setReminder: () => {
       setState({ reminded: true });
       const line = vs('remindPing', 'Tomorrow 12:30 — {d} is still good.', { d: dish(recipe) });
       ping(line);
-      // Signed in, this is a real notification tomorrow lunchtime rather than a
-      // toast you can only see if the app is already open.
-      if (auth.userId) {
-        const due = new Date();
-        due.setDate(due.getDate() + 1);
-        due.setHours(12, 30, 0, 0);
-        scheduleReminder({
-          userId: auth.userId,
-          title: 'Pantry',
-          body: line,
-          lang: lg,
-          dueAt: due,
-        });
-      }
+      const due = new Date();
+      due.setDate(due.getDate() + 1);
+      due.setHours(12, 30, 0, 0);
+      scheduleReminder({
+        userId: auth.userId!,
+        title: 'Pantry',
+        body: line,
+        lang: lg,
+        dueAt: due,
+      });
     },
-    offerShrink: !!w && w.pct > 0 && S.shrink === null,
-    shrinkTitle: w && w.pct >= 40 ? vs('shrinkBig', '') : vs('shrinkSmall', ''),
-    shrinkBody: w ? vs('shrinkBody', 'Same dish, smaller pan. Saves about {a} a cook.', { a: fmt(shrinkSave) }) : '',
-    acceptShrink: () => {
-      setState({ shrink: true });
-      ping(vs('shrinkPing', 'Portion trimmed. Next {d} is sized for what you actually eat.', { d: dish(recipe) }));
-    },
-    declineShrink: () => setState({ shrink: false }),
-    shrinkDone: S.shrink !== null,
-    shrinkDoneText: S.shrink ? vs('shrinkYesText', '') : vs('shrinkNoText', ''),
     streakBig: streakDays + ' ' + word('daysRunning', 'days running'),
     /* The clean-plate line used to claim "roughly £6.40 saved" — a hardcoded
        literal, whoever you were and whatever you cooked. The money claim is
@@ -2161,7 +2171,6 @@ export function usePantry() {
     keepsMonthsLabel: word('keepsMonths', 'Keeps for months'),
     daysWord: word('days', 'DAYS'),
     useItLabel: word('useIt', 'Use it'),
-    scanLabel: word('scanReceipt', 'Scan a receipt to add more'),
     useFirstCount: PERISH.filter((p) => p.days <= 4).length,
     stockValue: fmt(18.4),
     perishables: PERISH.map((p, i) => ({
@@ -2478,9 +2487,12 @@ export function usePantry() {
       return fmt(S.planDays ? total / S.planDays : 0);
     })(),
     savePlan: async () => {
-      if (!auth.userId || !S.plan.length) return;
+      // The in-flight flag is a double-tap guard as much as UI: two quick taps
+      // used to insert the same week twice.
+      if (!auth.userId || !S.plan.length || S.planSaving) return;
       const db = await getDb();
       if (!db) return;
+      setState({ planSaving: true });
       const { data, error } = await db
         .from('saved_plans')
         .insert({
@@ -2495,7 +2507,11 @@ export function usePantry() {
         .select('id')
         .single();
       if (error || !data) {
+        // A failed save that says nothing looks exactly like a successful one
+        // from the outside, which is the worst property a Save button can have.
         console.warn('savePlan', error?.message);
+        setState({ planSaving: false });
+        ping(xt(lg, 'planSaveFailed'));
         return;
       }
       const rows = S.plan.map((id, i) => ({
@@ -2509,9 +2525,11 @@ export function usePantry() {
       const { error: err2 } = await db.from('plan_meals').insert(rows);
       if (err2) {
         console.warn('savePlan meals', err2.message);
+        setState({ planSaving: false });
+        ping(xt(lg, 'planSaveFailed'));
         return;
       }
-      setState({ planSaved: true });
+      setState({ planSaved: true, planSaving: false });
       ping(xt(lg, 'planSaved'));
     },
 
@@ -2520,20 +2538,14 @@ export function usePantry() {
     nudgesLabel: X.nudges,
     insteadLabel: X.insteadOf,
     twoOthersLabel: X.twoOthers,
+    /* The technique-card count belongs to the skill line — it used to sit in
+       the sentence about the time budget, counting the wrong deck. Each line
+       now counts its own cards. */
     skillSummary:
       word('skillIs', 'Skill') +
       ': ' +
       skillWords[lvl].charAt(0).toUpperCase() +
       skillWords[lvl].slice(1) +
-      '.',
-    timeSummary:
-      word('timeIs', 'Time') +
-      ': ' +
-      word('upTo', 'up to') +
-      ' ' +
-      timeLevel() +
-      ' ' +
-      word('minutesNormal', 'minutes on a normal day') +
       '. ' +
       Object.keys(S.skill).length +
       ' ' +
@@ -2543,12 +2555,21 @@ export function usePantry() {
       ' ' +
       word('cardsPlaced', 'technique cards placed') +
       '.',
+    timeSummary:
+      word('timeIs', 'Time') +
+      ': ' +
+      word('upTo', 'up to') +
+      ' ' +
+      timeLevel() +
+      ' ' +
+      word('minutesNormal', 'minutes on a normal day') +
+      '.',
     redoTier: () => go('tier', { tierStep: 0 }),
-    toggles: [
-      { k: 'leftover', label: X.leftoverN, sub: X.leftoverS },
-      { k: 'shrink', label: X.shrinkN, sub: X.shrinkS },
-      { k: 'shop', label: X.shopN, sub: X.shopS },
-    ].map((t) => ({
+    /* One toggle, because one nudge exists. The other two rows that used to
+       sit here gated nothing: "portion learning" belonged to the shrink offer
+       (now gone), and "shop closing alerts" described a feature with no code
+       behind it anywhere — no timer, no notification, no closing-time check. */
+    toggles: [{ k: 'leftover', label: X.leftoverN, sub: X.leftoverS }].map((t) => ({
       key: t.k,
       label: t.label,
       sub: t.sub,
@@ -2587,16 +2608,6 @@ export function usePantry() {
         setState({ lang: l.code, langOpen: false });
       },
     })),
-    vendorDraft: S.vendorDraft,
-    onVendorDraft: (e: ChangeEvent<HTMLInputElement>) => setState({ vendorDraft: e.target.value }),
-    saveVendor: async () => {
-      setState({ vendorKey: S.vendorDraft });
-      const L = await live();
-      // Stored and handed to the live layer, which has no aggregator behind it
-      // yet — the note under the field says exactly that.
-      L.setVendorKey(S.vendorDraft);
-      ping(S.vendorDraft ? vs('keyOn', 'Key saved.') : vs('keyOff', 'Key cleared.'));
-    },
     /* Nominatim and Overpass run for real when you grant location, Open Prices
        runs whenever you open a shopping list, and the exchange rate is live the
        moment a network allows it — the last row says so, or says why not. The
