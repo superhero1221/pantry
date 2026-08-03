@@ -1119,6 +1119,16 @@ export function usePantry() {
         q.split(/\s+/).forEach((w) => {
           if (w.length > 2 && hay.indexOf(w) >= 0) s -= 30;
         });
+        // Ingredients count, but they never set `named`. "Chickpeas" is a
+        // question about what is in the cupboard, not a request for one
+        // particular dish, so it should sort a chickpea recipe up without
+        // earning the exemption that lets a dish you asked for by name ignore
+        // the time you said you had. Worth having only now the cookbook is
+        // large enough that you cannot see everything with chickpeas in it.
+        const pantryHay = r.items.map((i) => i.n).join(' ').toLowerCase();
+        q.split(/\s+/).forEach((w) => {
+          if (w.length > 3 && pantryHay.indexOf(w) >= 0) s -= 18;
+        });
         if (r.copycat && COPYCAT_HINTS.some((h) => q.indexOf(h) >= 0)) {
           s -= 140;
           named = true;
