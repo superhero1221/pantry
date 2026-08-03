@@ -73,6 +73,28 @@ describe('nutrition', () => {
     }
   });
 
+  it('keeps the cupboard and the recipe speaking the same language', () => {
+    // isOwned() folds a name through the alias map and then looks it up in the
+    // recipe's own `have` list. If those two are canonicalised differently, a
+    // recipe that assumes you own an onion answers no to "Onion" and puts one
+    // back on your shopping list — the exact promise the Kitchen screen makes.
+    for (const r of RECIPES) {
+      for (const had of r.have) {
+        const match = r.items.some((i) => canonical(i.n.split(',')[0]) === canonical(had));
+        expect(match, `${r.id}: "${had}" canonicalises to something it never buys`).toBe(true);
+      }
+    }
+  });
+
+  it('never lists one ingredient twice under two spellings', () => {
+    // Two lines collapsing to one cupboard key means ticking it off strikes
+    // through both and the basket total silently drops the second.
+    for (const r of RECIPES) {
+      const keys = r.items.map((i) => canonical(i.n.split(',')[0]));
+      expect(new Set(keys).size, `${r.id} lists ${keys.length} items under ${new Set(keys).size} keys`).toBe(keys.length);
+    }
+  });
+
   it('agrees with a worked example', () => {
     // One recipe checked by hand, so a table-wide error cannot pass by moving
     // the test and the code together. Carbonara is five ingredients and one

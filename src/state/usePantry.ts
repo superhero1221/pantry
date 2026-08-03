@@ -37,6 +37,7 @@ import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
 import { DERIVED, meetsDiet } from '../lib/diets';
 import { fromLocal, toLocal } from '../lib/money';
+import { canonical } from '../lib/nutrition';
 import { xt } from '../data/extra-copy';
 import { exportBackup, readBackup, readStore, STORE_KEY } from '../lib/backup';
 import {
@@ -55,8 +56,17 @@ import {
 } from './cloud';
 
 /** Photographs are resolved against BASE_URL once, here, rather than at each
- *  of the five places a dish picture is rendered. */
-const RECIPES: Recipe[] = RAW_RECIPES.map((r) => ({ ...r, pic: asset(r.pic) }));
+ *  of the five places a dish picture is rendered.
+ *
+ *  `have` is canonicalised at the same time, and it has to be: `isOwned` looks
+ *  a cupboard key up in this list, the key is folded through the alias map, and
+ *  a recipe whose list still said "Onions" would answer no to "Onion" and put
+ *  an onion you already own back on your shopping list. */
+const RECIPES: Recipe[] = RAW_RECIPES.map((r) => ({
+  ...r,
+  pic: asset(r.pic),
+  have: r.have.map((h) => canonical(h)),
+}));
 
 /** How many countries the cookbook actually covers — the Passport's
  *  denominator. Counted from the recipes rather than typed in, because the
@@ -331,12 +341,28 @@ const SHAPE: Record<string, (x: unknown) => boolean> = {
  * ordinary own property rather than the setter, and this loop only ever reads
  * the eighteen names it was given, so neither route reaches anything.
  */
+/** Re-key a saved map through the alias map.
+ *
+ *  A kitchen saved before ingredient names were canonicalised has "Onions" in
+ *  it, and `keyOf` now answers "Onion". Without this, everything a returning
+ *  cook had ticked would quietly come back unticked — the app would look like
+ *  it had forgotten them, which is worse than never having stored it. Later
+ *  writes win over earlier ones, so an explicit "no" set against the new
+ *  spelling is not overwritten by an old "yes". */
+const realias = <T,>(map: Record<string, T>): Record<string, T> => {
+  const out: Record<string, T> = {};
+  for (const [k, v] of Object.entries(map)) out[canonical(k)] = v;
+  return out;
+};
+
 function pick(blob: Record<string, unknown>): Partial<PantryState> {
   const out: Record<string, unknown> = {};
   for (const k of KEEP) if (k in blob && SHAPE[k](blob[k])) out[k] = blob[k];
   if (isObj(out.toggles)) {
     out.toggles = { leftover: (out.toggles as Record<string, boolean>).leftover ?? true };
   }
+  if (isObj(out.owned)) out.owned = realias(out.owned as Record<string, boolean>);
+  if (isObj(out.extras)) out.extras = realias(out.extras as Record<string, boolean>);
   return out as Partial<PantryState>;
 }
 
@@ -423,8 +449,16 @@ function initialState(): PantryState {
 }
 
 /** Canonical ingredient key — the name before the first comma, which is what
- *  the recipe `have` lists and the cupboard both match on. */
-const keyOf = (name: string) => name.split(',')[0].trim();
+ *  the recipe `have` lists and the cupboard both match on, folded through the
+ *  alias map so one cupboard entry covers every spelling of the thing.
+ *
+ *  The original fourteen recipes were written independently and drifted:
+ *  "Onion" and "Onions", "Carrot" and "Carrots", "Cumin" and "Ground cumin"
+ *  were four different things to a cupboard that matches on the string. With
+ *  fourteen dishes you might not notice. With a hundred and fifty, the Kitchen
+ *  lists both spellings and owning one does not stop the other appearing on
+ *  your shopping list, which is precisely the promise the screen makes. */
+const keyOf = (name: string) => canonical(name.split(',')[0].trim());
 
 /** The budget presets the design ships, in GBP: the chip row on Home, and the
  *  set that a typed-in amount is measured against. */
