@@ -126,6 +126,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     stepBack: 'Previous step',
     passportNudgeReal:
       '{n} countries in here you have never cooked from. The cheapest you are missing is {c} — {d} lands at {a} a serving.',
+    streakCleanReal: 'Nothing binned tonight — the plate came back clean.',
   },
 
   es: {
@@ -233,6 +234,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     stepBack: 'Paso anterior',
     passportNudgeReal:
       '{n} países de este recetario de los que nunca has cocinado. El más barato que te falta es {c}: {d} sale a {a} la ración.',
+    streakCleanReal: 'Nada a la basura esta noche: el plato volvió limpio.',
   },
 
   fr: {
@@ -340,6 +342,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     stepBack: 'Étape précédente',
     passportNudgeReal:
       '{n} pays d’ici dont vous n’avez jamais rien cuisiné. Le moins cher qui vous manque est {c} : {d} revient à {a} la portion.',
+    streakCleanReal: 'Rien à la poubelle ce soir — l\'assiette est revenue vide.',
   },
 
   pl: {
@@ -447,6 +450,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     stepBack: 'Poprzedni krok',
     passportNudgeReal:
       '{n} krajów z tej książki, z których nigdy nie gotowałeś. Najtańszy, którego ci brakuje, to {c} — {d} wychodzi {a} za porcję.',
+    streakCleanReal: 'Nic nie wylądowało dziś w koszu — talerz wrócił czysty.',
   },
 
   ur: {
@@ -550,6 +554,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     stepBack: 'پچھلا مرحلہ',
     passportNudgeReal:
       'اس کتاب میں {n} ممالک ایسے ہیں جن کا کھانا آپ نے کبھی نہیں پکایا۔ ان میں سب سے سستا {c} ہے — {d} فی حصہ {a} پڑتا ہے۔',
+    streakCleanReal: 'آج رات کچھ ضائع نہیں ہوا — پلیٹ صاف واپس آئی۔',
   },
 
   ar: {
@@ -653,6 +658,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     stepBack: 'الخطوة السابقة',
     passportNudgeReal:
       '{n} بلداً في هذا الكتاب لم تطبخ من مطبخها قط. أرخص ما يفوتك {c} — {d} يكلّف {a} للحصة.',
+    streakCleanReal: 'لا شيء في القمامة الليلة — عاد الطبق نظيفاً.',
   },
 };
 

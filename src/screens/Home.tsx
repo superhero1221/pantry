@@ -9,14 +9,16 @@ export function Home({ v }: { v: Pantry }) {
     <div style={css('padding:6px 22px 26px')}>
       <div style={css('display:flex;align-items:center;justify-content:space-between')}>
         <div style={css('font-size:15px;font-weight:600;color:#645c50')}>{v.greeting}</div>
-        <Btn
-          onClick={v.goPassport}
-          css="display:flex;align-items:center;gap:5px;padding:6px 12px 6px 9px;border-radius:999px;background:#fff2eb"
-          hover="background:#ffe1d0"
-        >
-          <Flame size={16} stroke="#b2622d" />
-          <span style={css('font-size:13.5px;font-weight:800;color:#8c491a')}>{v.streak}</span>
-        </Btn>
+        {v.showStreak && (
+          <Btn
+            onClick={v.goPassport}
+            css="display:flex;align-items:center;gap:5px;padding:6px 12px 6px 9px;border-radius:999px;background:#fff2eb"
+            hover="background:#ffe1d0"
+          >
+            <Flame size={16} stroke="#b2622d" />
+            <span style={css('font-size:13.5px;font-weight:800;color:#8c491a')}>{v.streak}</span>
+          </Btn>
+        )}
       </div>
 
       <h1

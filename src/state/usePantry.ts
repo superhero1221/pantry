@@ -125,7 +125,9 @@ export interface PantryState {
   lostOpen: boolean;
   waste: Waste | null;
   shrink: boolean | null;
-  streak: number;
+  /** The log row this cook went in as, so the waste answer annotates it
+   *  rather than creating it. Reset when a new cook starts; never persisted. */
+  cookLogId: string | null;
   reminded: boolean;
   notif: string | null;
   drag: Drag | null;
@@ -201,7 +203,7 @@ const INITIAL: PantryState = {
   lostOpen: false,
   waste: null,
   shrink: null,
-  streak: 4,
+  cookLogId: null,
   reminded: false,
   notif: null,
   drag: null,
@@ -260,7 +262,6 @@ const KEEP = [
   'history',
   'profile',
   'dismissed',
-  'streak',
   'vendorKey',
   'planDays',
   'planMeals',
@@ -340,6 +341,52 @@ const keyOf = (name: string) => name.split(',')[0].trim();
 /** The budget presets the design ships, in GBP: the chip row on Home, and the
  *  set that a typed-in amount is measured against. */
 const BUDGETS = [3, 5, 6, 8, 12];
+
+/** Days since a cook. Real rows age with the calendar; seeded sample rows keep
+ *  the age they shipped with, because a stage set should not rot — the sample
+ *  chart is a diorama, says so, and steps aside on the first real cook anyway.
+ *  This used to trust the stored snapshot for real rows too, which logCook
+ *  wrote as 0 and nothing ever aged: every dinner ever cooked counted as
+ *  "this week", forever, and the week-over-week delta was fiction. */
+const ageOf = (x: LocalCook) =>
+  x.seeded ? x.ago : Math.max(0, Math.floor((Date.now() - x.at) / 864e5));
+
+/** The local calendar day a timestamp falls on, as a comparable key. */
+const dayKey = (t: number) => {
+  const d = new Date(t);
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+};
+
+/** Consecutive calendar days with a real cook, ending today — or yesterday, so
+ *  the streak is not dead at breakfast before tonight's dinner. The app used
+ *  to ship this as a literal 4 and increment it when you accepted a smaller
+ *  portion: a streak you could neither earn nor lose by cooking. Now it is
+ *  read off the log, which means it can be zero, and zero is simply not shown
+ *  rather than dressed up. */
+const streakFrom = (history: LocalCook[]): number => {
+  const days = new Set(history.filter((c) => !c.seeded).map((c) => dayKey(c.at)));
+  if (!days.size) return 0;
+  // Anchor at noon so stepping back 24h can never skip or repeat a local day
+  // across a DST change.
+  const noon = new Date();
+  noon.setHours(12, 0, 0, 0);
+  let t = noon.getTime();
+  if (!days.has(dayKey(t))) t -= 864e5;
+  let n = 0;
+  while (days.has(dayKey(t))) {
+    n += 1;
+    t -= 864e5;
+  }
+  return n;
+};
+
+/** English names for every country the cookbook covers — the last resort after
+ *  the translated maps, so a real cook from Mexico never renders as "MX". */
+const COUNTRY_NAMES: Record<string, string> = {
+  TH: 'Thailand', US: 'United States', CN: 'China', FR: 'France', IN: 'India',
+  GB: 'United Kingdom', MA: 'Morocco', MX: 'Mexico', VN: 'Vietnam',
+  NG: 'Nigeria', IT: 'Italy',
+};
 
 /* ── The address bar ───────────────────────────────────────────────────────
    Pantry had no routing at all: the URL never moved, so the phone's own back
@@ -533,7 +580,9 @@ export function usePantry() {
     language: s.lang || 'en',
     max_time: s.maxTime,
     budget_amount: Number(s.budget.toFixed(2)),
-    streak: s.streak,
+    // Derived, not stored: the log is the truth and the profile column just
+    // mirrors it for anything reading the table directly.
+    streak: streakFrom(s.history),
     country: s.country || 'GB',
     diets: s.diets,
     skill_cards: s.skill,
@@ -582,7 +631,6 @@ export function usePantry() {
         diets: remote.diets ?? local.diets,
         maxTime: remote.max_time ?? local.maxTime,
         budget: Number(remote.budget_amount ?? local.budget),
-        streak: remote.streak ?? local.streak,
         skill: remote.skill_cards ?? local.skill,
         time: remote.time_cards ?? local.time,
         profile: remote.learned ?? local.profile,
@@ -620,7 +668,6 @@ export function usePantry() {
     S.diets,
     S.maxTime,
     S.budget,
-    S.streak,
     S.skill,
     S.time,
     S.profile,
@@ -981,7 +1028,10 @@ export function usePantry() {
   }, [S.screen, setState]);
 
   /* ── The log, and the questions it earns the right to ask ─────────────── */
-  const logCook = (r: Recipe, waste: Waste | null) => {
+  /** Put tonight in the log and say which row it went in as, so the waste
+   *  answer a minute later can annotate the same row instead of being the
+   *  thing that creates it. */
+  const logCook = (r: Recipe, waste: Waste | null): string => {
     const row: LocalCook = {
       clientId:
         typeof crypto !== 'undefined' && crypto.randomUUID
@@ -1005,6 +1055,7 @@ export function usePantry() {
     const kept = S.history.filter((c) => !c.seeded);
     setState({ history: [row].concat(kept) });
     if (auth.userId) pushCooks(auth.userId, [row]);
+    return row.clientId!;
   };
 
   /** Every question is skippable, and every answer is a fact the user can
@@ -1285,7 +1336,9 @@ export function usePantry() {
   const dietWords = i18n.diets(lg);
 
   const weekly = [7, 6, 5, 4, 3, 2, 1, 0].map((wk) =>
-    S.history.filter((x) => x.ago >= wk * 7 && x.ago < (wk + 1) * 7).reduce((a, x) => a + x.spend, 0),
+    S.history
+      .filter((x) => ageOf(x) >= wk * 7 && ageOf(x) < (wk + 1) * 7)
+      .reduce((a, x) => a + x.spend, 0),
   );
   const maxWeek = Math.max.apply(null, weekly);
   const thisWeek = weekly[weekly.length - 1];
@@ -1298,6 +1351,35 @@ export function usePantry() {
    *  — two screens reading one number cannot quote you two. A dish with no
    *  restaurant price is counted at a nine pound plate, and the whole thing
    *  follows the log the moment real cooks push the sample weeks out. */
+  /** Read off the log every render, never stored — see streakFrom. */
+  const streakDays = streakFrom(S.history);
+
+  /* The passport used to be a static array forever — cook from Mexico and it
+     never noticed. Real cooks drive it now: one row per country, counted, with
+     the cheapest per-serving dish carrying the flag. The shipped rows only
+     stand in until the first real cook, and the banner says so for exactly as
+     long as that is true. */
+  const realCooks = S.history.filter((c) => !c.seeded);
+  const passportRows = realCooks.length
+    ? Object.values(
+        realCooks.reduce<Record<string, { code: string; times: number; best: LocalCook }>>(
+          (m, c) => {
+            const g = m[c.code] || (m[c.code] = { code: c.code, times: 0, best: c });
+            g.times += 1;
+            if (c.spend / c.servings < g.best.spend / g.best.servings) g.best = c;
+            return m;
+          },
+          {},
+        ),
+      ).map((g) => ({
+        code: g.code,
+        dish: g.best.name,
+        country: COUNTRY_NAMES[g.code] || g.code,
+        times: g.times,
+        price: g.best.spend / g.best.servings,
+      }))
+    : PASSPORT;
+
   const savedVsTakeaway = S.history.reduce(
     (a, x) => a + Math.max(0, (RECIPES.find((y) => y.id === x.id)?.restaurant || 9) * x.servings - x.spend),
     0,
@@ -1582,7 +1664,10 @@ export function usePantry() {
 
     /* ── Home ───────────────────────────────────────────────────────────── */
     greeting: word('evening', 'Evening'),
-    streak: S.streak + ' ' + (HH.daysWord || 'days'),
+    /* Zero is not shown rather than dressed up: the flame chip only appears
+       once there is a real day to count. */
+    streak: streakDays + ' ' + (HH.daysWord || 'days'),
+    showStreak: streakDays > 0,
     query: S.query,
     onQuery: (e: ChangeEvent<HTMLInputElement>) => setState({ query: e.target.value }),
     cravings: (P.cravings || CRAVINGS).map((label) => ({
@@ -1920,7 +2005,7 @@ export function usePantry() {
       }
     },
     honestyLine: fill(c.tier === 'local' ? SL.measured : SL.modelled, { c: countryName }),
-    toCook: () => go('cook', { step: 0, timerRun: false, timerLeft: 0 }),
+    toCook: () => go('cook', { step: 0, timerRun: false, timerLeft: 0, cookLogId: null }),
 
     /* ── Cook ───────────────────────────────────────────────────────────── */
     stepNo: S.step + 1,
@@ -1961,8 +2046,15 @@ export function usePantry() {
     nextCta:
       S.step >= recipe.method.length - 1 ? word('thatsIt', 'That’s it — done') : word('doneNext', 'Done, next'),
     nextStep: () => {
-      if (S.step >= recipe.method.length - 1)
-        return go('after', { waste: null, shrink: null, reminded: false });
+      if (S.step >= recipe.method.length - 1) {
+        // Reaching the end of the method IS the cook — that is when it goes in
+        // the log, with the waste question still open. Answering it later
+        // annotates the same row; walking away no longer un-cooks dinner.
+        // (It used to log only when the waste question was answered, so a
+        // closed tab on the After screen lost the meal.)
+        const id = S.cookLogId ?? logCook(recipe, null);
+        return go('after', { waste: null, shrink: null, reminded: false, cookLogId: id });
+      }
       setState({ step: S.step + 1, timerRun: false, timerLeft: 0, lostOpen: false });
     },
     prevStep: () => setState({ step: Math.max(0, S.step - 1), timerRun: false, lostOpen: false }),
@@ -1992,7 +2084,17 @@ export function usePantry() {
       label: x.label,
       style:
         'flex:1;padding:15px 8px;border-radius:24px;background:#f9f4ed;box-shadow:inset 0 0 0 1px rgba(32,30,29,.07);transition:background .15s',
-      pick: () => setState({ waste: x.k }),
+      pick: () => {
+        // The cook is already in the log; this annotates it. The same row goes
+        // back up to the cloud, where the upsert on client id overwrites.
+        const pct = x.k === 'lots' ? 0.5 : x.k === 'some' ? 0.2 : 0;
+        const history = S.history.map((c) =>
+          c.clientId && c.clientId === S.cookLogId ? { ...c, waste: pct } : c,
+        );
+        setState({ waste: x.k, history });
+        const row = history.find((c) => c.clientId === S.cookLogId);
+        if (auth.userId && row) pushCooks(auth.userId, [row]);
+      },
     })),
     wasteHeadline: w ? w.head : '',
     wasteBody: w ? w.body : '',
@@ -2028,25 +2130,25 @@ export function usePantry() {
     shrinkTitle: w && w.pct >= 40 ? vs('shrinkBig', '') : vs('shrinkSmall', ''),
     shrinkBody: w ? vs('shrinkBody', 'Same dish, smaller pan. Saves about {a} a cook.', { a: fmt(shrinkSave) }) : '',
     acceptShrink: () => {
-      setState({ shrink: true, streak: S.streak + 1 });
+      setState({ shrink: true });
       ping(vs('shrinkPing', 'Portion trimmed. Next {d} is sized for what you actually eat.', { d: dish(recipe) }));
     },
     declineShrink: () => setState({ shrink: false }),
     shrinkDone: S.shrink !== null,
     shrinkDoneText: S.shrink ? vs('shrinkYesText', '') : vs('shrinkNoText', ''),
-    streakBig: S.streak + ' ' + word('daysRunning', 'days running'),
-    streakSub:
-      w && w.pct === 0
-        ? vs('streakClean', 'Nothing binned all week. That is roughly {a} saved.', { a: fmt(6.4) })
-        : vs('streakKeep', 'Keep a clean plate tomorrow and it is a week.'),
+    streakBig: streakDays + ' ' + word('daysRunning', 'days running'),
+    /* The clean-plate line used to claim "roughly £6.40 saved" — a hardcoded
+       literal, whoever you were and whatever you cooked. The money claim is
+       gone; a clean plate is worth stating without inventing its price. */
+    streakSub: w && w.pct === 0 ? xt(lg, 'streakCleanReal') : vs('streakKeep', ''),
     streakDots: (HH.week || ['M', 'T', 'W', 'T', 'F', 'S', 'S']).map((d, i) => ({
       key: i,
       label: d,
-      bg: i < S.streak ? 'rgba(246,160,107,.9)' : 'rgba(245,234,216,.12)',
-      fg: i < S.streak ? '#402310' : 'rgba(245,234,216,.45)',
+      bg: i < Math.min(streakDays, 7) ? 'rgba(246,160,107,.9)' : 'rgba(245,234,216,.12)',
+      fg: i < Math.min(streakDays, 7) ? '#402310' : 'rgba(245,234,216,.45)',
     })),
     finishMeal: () => {
-      logCook(recipe, S.waste);
+      // The cook was logged when the last step was done; this is just leaving.
       // The end of a cook takes the place of the after screen rather than
       // stacking on top of it: Back from Home should not offer to log the same
       // dinner a second time.
@@ -2081,9 +2183,11 @@ export function usePantry() {
     /* ── Passport ───────────────────────────────────────────────────────── */
     ofCountriesLabel: word('ofCountries', 'of ' + COVERED + ' countries'),
     keptOutLabel: word('keptOut', 'kept out of takeaways'),
-    countriesCooked: PASSPORT.length,
+    countriesCooked: passportRows.length,
     totalSaved: fmt(savedVsTakeaway),
-    passport: PASSPORT.slice()
+    /** True while the flags below are the shipped diorama rather than yours. */
+    passportIsSample: realCooks.length === 0,
+    passport: passportRows.slice()
       .sort((a, b) => a.price - b.price)
       .map((p, i) => ({
         key: p.code,
@@ -2112,8 +2216,12 @@ export function usePantry() {
        counted and named off the data now, and there is nothing to say once you
        have cooked from everywhere. */
     passportNudge: (() => {
+      // Counted against what YOU have cooked once there is anything real —
+      // the sample rows only answer for themselves while they are on stage.
       const cooked = new Set(
-        RECIPES.filter((r) => PASSPORT.some((p) => p.dish === r.name)).map((r) => r.code),
+        realCooks.length
+          ? realCooks.map((c) => c.code)
+          : RECIPES.filter((r) => PASSPORT.some((p) => p.dish === r.name)).map((r) => r.code),
       );
       const missing = RECIPES.filter((r) => !cooked.has(r.code));
       if (!missing.length) return '';
@@ -2122,7 +2230,7 @@ export function usePantry() {
       const cheapest = missing.reduce((a, r) => (per(r) < per(a) ? r : a));
       return fill(xt(lg, 'passportNudgeReal'), {
         n: new Set(missing.map((r) => r.code)).size,
-        c: P.cn[cheapest.code] || COUNTRIES[cheapest.code]?.name || cheapest.code,
+        c: P.cn[cheapest.code] || COUNTRIES[cheapest.code]?.name || COUNTRY_NAMES[cheapest.code] || cheapest.code,
         d: dish(cheapest),
         a: fmt(per(cheapest)),
       });
