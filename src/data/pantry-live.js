@@ -8,13 +8,15 @@
 //   Open Food Facts            product lookup   keyless, ODbL
 //   Frankfurter (ECB reference) exchange rates  keyless, about thirty currencies
 //
-// No major UK/US supermarket publishes a developer API, so real shelf prices for
-// a named chain need a paid aggregator. setVendorKey() plugs one in; without it
-// the app uses Open Prices crowd data and says so.
+// No major UK/US supermarket publishes a developer API, and their terms forbid
+// scraping one together, so the real prices here are Open Prices plus the app's
+// own reports. There was once a vendorPrice() that posted a bearer token to a
+// third-party aggregator; the UI that set that key promised something no code
+// delivered, so both are gone. A vendor integration arrives as working code or
+// not at all.
 
 const UA = 'PantryPrototype/1.0 (design prototype)';
 const cache = new Map();
-let vendor = null;
 
 const memo = async (key, ttl, fn) => {
   const hit = cache.get(key);
@@ -30,8 +32,6 @@ const timed = (url, opts = {}, ms = 9000) => {
   return fetch(url, { ...opts, signal: ac.signal }).finally(() => clearTimeout(bail));
 };
 
-export const setVendorKey = k => { vendor = k && k.trim() ? k.trim() : null; };
-export const hasVendorKey = () => !!vendor;
 
 /** Browser geolocation. Resolves {lat, lon, accuracy} or rejects with a readable reason. */
 export function locate(opts = {}) {
@@ -215,23 +215,6 @@ export async function priceBasket(ingredients, countryCode) {
     try { const p = await openPrice(n, countryCode); if (p) out[n] = p; } catch (_) {}
   }
   return out;
-}
-
-/** Named-chain shelf prices. Needs a paid aggregator key; null without one. */
-export async function vendorPrice(ingredient, chainDomain) {
-  if (!vendor) return null;
-  try {
-    const r = await timed('https://s.pepesto.com/api/search', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + vendor, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ supermarket_domain: chainDomain, query: ingredient, limit: 3 })
-    }, 12000);
-    if (!r.ok) return null;
-    const j = await r.json();
-    const first = Array.isArray(j) ? j[0] : Object.values(j)[0];
-    if (!first) return null;
-    return { value: first.price ?? first.promotional_price, currency: first.currency || 'GBP', source: chainDomain };
-  } catch (_) { return null; }
 }
 
 /**

@@ -30,8 +30,6 @@ export interface Price {
   source: string;
 }
 
-export declare const setVendorKey: (k: string) => void;
-export declare const hasVendorKey: () => boolean;
 export declare function locate(opts?: PositionOptions): Promise<Coords>;
 export declare function reverseGeocode(lat: number, lon: number): Promise<Place>;
 export declare function nearbyShops(
@@ -45,7 +43,6 @@ export declare function priceBasket(
   ingredients: string[],
   countryCode: string,
 ): Promise<Record<string, Price>>;
-export declare function vendorPrice(ingredient: string, chainDomain: string): Promise<Price | null>;
 
 export interface Fx {
   /** The ECB publication date these rates carry, 'YYYY-MM-DD'. Empty when the
