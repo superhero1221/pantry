@@ -27,7 +27,7 @@ const ALSO: Record<string, string[]> = {
   cheddar: ['cheese'], pecorino: ['cheese'], parmesan: ['cheese'], mozzarella: ['cheese'],
   feta: ['cheese'], halloumi: ['cheese'], paneer: ['cheese'], gruyere: ['cheese'],
   spaghetti: ['pasta'], macaroni: ['pasta'], lasagne: ['pasta'], tagliatelle: ['pasta'],
-  basmati: ['rice'], arborio: ['rice'], couscous: ['grain'],
+  basmati: ['rice'], arborio: ['rice'], couscous: ['grain'], sourdough: ['bread'], baguette: ['bread'],
   guanciale: ['pork'], pancetta: ['pork'], lardons: ['pork'],
   prawns: ['prawn'], chickpeas: ['chickpea'], lentils: ['lentil', 'dal', 'dhal'],
   aubergine: ['aubergines'], courgette: ['courgettes'], coriander: ['cilantro'],

@@ -62,10 +62,28 @@ export function gramsOf(item) {
   throw new Error(`cannot read the quantity "${item.g}" for "${name}"`);
 }
 
+/**
+ * A pan of oil you fry in is not a pan of oil you eat.
+ *
+ * Chole Bhature asks for 500 ml of oil to deep fry the bread in. Counted as
+ * eaten that is 4,495 kcal, and it put the dish at 2,166 kcal a serving —
+ * which is not a plate of food, it is a plate of food plus most of a bottle of
+ * oil that went back in the bottle. Fried dough takes up something like a sixth
+ * of its own weight; against 500 ml of oil for 400 g of dough, that lands near
+ * an eighth of what was poured. The rest is washing up.
+ *
+ * A recipe opts into this by saying so in the ingredient name — "Vegetable oil,
+ * for deep frying" — which is the same comma-note the shopping list already
+ * uses, so you still buy the full bottle and the basket price is still right.
+ */
+const FRY_NOTE = /,\s*(for|to)\s+(deep[- ]?|shallow[- ]?)?fry(ing)?\b/i;
+const FRY_ABSORBED = 0.12;
+
 /** Grams of it you actually eat, after draining the tin or lifting out the bones. */
 export function edibleGrams(item) {
   const name = canonical(item.n);
-  return gramsOf(item) * (YIELD[name] ?? 1);
+  const fried = FRY_NOTE.test(item.n) ? FRY_ABSORBED : 1;
+  return gramsOf(item) * (YIELD[name] ?? 1) * fried;
 }
 
 /** Ingredients in a recipe that this table has never heard of. */

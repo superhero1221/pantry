@@ -60,3 +60,5 @@ export function breaksDietBecause(recipe: Recipe, diet: string): string[] {
   if (!bad) return [];
   return recipe.items.filter((i) => bad.test(i.n)).map((i) => i.n);
 }
+
+export { tagContradictions } from './diet-audit';

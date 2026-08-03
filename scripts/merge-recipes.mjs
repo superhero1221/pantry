@@ -17,6 +17,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { RECIPES } from '../src/data/cookbook.js';
 import { FOODS, UNIT } from '../src/data/nutrition.js';
 import { canonical } from '../src/lib/nutrition.js';
+import { tagContradictions } from '../src/lib/diet-audit.js';
 
 const [, , input, ...rest] = process.argv;
 const dry = rest.includes('--dry');
@@ -62,6 +63,7 @@ const q = (s) => {
 const seenId = new Set(RECIPES.map((r) => r.id));
 const seenName = new Set(RECIPES.map((r) => r.name.toLowerCase()));
 const kept = [];
+const stripped = [];
 const rejected = [];
 const newFoods = {};
 const newUnits = {};
@@ -81,6 +83,21 @@ for (const batch of batches) {
     // A reviewer correcting the tags is the common case and is not a rejection.
     if (v && v.verdict === 'fix' && Array.isArray(v.tagsShouldBe)) r.tags = v.tagsShouldBe;
 
+    // The adversarial reviewer is a second opinion, not the safety net. The
+    // net is deterministic: a tag its own ingredients disprove comes off here,
+    // whether or not a reviewer ever looked at this batch. Nine of the fourteen
+    // review agents died on a session limit, and the tags still have to be safe.
+    const wrong = tagContradictions({ ...r, tags: r.tags || [] });
+    for (const [t, names] of Object.entries(wrong)) {
+      if (t === 'vegetarian' && !(r.tags || []).includes('vegetarian')) {
+        r.tags.push('vegetarian');
+        stripped.push(`${r.id}: +vegetarian (it was tagged vegan without it)`);
+        continue;
+      }
+      r.tags = (r.tags || []).filter((x) => x !== t);
+      stripped.push(`${r.id}: -${t} (${names.slice(0, 3).join(', ')})`);
+    }
+
     if (!/^[a-z][a-z0-9_]{2,28}$/.test(r.id)) why.push(`bad id "${r.id}"`);
     if (seenId.has(r.id)) why.push(`duplicate id "${r.id}"`);
     if (seenName.has(String(r.name).toLowerCase())) why.push(`duplicate name "${r.name}"`);
@@ -98,7 +115,13 @@ for (const batch of batches) {
     // is a guess again and the whole exercise was pointless.
     for (const it of r.items || []) {
       const name = canonical(it.n);
-      const known = FOODS[name] || newFoods[name] || newFoods[it.n];
+      // canonical() falls back to the full name when the head is not yet a
+      // known food, and a brand-new ingredient never is — it is still sitting
+      // in newFoods waiting to be merged. So check the head too, or every
+      // recipe introducing an ingredient with a note after the comma is
+      // rejected for not having the composition it arrived with.
+      const head = it.n.split(',')[0].trim();
+      const known = FOODS[name] || newFoods[name] || newFoods[it.n] || newFoods[head];
       if (!known) why.push(`no composition for "${it.n}"`);
       const bare = /^[\d.]+(\s+[a-z]+)?$/i.test(String(it.g).trim()) && !/(g|kg|ml|l|tbsp|tsp|dsp)$/i.test(String(it.g).trim());
       if (bare && UNIT[name] === undefined && newUnits[name] === undefined && newUnits[it.n] === undefined) {
@@ -167,7 +190,8 @@ ${method}
   },`;
 };
 
-console.log(`kept ${kept.length}, rejected ${rejected.length}`);
+console.log(`kept ${kept.length}, rejected ${rejected.length}, tags corrected ${stripped.length}`);
+for (const t of stripped) console.log(`  TAG  ${t}`);
 for (const r of rejected) console.log(`  REJECT ${r.id} (${r.name})\n    - ${r.why.join('\n    - ')}`);
 if (dry) process.exit(rejected.length ? 1 : 0);
 if (!kept.length) {
