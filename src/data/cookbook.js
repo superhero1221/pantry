@@ -556,6 +556,7 @@ export const RECIPES = [
       { text: 'Rinse the lentils in three changes of cold water until it runs clear.', m: 3 },
       { text: 'Lentils into a pan with 900 ml water, the turmeric and a pinch of salt. Bring to the boil, skim the foam, then simmer 25 minutes until completely soft and falling apart.', m: 27, tip: 'Salt at the start is fine with red lentils. It is only whole pulses like chickpeas that stay tough if salted early.' },
       { text: 'While that goes, finely chop the onion, tomatoes, garlic and ginger.', m: 6 },
+      { text: 'Rinse the basmati rice until the water runs clear, then put it on: 200 g to 400 ml water, lid on, lowest heat, 10 minutes, then off the heat and left alone for 10 more.', m: 22, tip: 'The ten minutes standing with the lid on is not optional and not a rest. That is when the grains finish on their own steam. Lifting the lid to look is how rice ends up wet at the bottom and hard on top.' },
       { text: 'Whisk the cooked lentils hard for 30 seconds. You want a loose, creamy soup, not distinguishable lentils.', m: 1 },
       { text: 'For the tadka: melt the ghee in a small pan on medium-high. Cumin seeds in. When they crackle and darken, about 30 seconds, add the dried chillies.', m: 2, tip: 'The tadka is the entire dish. Cold ghee gives you nothing. Wait for the seeds to actually pop.' },
       { text: 'Garlic and ginger in, fry to pale gold, then the onion, 5 minutes until browned at the edges.', m: 6 },
