@@ -33,8 +33,18 @@ export default defineConfig({
       ? { output: { inlineDynamicImports: true } }
       : {
           output: {
-            manualChunks: (id: string) =>
-              id.includes('/node_modules/react') ? 'react' : undefined,
+            manualChunks: (id: string) => {
+              if (id.includes('/node_modules/react')) return 'react';
+              // The cookbook is the largest thing in the build and the slowest
+              // to change: a hundred and fifty recipes of ingredients, method
+              // and prose. Screens change every deploy, recipes hardly ever, so
+              // giving it its own hash leaves it in the service worker's cache
+              // across deploys that only touched the app.
+              if (id.includes('/src/data/cookbook') || id.includes('/src/data/nutrition')) {
+                return 'cookbook';
+              }
+              return undefined;
+            },
           },
         },
   },
