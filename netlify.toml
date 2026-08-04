@@ -12,8 +12,24 @@
 # raising an error anywhere. Headers go in public/_headers, and their mirror
 # goes in vercel.json.
 
+# The photographs.
+#
+# 139 dishes ship with a drawing rather than a photograph, because the machine
+# the cookbook was written on cannot reach Wikimedia — its network policy
+# allows the npm registry and github.com and nothing else. Netlify's build
+# servers have ordinary internet access, so connecting this repo to Netlify is
+# by itself enough to fix it: the fetcher runs first and the photographs are in
+# dist/ before vite is called.
+#
+# It adds a couple of minutes to a deploy and re-fetches each time, because a
+# build cannot commit back to the repository. If you would rather pay that cost
+# once, run .github/workflows/dish-photos.yml instead — that one does commit —
+# and drop the `fetch-dish-photos` call from the command below.
+#
+# `|| true` on purpose: a Wikimedia outage should leave you with a site full of
+# drawings, not a failed deploy.
 [build]
-  command = "npm run build"
+  command = "node scripts/fetch-dish-photos.mjs || true && npm run build"
   publish = "dist"
 
 [build.environment]
