@@ -7,3 +7,6 @@ pantry-dist.zip
 
 .env
 .env.local
+
+# Python bytecode from the mascot scripts
+__pycache__/

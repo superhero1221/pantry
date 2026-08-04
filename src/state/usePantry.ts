@@ -114,6 +114,9 @@ interface FxCache extends Fx {
   at: number;
 }
 
+/** The poses that exist as files in `public/mascot`. */
+export type Pose = 'walk' | 'wink' | 'think' | 'cheer';
+
 export interface PantryState {
   screen: Screen;
   seen: boolean;
@@ -1737,10 +1740,23 @@ export function usePantry() {
     showNav:
       ['home', 'kitchen', 'stats', 'passport', 'settings', 'browse', 'plan'].indexOf(screen) >= 0,
 
-    /* Whether the little pot in the corner is standing there. Read as "not
-       false" rather than "is true" so that a profile saved before the
-       character existed shows it, the same as a fresh install would. */
+    /* Whether the character in the corner is standing there. Read as "not
+       false" rather than "is true" so that a profile saved before it existed
+       shows it, the same as a fresh install would. */
     mascot: S.toggles.mascot !== false,
+
+    /* Which pose. Not decoration for its own sake: the character is the only
+       thing on screen that reacts to where you are, and a cook who has just
+       finished a dish should be met by something pleased about it rather than
+       by the same drawing that was on the shopping list. Four poses, so each
+       one still means something — a fifth would be a pose nobody could name. */
+    mascotPose: (['welcome', 'goal', 'tier', 'diet', 'locate'].indexOf(screen) >= 0
+      ? 'think'
+      : screen === 'after' || screen === 'stats' || screen === 'passport'
+        ? 'cheer'
+        : screen === 'results' || screen === 'cook' || screen === 'shop'
+          ? 'wink'
+          : 'walk') as Pose,
 
     /* ── Onboarding ─────────────────────────────────────────────────────── */
     start: () => go('goal'),

@@ -239,26 +239,15 @@ select {
 .pg-mascot {
   position: absolute;
   z-index: 20;
-  inset-inline-end: 6px;
-  bottom: calc(var(--pg-bottom) + 2px);
+  inset-inline-end: 4px;
+  bottom: calc(var(--pg-bottom) - 4px);
   pointer-events: none;
-  filter: drop-shadow(0 5px 9px rgba(46, 43, 37, 0.16));
 }
-/* Mirrored in Arabic and Urdu, so the spoon is still on the outside edge and
-   the character still faces into the screen rather than off it. On the drawing
-   itself, not on either of the two elements above it: both of those are
-   running an animation, and an animation's transform beats a stylesheet's. */
-[dir='rtl'] .pg-mascot svg {
-  transform: scaleX(-1);
-}
-/* Everything on the character mirrors except the word on its plate, which
-   mirrors into nonsense. Flipped back about its own centre, so the brass plate
-   still faces the way the rest of it does and the name still reads. */
-[dir='rtl'] .pg-mascot text {
-  transform-box: view-box;
-  transform-origin: 36px 65px;
-  transform: scaleX(-1);
-}
+/* Deliberately not mirrored in Arabic and Urdu. Everything else in the app
+   flips, and the character would look better facing into the screen — but it
+   has its own name painted across its belly, and a mirrored drawing spells
+   that backwards. A picture cannot flip half of itself the way a drawing made
+   of shapes could. Facing the wrong way is a smaller mistake than nonsense. */
 
 /* A list of dish cards. One column on a phone, which is what the design drew;
    the breakpoints below turn it into a grid. Declared here rather than inline

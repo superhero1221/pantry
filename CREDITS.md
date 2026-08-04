@@ -113,17 +113,41 @@ that are not fish pie.
 ## The mascot
 
 Pantry — the cream canister with the brown lid, the brass plate and the wooden
-spoon — is original work, drawn as SVG in `src/ui/Mascot.tsx` from a character
-sheet commissioned for this app. It is drawn in the rubber-hose idiom of 1930s
-animation: heavy uniform outlines, pie-cut eyes, limbs with no elbows. That
-idiom is public property and has been for decades; the characters other people
-have drawn in it are not, and none of them are in here. Nothing was traced.
+spoon — comes from a character sheet made for this app. It is drawn in the
+rubber-hose idiom of 1930s animation: heavy outlines, big eyes, limbs with no
+elbows, white gloves. That idiom is public property and has been for decades;
+the characters other people have drawn in it are not, and none of them are in
+here.
 
-It is 62 pixels tall and bobs about three pixels every three and a half
+Four poses ship, in `public/mascot`, and the screen decides which one you get:
+thinking through the setup questions, cheering on Stats and Passport and on the
+screen after you finish cooking, winking on a recipe, walking everywhere else.
+
+Two scripts turn a sheet into those files, and both are in `scripts`:
+
+- `cut-mascot.py` removes the background by flooding inward from the edges
+  rather than by deleting pixels near the background colour. The distinction is
+  the whole job: the character's body is cream too, and a colour test punches a
+  hole straight through the middle of the jar. It then separates the poses by
+  finding blobs of ink and taking the big ones as figures, because a raised
+  spoon in one pose reaches over the pose below it and any method based on
+  empty rows and columns welds the sheet into one piece.
+- `mascot-poses.py` scales every pose by the height of its BODY rather than of
+  its image, and stands them all on one floor line. Scale by image height and
+  the pose holding a spoon up comes out shorter than the one that is not — so
+  in a fixed corner of the screen the character appears to shrink and sink
+  every time the pose changes.
+
+It stands 68 pixels tall and bobs about three pixels every three and a half
 seconds, which is as much movement as an app for people who are easily pulled
 away from things has any business making. `prefers-reduced-motion` stops it
 along with everything else, and there is a switch on the Settings screen to
 take it away entirely.
+
+It is deliberately **not** mirrored in Arabic and Urdu, though everything else
+in the app is. It has its own name painted across its belly, and a mirrored
+photograph spells that backwards; facing the wrong way is a smaller mistake
+than nonsense.
 
 ## Fonts
 

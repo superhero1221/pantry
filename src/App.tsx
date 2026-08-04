@@ -88,7 +88,7 @@ export default function App() {
             somewhere: React tears the old one down and mounts a new one, which
             is the only way to restart a CSS animation without a class dance.
             It costs nothing — the character holds no state. */}
-        {v.mascot && <Mascot key={v.screen} />}
+        {v.mascot && <Mascot key={v.screen} pose={v.mascotPose} />}
 
         {v.showNav && <Nav v={v} />}
       </div>
