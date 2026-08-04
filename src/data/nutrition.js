@@ -348,6 +348,9 @@ export const FOODS = {
   Injera: [151, 5, 33, 0.8, 4, 2.5, 30, 0, 0, 0.3],
   'Egusi seeds': [595, 28.3, 15.3, 47.4, 3, 7.3, 54, 0, 0, 0.02],
   'Red palm oil': [884, 0, 0, 99.9, 0, 0.01, 0, 0, 0, 0.01],
+
+  // ---- Added with the cookbook expansion --------------------------------
+  Gruyere: [413, 30, 0.4, 32, 0, 0.2, 1011, 1.6, 0, 1.1],
 };
 
 /**
@@ -416,6 +419,7 @@ export const UNIT = {
   'Preserved lemons': 30,
   'Merguez sausages': 60,
   Injera: 90,
+  Lettuce: 300,
 };
 
 /**
