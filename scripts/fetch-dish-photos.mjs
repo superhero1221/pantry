@@ -68,10 +68,164 @@ async function api(params) {
   return res.json();
 }
 
+
+/**
+ * The Wikipedia article each dish actually lives at.
+ *
+ * Searching for the dish name finds the wrong page more often than you would
+ * hope: "Red Lentil Kofte" is filed under "Mercimek köftesi", "Groundnut Stew"
+ * under "Maafe", and a search for "Fish Pie" will happily return something
+ * that is neither. Pinning the title is the difference between a hundred and
+ * thirty-nine correct photographs and a hundred and thirty-nine plausible
+ * ones. Anything not listed here falls back to searching.
+ */
+const ARTICLE = {
+  "ragu_bolognese": "Bolognese sauce",
+  "cacio_e_pepe": "Cacio e pepe",
+  "risotto_milanese": "Risotto alla milanese",
+  "spaghetti_puttanesca": "Pasta alla puttanesca",
+  "parmigiana_melanzane": "Parmigiana",
+  "minestrone": "Minestrone",
+  "chicken_saltimbocca": "Saltimbocca",
+  "panzanella": "Panzanella",
+  "pasta_e_fagioli": "Pasta e fagioli",
+  "chana_masala": "Chana masala",
+  "rajma_masala": "Rajma",
+  "palak_paneer": "Palak paneer",
+  "chicken_karahi": "Karahi",
+  "keema_matar": "Keema",
+  "aloo_gobi": "Aloo gobi",
+  "chicken_biryani": "Biryani",
+  "lamb_nihari": "Nihari",
+  "chole_bhature": "Chole bhature",
+  "sarson_saag": "Sarson da saag",
+  "sambar": "Sambar (dish)",
+  "tomato_rasam": "Rasam",
+  "lemon_rice": "Lemon rice",
+  "fish_white_curry": "Fish curry",
+  "egg_hoppers": "Appam",
+  "rava_dosa": "Dosa",
+  "pumpkin_kootu": "Kootu",
+  "parippu": "Dal",
+  "devilled_chicken": "Sri Lankan cuisine",
+  "cabbage_mallum": "Mallung",
+  "mapo_tofu": "Mapo tofu",
+  "kung_pao_chicken": "Kung Pao chicken",
+  "hong_shao_rou": "Red braised pork belly",
+  "egg_fried_rice": "Egg fried rice",
+  "dan_dan_noodles": "Dan dan noodles",
+  "char_siu_pork": "Char siu",
+  "tomato_and_egg": "Stir-fried tomato and scrambled eggs",
+  "dry_fried_green_beans": "Dry-fried green beans",
+  "cumin_lamb": "Cumin lamb",
+  "wonton_soup": "Wonton",
+  "oyakodon": "Oyakodon",
+  "katsu_curry": "Japanese curry",
+  "miso_soup_rice": "Miso soup",
+  "yakisoba": "Yakisoba",
+  "teriyaki_salmon": "Teriyaki",
+  "bibimbap": "Bibimbap",
+  "kimchi_jjigae": "Kimchi-jjigae",
+  "bulgogi": "Bulgogi",
+  "japchae": "Japchae",
+  "tteokbokki": "Tteok-bokki",
+  "green_curry_tofu": "Green curry",
+  "larb_gai": "Larb",
+  "tom_yum": "Tom yum",
+  "banh_mi": "Bánh mì",
+  "bun_cha": "Bún chả",
+  "caramel_pork": "Thịt kho",
+  "nasi_goreng": "Nasi goreng",
+  "beef_rendang": "Rendang",
+  "prawn_laksa": "Laksa",
+  "gado_gado": "Gado-gado",
+  "chilaquiles_rojos": "Chilaquiles",
+  "chicken_tinga": "Tinga (food)",
+  "black_bean_enchiladas": "Enchilada",
+  "pozole_rojo": "Pozole",
+  "esquites": "Esquites",
+  "black_bean_soup": "Black bean soup",
+  "lomo_saltado": "Lomo saltado",
+  "feijoada": "Feijoada",
+  "chimichurri_steak": "Chimichurri",
+  "arroz_con_pollo": "Arroz con pollo",
+  "mujadara": "Mujaddara",
+  "fattoush_halloumi": "Fattoush",
+  "kofta_siniyeh": "Kofta",
+  "maqluba": "Maqluba",
+  "hummus_dinner": "Hummus",
+  "fesenjan": "Fesenjān",
+  "ghormeh_sabzi": "Ghormeh sabzi",
+  "tabbouleh_plate": "Tabbouleh",
+  "chicken_shawarma": "Shawarma",
+  "batata_harra": "Batata harra",
+  "chicken_tagine": "Tagine",
+  "harira": "Harira",
+  "koshari": "Kushari",
+  "chermoula_fish": "Chermoula",
+  "misir_wot": "Wat (food)",
+  "doro_wot": "Doro wat",
+  "gomen": "Gomen wat",
+  "zaalouk": "Zaalouk",
+  "merguez_couscous": "Merguez",
+  "ojja_prawns": "Ojja",
+  "egusi_stew": "Egusi",
+  "suya_chicken": "Suya",
+  "waakye": "Waakye",
+  "thieboudienne": "Thieboudienne",
+  "groundnut_stew": "Maafe",
+  "kelewele": "Kelewele",
+  "ugali_sukuma": "Ugali",
+  "chapati_beans": "Chapati",
+  "yassa_poulet": "Yassa (food)",
+  "moin_moin": "Moin moin",
+  "shepherds_pie": "Shepherd's pie",
+  "toad_in_the_hole": "Toad in the hole",
+  "fish_pie": "Fish pie",
+  "bangers_and_mash": "Bangers and mash",
+  "cauliflower_cheese": "Cauliflower cheese",
+  "lancashire_hotpot": "Lancashire hotpot",
+  "kedgeree": "Kedgeree",
+  "coronation_chicken": "Coronation chicken",
+  "colcannon": "Colcannon",
+  "lentil_cottage_pie": "Cottage pie",
+  "coq_au_vin": "Coq au vin",
+  "ratatouille": "Ratatouille",
+  "croque_monsieur": "Croque monsieur",
+  "boeuf_bourguignon": "Beef bourguignon",
+  "soupe_a_loignon": "French onion soup",
+  "tortilla_espanola": "Spanish omelette",
+  "paella_mixta": "Paella",
+  "patatas_bravas": "Patatas bravas",
+  "pisto_manchego": "Pisto",
+  "gambas_al_ajillo": "Gambas al ajillo",
+  "moussaka": "Moussaka",
+  "gemista": "Gemista",
+  "chicken_souvlaki": "Souvlaki",
+  "briam": "Briam",
+  "spanakopita": "Spanakopita",
+  "menemen": "Menemen (food)",
+  "mercimek_koftesi": "Mercimek köftesi",
+  "karniyarik": "Karnıyarık",
+  "mercimek_corbasi": "Lentil soup",
+  "cevapi": "Ćevapi",
+  "chicken_gumbo": "Gumbo",
+  "jambalaya": "Jambalaya",
+  "chilli_con_carne": "Chili con carne",
+  "mac_and_cheese": "Macaroni and cheese",
+  "cornbread_greens": "Cornbread",
+  "jerk_chicken": "Jerk (cooking)",
+  "rice_and_peas": "Rice and peas",
+  "cuban_black_beans": "Frijoles negros",
+  "sloppy_joes": "Sloppy joe",
+  "buttermilk_chicken": "Roast chicken"
+};
+
 /** The article title Wikipedia thinks this dish is, or null. */
 async function findArticle(recipe) {
-  // The dish's own name first, then a search, then the native-script name —
-  // "Mercimek köftesi" finds the article when "Red Lentil Kofte" does not.
+  if (ARTICLE[recipe.id]) return ARTICLE[recipe.id];
+  // Unpinned dishes fall back to searching: the dish's own name, then the name
+  // with its cuisine, then the native-script name.
   const tries = [recipe.name, `${recipe.name} ${recipe.cuisine}`, recipe.local].filter(
     (t) => t && /\S/.test(t),
   );
@@ -154,6 +308,10 @@ const manifestPath = 'public/pix/manifest.json';
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const got = [];
 const exts = {};
+// Cottage pie and shepherd's pie share an article, and a cookbook where two
+// dishes carry the same picture looks broken in exactly the way a drawing does
+// not. First dish to claim a file keeps it; the second stays drawn.
+const usedFiles = new Set(Object.values(manifest).map((m) => m.file).filter(Boolean));
 const missed = [];
 
 
@@ -172,6 +330,10 @@ for (const r of wanted) {
     const lic = await licenceOf(lead.file);
     if (!lic) {
       missed.push(`${r.id}: no file info for ${lead.file}`);
+      continue;
+    }
+    if (usedFiles.has(lead.file)) {
+      missed.push(`${r.id}: ${lead.file} is already another dish's photograph`);
       continue;
     }
     if (!usable(lic.licence)) {
@@ -202,6 +364,7 @@ for (const r of wanted) {
     };
     got.push(r.id);
     exts[r.id] = ext;
+    usedFiles.add(lead.file);
     // Wikimedia asks for a courteous request rate and it costs us nothing.
     await sleep(400);
   } catch (e) {
