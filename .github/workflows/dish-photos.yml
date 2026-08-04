@@ -1,0 +1,77 @@
+# Fetch a real photograph for every dish that only has a drawing.
+#
+# This exists because the machine the cookbook was written on cannot reach
+# Wikimedia — its network policy allows the npm registry and github.com and
+# nothing else. A GitHub runner has ordinary internet access, so the job that
+# was impossible there is routine here.
+#
+# Run it from the Actions tab: "Fetch dish photos" -> Run workflow. It commits
+# the photographs, the attribution manifest and the updated cookbook straight
+# to the branch. Safe to run repeatedly: anything already photographed is
+# skipped, so a second run only picks up what the first one missed.
+name: Fetch dish photos
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'How many dishes to attempt (blank = all of them)'
+        required: false
+        default: ''
+      dry:
+        description: 'Report what it would fetch without downloading anything'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  photos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The fetcher deliberately has no dependencies — it is plain Node and
+      # Wikimedia's own thumbnailer does the resizing. Everything installed
+      # here is only so the tests and the build can run afterwards.
+      - run: npm ci
+
+      - name: Fetch the photographs
+        run: |
+          node scripts/fetch-dish-photos.mjs \
+            ${{ inputs.dry && '--dry' || '' }} \
+            ${{ inputs.limit && format('--limit={0}', inputs.limit) || '' }}
+
+      # A photograph that arrives with a broken licence, a missing attribution
+      # or a dish pointing at a file that is not there should never reach the
+      # branch. If this fails, nothing is committed.
+      - name: Check nothing broke
+        if: ${{ !inputs.dry }}
+        run: |
+          npx tsc --noEmit
+          npx vitest run
+          npx vite build
+
+      - name: Commit what came back
+        if: ${{ !inputs.dry }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          if git diff --quiet -- public/pix src/data/cookbook.js; then
+            echo "no new photographs"
+            exit 0
+          fi
+          git add public/pix src/data/cookbook.js
+          COUNT=$(git diff --cached --name-only -- public/pix | grep -cv 'manifest.json' || true)
+          git commit -m "Photograph $COUNT more dishes
+
+          Fetched from Wikimedia Commons by scripts/fetch-dish-photos.mjs, which
+          refuses any licence forbidding commercial reuse or modification. Each
+          photographer, licence and source file is recorded in
+          public/pix/manifest.json."
+          git push

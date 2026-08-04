@@ -14,17 +14,17 @@
  *   node scripts/fetch-dish-photos.mjs --only=moussaka,paella_mixta
  *   node scripts/fetch-dish-photos.mjs --limit=20
  *
- * IT NEEDS NETWORK ACCESS TO WIKIMEDIA. The sandbox this was written in allows
- * only npm and GitHub, so it has never been run against the live API from
- * there — run it somewhere with ordinary outbound access, or widen the
- * environment's network policy to include en.wikipedia.org,
- * commons.wikimedia.org and upload.wikimedia.org.
+ * IT NEEDS NETWORK ACCESS TO WIKIMEDIA, and nothing else — no image library,
+ * no headless browser, just Node. That is deliberate: it means the same script
+ * runs on a laptop, on a CI runner, or in .github/workflows/dish-photos.yml,
+ * which is how it gets run when the machine you are sitting at cannot reach
+ * Wikimedia. The sandbox this was written in allows only npm and GitHub, so it
+ * has never been run against the live API from there.
  *
  * It is safe to re-run. Anything already photographed is skipped, so an
  * interrupted run costs nothing but the requests it already made.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { chromium } from 'playwright';
 import { RECIPES } from '../src/data/cookbook.js';
 
 const args = process.argv.slice(2);
@@ -84,12 +84,29 @@ async function findArticle(recipe) {
   return null;
 }
 
-/** The article's lead image: its File: title and full-size URL. */
+/**
+ * The article's lead image, already scaled by Wikimedia.
+ *
+ * `pithumbsize` makes their thumbnailer do the resizing, which removes the
+ * only reason this script ever needed a browser: the originals on Commons are
+ * routinely four thousand pixels wide, and downloading a hundred and forty of
+ * them to shrink them locally was several hundred megabytes of waste. It also
+ * means the script now runs anywhere Node runs — a CI runner, a laptop — with
+ * no image library and no headless Chrome.
+ */
 async function leadImage(title) {
-  const j = await api({ action: 'query', prop: 'pageimages', piprop: 'original|name', titles: title });
+  const j = await api({
+    action: 'query',
+    prop: 'pageimages',
+    piprop: 'thumbnail|original|name',
+    pithumbsize: '900',
+    titles: title,
+  });
   const page = (j.query?.pages ?? [])[0];
-  if (!page || !page.original || !page.pageimage) return null;
-  return { file: `File:${page.pageimage}`, url: page.original.source };
+  if (!page || !page.pageimage) return null;
+  const url = page.thumbnail?.source ?? page.original?.source;
+  if (!url) return null;
+  return { file: `File:${page.pageimage}`, url, full: page.original?.source ?? url };
 }
 
 /** Photographer and licence, straight off the file description page. */
@@ -114,35 +131,15 @@ async function licenceOf(file) {
   };
 }
 
-/**
- * Shrink to something a phone should download.
- *
- * The originals on Commons are frequently four thousand pixels wide and
- * several megabytes; the app draws them at 74 px in a list and full width on
- * one screen. 900 px of webp is more than enough and keeps a hundred and forty
- * photographs from turning the deploy into a download.
- */
-async function toWebp(page, url) {
-  return page.evaluate(
-    async ([src]) =>
-      new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onerror = () => reject(new Error('image would not load'));
-        img.onload = () => {
-          const w = Math.min(900, img.naturalWidth);
-          const h = Math.round((img.naturalHeight / img.naturalWidth) * w);
-          const c = document.createElement('canvas');
-          c.width = w;
-          c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/webp', 0.82));
-        };
-        img.src = src;
-      }),
-    [url],
-  );
+/** Download the bytes Wikimedia already scaled for us. */
+async function download(url) {
+  const res = await fetch(url, { headers: { 'User-Agent': UA } });
+  if (!res.ok) throw new Error(`${res.status} downloading the image`);
+  return Buffer.from(await res.arrayBuffer());
 }
+
+/** Whatever Wikimedia's thumbnailer handed back — usually jpg, sometimes png. */
+const extOf = (url) => (url.match(/\.(jpe?g|png|webp|gif)(?:$|\?)/i)?.[1] ?? 'jpg').toLowerCase().replace('jpeg', 'jpg');
 
 const wanted = RECIPES.filter((r) => {
   if (only.length) return only.includes(r.id);
@@ -156,13 +153,9 @@ if (!wanted.length) process.exit(0);
 const manifestPath = 'public/pix/manifest.json';
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 const got = [];
+const exts = {};
 const missed = [];
 
-const browser = dry ? null : await chromium.launch();
-// A blank page on the upload host, so the canvas can read the pixels back:
-// drawing a cross-origin image taints the canvas and toDataURL throws.
-const page = dry ? null : await (await browser.newContext({ userAgent: UA })).newPage();
-if (page) await page.goto('https://upload.wikimedia.org/robots.txt').catch(() => {});
 
 for (const r of wanted) {
   try {
@@ -192,9 +185,9 @@ for (const r of wanted) {
       continue;
     }
 
-    const dataUri = await toWebp(page, lead.url);
-    const bytes = Buffer.from(dataUri.split(',')[1], 'base64');
-    writeFileSync(`public/pix/${r.id}.webp`, bytes);
+    const ext = extOf(lead.url);
+    const bytes = await download(lead.url);
+    writeFileSync(`public/pix/${r.id}.${ext}`, bytes);
     manifest[r.id] = {
       licence: lic.licence,
       author: lic.author,
@@ -203,19 +196,18 @@ for (const r of wanted) {
       article: title,
       source: lead.source,
       licenceUrl: lic.licenceUrl,
-      img: `${r.id}.webp`,
+      img: `${r.id}.${ext}`,
       bytes: bytes.length,
       fetched: new Date().toISOString().slice(0, 10),
     };
     got.push(r.id);
+    exts[r.id] = ext;
     // Wikimedia asks for a courteous request rate and it costs us nothing.
     await sleep(400);
   } catch (e) {
     missed.push(`${r.id}: ${e.message}`);
   }
 }
-
-if (browser) await browser.close();
 
 if (!dry && got.length) {
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 1) + '\n');
@@ -224,7 +216,7 @@ if (!dry && got.length) {
   // leaving a dish with no picture at all.
   let cookbook = readFileSync('src/data/cookbook.js', 'utf8');
   for (const id of got) {
-    cookbook = cookbook.replace(`pic: 'pix/${id}.svg'`, `pic: 'pix/${id}.webp'`);
+    cookbook = cookbook.replace(`pic: 'pix/${id}.svg'`, `pic: 'pix/${id}.${exts[id]}'`);
   }
   writeFileSync('src/data/cookbook.js', cookbook);
 }
