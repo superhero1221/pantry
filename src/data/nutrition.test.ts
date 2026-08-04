@@ -109,13 +109,14 @@ describe('nutrition', () => {
 
   it('agrees with a worked example', () => {
     // One recipe checked by hand, so a table-wide error cannot pass by moving
-    // the test and the code together. Carbonara is five ingredients and one
-    // yield: 200 g spaghetti at 371, 120 g guanciale at 450, 3 eggs of 58 g at
-    // 143, 60 g pecorino at 419, and 6 g of peppercorns of which 60% is solids,
-    // at 251 — all over two servings.
-    const carbonara = RECIPES.find((r) => r.id === 'carbonara')!;
-    const byHand = (200 * 3.71 + 120 * 4.5 + 3 * 58 * 1.43 + 60 * 4.19 + 6 * 0.6 * 2.51) / 2;
-    expect(Math.abs(perServing(carbonara).kcal - byHand)).toBeLessThan(5);
+    // the test and the code together. Miso soup with rice is seven ingredients,
+    // all weighed, none with a yield factor: 160 g sushi rice at 349, 500 ml
+    // stock at 4, 40 g miso at 199, 200 g silken tofu at 55, 80 g mushrooms at
+    // 22, 100 g pak choi at 13 and 30 g spring onions at 32 — over two.
+    const soup = RECIPES.find((r) => r.id === 'miso_soup_rice')!;
+    const byHand =
+      (160 * 3.49 + 500 * 0.04 + 40 * 1.99 + 200 * 0.55 + 80 * 0.22 + 100 * 0.13 + 30 * 0.32) / 2;
+    expect(Math.abs(perServing(soup).kcal - byHand)).toBeLessThan(5);
   });
 
   it('has a composition table that is not quietly broken', () => {

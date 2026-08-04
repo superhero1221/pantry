@@ -34,11 +34,11 @@ const RULES: [Technique, RegExp][] = [
   ['boil', /\b(boil|blanch|water on to|pasta (on|into) the water|rice on|pan of (salted |lightly salted )?water on|into the (boiling|salted) water|bring .* to (the|a) boil|cover(ed)? with water)\b/i],
   [
     'fry',
-    /\b(fry|sear|sauté|saute|sizzle|toast|char|render|caramelise|heat (your|the|a) .*(pan|wok)|hottest pan|pan properly hot|frying pan|dry pan|oil in|oil into|butter foaming|melt the (butter|ghee|oil)|brown the|in (a|one) (single )?layer|a side|non-stick pan|soften it in|pour the beaten egg|eggs in\b|cook \d+ minutes|in,? \d+ (minutes?|seconds?)|in for (a|\d+) (minute|second)|until (deep |pale )?gold|,\s*\d+ (minutes?|seconds?)\b|heat (down|up) to|back on the heat|get (a|the) .{0,24}(pan|wok).{0,16}hot|pour in a .{0,12}ladle)\b/i,
+    /\b(fry|sear|sauté|saute|sizzle|toast|char|render|caramelise|heat (your|the|a) .*(pan|wok)|hottest pan|pan properly hot|frying pan|dry pan|oil in|oil into|butter foaming|melt the (butter|ghee|oil)|brown the|in (a|one) (single )?layer|a side|non-stick pan|soften it in|pour the beaten egg|eggs in\b|cook \d+ minutes|in,? \d+ (minutes?|seconds?)|in for (a|the last |another )?\d* ?(minute|second)|until (deep |pale )?gold|,\s*\d+ (minutes?|seconds?)\b|heat (down|up) to|back on the heat|get (a|the) .{0,24}(pan|wok).{0,16}hot|pour in a .{0,12}ladle)\b/i,
   ],
   [
     'toss',
-    /\b(toss|stir[- ]fry|keep .* moving|fold |push everything aside|drag the set edges|stir(red)? (it |them )?(constantly|through|for|back|once)|stir (the |in )?\w+ into|combine|mash|coat(ed)? )\b/i,
+    /\b(toss|stir[- ]fry|keep .* moving|fold |push everything aside|drag the set edges|stir(red)? (it |them )?(constantly|through|for|back|once)|stir (the |in )?[\w ]{0,24}into|combine|mash|coat(ed)? )\b/i,
   ],
   [
     'simmer',
@@ -49,6 +49,9 @@ const RULES: [Technique, RegExp][] = [
   // between "." and a space is not a word boundary. "Wine in. Stir until the
   // pan is almost dry" was silently falling through to the chopping board.
   ['fry', /\b\w+ in[.,]\s/i],
+  ['fry', /\badd the (mince|beef|chicken|lamb|prawns|fish)|\w+ back,/i],
+  ['rest', /\bin the freezer\b/i],
+  ['boil', /\bstraight into the (soup|boiling water|water)\b/i],
   ['boil', /into a (big |large )?pan of (boiling|salted|well-salted) water/i],
   ['plate', /\b(over rice|alongside|in the bottom of|tell whoever is eating|any glaze left)/i],
   ['toss', /\bstir it in one direction/i],
