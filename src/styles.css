@@ -157,6 +157,45 @@ select {
   }
 }
 
+/* ── Pantry, the mascot ───────────────────────────────────────────────────
+   Two keyframes rather than one composite, because the hop plays once when a
+   screen arrives and the bob never stops — and both of them want `transform`,
+   so they run on nested elements inside Mascot.tsx.
+
+   The bob is deliberately slow and short. This is an app for people who lose
+   the thread of what they were doing, and something jumping in the corner of
+   their eye is the exact failure it exists to prevent; three and a half
+   seconds and three pixels reads as alive rather than as movement. Anyone who
+   still finds it too much turns it off in Settings, and anyone who has told
+   their phone to stop animating things has already turned it off — the
+   reduced-motion block below stops both of these along with everything else. */
+@keyframes pgBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.6deg);
+  }
+  50% {
+    transform: translateY(-3.5px) rotate(1.6deg);
+  }
+}
+@keyframes pgHop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.7);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.05);
+  }
+  82% {
+    transform: translateY(0) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Someone who has told their phone to stop moving things has told this app too.
    Most of the movement here is written in declaration strings passed through
    css(), and a media query cannot select a style attribute — but an author
@@ -193,6 +232,34 @@ select {
   z-index: 60;
 }
 
+/* The mascot stands in the trailing corner of the shell rather than inside the
+   scrolling screen, so it stays where you left it instead of sliding away up
+   the page. pointer-events:none is the important line: it is a picture, not a
+   control, and nothing it happens to overlap stops being tappable. */
+.pg-mascot {
+  position: absolute;
+  z-index: 20;
+  inset-inline-end: 6px;
+  bottom: calc(var(--pg-bottom) + 2px);
+  pointer-events: none;
+  filter: drop-shadow(0 5px 9px rgba(46, 43, 37, 0.16));
+}
+/* Mirrored in Arabic and Urdu, so the spoon is still on the outside edge and
+   the character still faces into the screen rather than off it. On the drawing
+   itself, not on either of the two elements above it: both of those are
+   running an animation, and an animation's transform beats a stylesheet's. */
+[dir='rtl'] .pg-mascot svg {
+  transform: scaleX(-1);
+}
+/* Everything on the character mirrors except the word on its plate, which
+   mirrors into nonsense. Flipped back about its own centre, so the brass plate
+   still faces the way the rest of it does and the name still reads. */
+[dir='rtl'] .pg-mascot text {
+  transform-box: view-box;
+  transform-origin: 36px 65px;
+  transform: scaleX(-1);
+}
+
 /* A list of dish cards. One column on a phone, which is what the design drew;
    the breakpoints below turn it into a grid. Declared here rather than inline
    on the screen because an inline display beats a stylesheet, and a media
@@ -209,9 +276,27 @@ select {
      shell would otherwise start under the clock. Kept as a variable because the
      toast that floats inside the shell has to clear the same band. */
   --pg-top: env(safe-area-inset-top);
+  /* How far up from the floor of the shell anything floating has to start, so
+     that it clears the tab bar. Seventy is that bar measured rather than
+     guessed: 8 and 10 of padding around a 52px column of icon, gap and label,
+     plus whatever the phone reserves below it — the same env() the bar's own
+     padding uses, so the two can never drift apart. App.tsx drops this to a
+     margin on the screens that have no tab bar. */
+  --pg-bottom: calc(70px + env(safe-area-inset-bottom));
   position: relative;
   width: 100%;
   max-width: var(--shell-max);
+  /* Exactly the viewport, not merely at least it. With only a minimum the
+     shell grew to whatever the screen inside it needed — sixteen thousand
+     pixels on Browse — and the document scrolled instead of `.pg-main`. Three
+     things quietly depended on that not happening: the tab bar scrolled off
+     the bottom and stayed there, the toast floated at the top of the document
+     rather than the top of the window, and the scroll reset that runs on every
+     navigation was resetting an element that had never scrolled, so leaving a
+     list halfway down and tapping another tab landed you halfway down that
+     one. dvh rather than vh so a phone's disappearing address bar is the
+     browser's problem rather than ours. */
+  height: 100dvh;
   min-height: 100dvh;
   padding-top: var(--pg-top);
   display: flex;
@@ -267,6 +352,9 @@ select {
   }
   .pg-shell {
     --shell-max: 1120px;
+    /* The tab bar has become a rail down the side, so there is nothing along
+       the bottom left to clear. */
+    --pg-bottom: 4px;
     flex-direction: row-reverse;
     min-height: min(940px, calc(100dvh - 80px));
     height: min(940px, calc(100dvh - 80px));

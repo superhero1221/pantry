@@ -37,6 +37,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'Could not reach the sign-in service — usually that is no signal. Everything else carries on working on this device.',
 
+    /* ── Mascot ── */
+    mascotN: 'Pantry, in the corner',
+    mascotS: 'The little pot with the spoon. Turn it off if it pulls at you.',
+
     /* ── Prices ── */
     priceAsk: 'Saw a different price?',
     priceAskBody:
@@ -250,6 +254,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'No he podido conectar con el servicio de acceso; casi siempre es falta de señal. Todo lo demás sigue funcionando en este dispositivo.',
 
+    /* ── Mascot ── */
+    mascotN: 'Pantry, en la esquina',
+    mascotS: 'La ollita de la cuchara. Quítala si te distrae.',
+
     priceAsk: '¿Has visto otro precio?',
     priceAskBody:
       'Dime lo que costó de verdad y todo el que compre aquí verá un número real en vez de mi estimación.',
@@ -452,6 +460,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'Sur cet appareil uniquement',
     cloudUnreachable:
       'Impossible de joindre le service de connexion — le plus souvent, c’est le réseau. Tout le reste continue de fonctionner sur cet appareil.',
+
+    /* ── Mascot ── */
+    mascotN: 'Pantry, dans le coin',
+    mascotS: 'La petite cocotte à la cuillère. Désactivez-la si elle vous distrait.',
 
     priceAsk: 'Vu un autre prix ?',
     priceAskBody:
@@ -657,6 +669,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'Nie udało się połączyć z usługą logowania — zwykle to brak zasięgu. Cała reszta działa dalej na tym urządzeniu.',
 
+    /* ── Mascot ── */
+    mascotN: 'Pantry, w rogu',
+    mascotS: 'Garnuszek z łyżką. Wyłącz go, jeśli rozprasza.',
+
     priceAsk: 'Widziałeś inną cenę?',
     priceAskBody:
       'Powiedz, ile naprawdę kosztowało, a każdy, kto kupuje tutaj, zobaczy prawdziwą liczbę zamiast mojego szacunku.',
@@ -859,6 +875,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'سائن اِن سروس تک رسائی نہیں ہو سکی — عام طور پر سگنل نہ ہونے کی وجہ سے۔ باقی سب کچھ اسی آلے پر چلتا رہے گا۔',
 
+    /* ── Mascot ── */
+    mascotN: 'پینٹری، کونے میں',
+    mascotS: 'چمچے والی چھوٹی ہانڈی۔ اگر دھیان بٹے تو بند کر دیں۔',
+
     priceAsk: 'کوئی اور قیمت دیکھی؟',
     priceAskBody:
       'مجھے بتائیں کہ اصل میں کتنے کی تھی، تو یہاں خریداری کرنے والے ہر شخص کو میرے اندازے کے بجائے اصل عدد ملے گا۔',
@@ -1057,6 +1077,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'على هذا الجهاز فقط',
     cloudUnreachable:
       'تعذّر الوصول إلى خدمة تسجيل الدخول — غالباً بسبب انقطاع الشبكة. كل شيء آخر يواصل العمل على هذا الجهاز.',
+
+    /* ── Mascot ── */
+    mascotN: 'بانتري، في الزاوية',
+    mascotS: 'القِدر الصغير بالملعقة. أطفئه إن كان يشتّت انتباهك.',
 
     priceAsk: 'رأيت سعراً مختلفاً؟',
     priceAskBody:

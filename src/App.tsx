@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { css } from './lib/css';
 import { usePantry } from './state/usePantry';
 import { Boundary } from './ui/Boundary';
+import { Mascot } from './ui/Mascot';
 import { Nav } from './ui/Nav';
 import { After } from './screens/After';
 import { Browse } from './screens/Browse';
@@ -31,7 +32,7 @@ export default function App() {
 
   return (
     <div className="pg-page">
-      <div className="pg-shell" dir={v.dir}>
+      <div className="pg-shell" dir={v.dir} style={css(v.showNav ? '' : '--pg-bottom:10px')}>
         {/* Placement lives in .pg-toast: on a desktop the banner has to clear
             the nav rail, and an inline inset would beat any media query. */}
         {v.notif && (
@@ -82,6 +83,12 @@ export default function App() {
           {v.isLegal && <Legal v={v} />}
           </Boundary>
         </main>
+
+        {/* Keyed on the screen so the hop replays every time you arrive
+            somewhere: React tears the old one down and mounts a new one, which
+            is the only way to restart a CSS animation without a class dance.
+            It costs nothing — the character holds no state. */}
+        {v.mascot && <Mascot key={v.screen} />}
 
         {v.showNav && <Nav v={v} />}
       </div>

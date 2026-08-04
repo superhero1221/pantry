@@ -231,7 +231,7 @@ const INITIAL: PantryState = {
   notif: null,
   drag: null,
   sel: null,
-  toggles: { leftover: true },
+  toggles: { leftover: true, mascot: true },
   lang: null,
   langOpen: false,
   liveStatus: 'idle',
@@ -359,7 +359,8 @@ function pick(blob: Record<string, unknown>): Partial<PantryState> {
   const out: Record<string, unknown> = {};
   for (const k of KEEP) if (k in blob && SHAPE[k](blob[k])) out[k] = blob[k];
   if (isObj(out.toggles)) {
-    out.toggles = { leftover: (out.toggles as Record<string, boolean>).leftover ?? true };
+    const was = out.toggles as Record<string, boolean>;
+    out.toggles = { leftover: was.leftover ?? true, mascot: was.mascot ?? true };
   }
   if (isObj(out.owned)) out.owned = realias(out.owned as Record<string, boolean>);
   if (isObj(out.extras)) out.extras = realias(out.extras as Record<string, boolean>);
@@ -1736,6 +1737,11 @@ export function usePantry() {
     showNav:
       ['home', 'kitchen', 'stats', 'passport', 'settings', 'browse', 'plan'].indexOf(screen) >= 0,
 
+    /* Whether the little pot in the corner is standing there. Read as "not
+       false" rather than "is true" so that a profile saved before the
+       character existed shows it, the same as a fresh install would. */
+    mascot: S.toggles.mascot !== false,
+
     /* ── Onboarding ─────────────────────────────────────────────────────── */
     start: () => go('goal'),
     goalTitle: word('goalTitle', 'What are you after?'),
@@ -2901,11 +2907,17 @@ export function usePantry() {
       word('minutesNormal', 'minutes on a normal day') +
       '.',
     redoTier: () => go('tier', { tierStep: 0 }),
-    /* One toggle, because one nudge exists. The other two rows that used to
-       sit here gated nothing: "portion learning" belonged to the shrink offer
-       (now gone), and "shop closing alerts" described a feature with no code
-       behind it anywhere — no timer, no notification, no closing-time check. */
-    toggles: [{ k: 'leftover', label: X.leftoverN, sub: X.leftoverS }].map((t) => ({
+    /* Two switches, both of which do something. The other two rows that used
+       to sit here gated nothing: "portion learning" belonged to the shrink
+       offer (now gone), and "shop closing alerts" described a feature with no
+       code behind it anywhere — no timer, no notification, no closing-time
+       check. The mascot's switch is here rather than under some appearance
+       heading because a character bobbing in the corner is a nudge like any
+       other, and this is where you come to stop being nudged. */
+    toggles: [
+      { k: 'leftover', label: X.leftoverN, sub: X.leftoverS },
+      { k: 'mascot', label: xt(lg, 'mascotN'), sub: xt(lg, 'mascotS') },
+    ].map((t) => ({
       key: t.k,
       label: t.label,
       sub: t.sub,

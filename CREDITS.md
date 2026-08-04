@@ -110,6 +110,21 @@ cook tonight, and no amount of it being pretty would make that honest.
 each dish rather than searching, because a search for "Fish Pie" returns things
 that are not fish pie.
 
+## The mascot
+
+Pantry — the cream canister with the brown lid, the brass plate and the wooden
+spoon — is original work, drawn as SVG in `src/ui/Mascot.tsx` from a character
+sheet commissioned for this app. It is drawn in the rubber-hose idiom of 1930s
+animation: heavy uniform outlines, pie-cut eyes, limbs with no elbows. That
+idiom is public property and has been for decades; the characters other people
+have drawn in it are not, and none of them are in here. Nothing was traced.
+
+It is 62 pixels tall and bobs about three pixels every three and a half
+seconds, which is as much movement as an app for people who are easily pulled
+away from things has any business making. `prefers-reduced-motion` stops it
+along with everything else, and there is a switch on the Settings screen to
+take it away entirely.
+
 ## Fonts
 
 Caprasimo and Figtree, both under the SIL Open Font License, self-hosted in

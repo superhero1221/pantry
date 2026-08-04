@@ -57,7 +57,19 @@ export const Kicker = ({
   </div>
 );
 
-/** A dish photograph, washed back into the warm ground the way the system asks. */
+/** A dish photograph, washed back into the warm ground the way the system asks.
+ *
+ *  A real `<img>` rather than the background-image this used to be, purely so
+ *  that `loading="lazy"` exists to write. Browse lists all hundred and fifty-
+ *  three dishes at once and a background image is fetched the moment its
+ *  element is laid out, whether or not it is anywhere near the screen — which
+ *  made opening Browse an eight-megabyte download to look at four cards. The
+ *  frame keeps the size, the radius and the wash so nothing about it looks any
+ *  different; the picture inside it now waits its turn.
+ *
+ *  The filter stays on the frame rather than moving to the image, because two
+ *  screens pass their own through `style` and a filter on the parent applies
+ *  to the child anyway — putting one in both places would apply it twice. */
 export const DishPic = ({
   src,
   size,
@@ -72,15 +84,24 @@ export const DishPic = ({
   <span
     style={{
       flex: 'none',
+      display: 'block',
       width: size ?? '100%',
       height: size ?? '100%',
       borderRadius: radius,
       background: '#eee7db',
-      backgroundImage: src ? `url(${src})` : 'none',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
+      overflow: 'hidden',
       filter: 'saturate(.82) contrast(.94)',
       ...style,
     }}
-  />
+  >
+    {src && (
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+    )}
+  </span>
 );
