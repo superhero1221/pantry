@@ -2,6 +2,7 @@ import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { BackBtn, Dots } from '../ui/bits';
 import { Info } from '../ui/Icon';
+import { MascotBig } from '../ui/Mascot';
 import type { Pantry } from '../state/usePantry';
 
 const H2 = "font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.06;margin:0;letter-spacing:-.3px";
@@ -35,6 +36,16 @@ export function Goal({ v }: { v: Pantry }) {
           </Btn>
         ))}
       </div>
+
+      {/* The character acts out whatever you just picked. Keyed on the pose so
+          it hops again when you change your mind, which is the moment worth
+          animating — nothing else on this screen tells you the app heard you.
+          It takes no room until there is something to show. */}
+      {v.goalPose && (
+        <div style={css('display:flex;justify-content:center;margin-top:14px')}>
+          <MascotBig key={v.goalPose} pose={v.goalPose} />
+        </div>
+      )}
 
       <div style={css('margin-top:22px;padding:15px 16px;border-radius:22px;background:#e1eecc;display:flex;gap:11px;align-items:flex-start')}>
         <Info size={19} stroke="#56633f" style={{ flex: 'none', marginTop: 1 }} />

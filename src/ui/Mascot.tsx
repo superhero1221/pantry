@@ -1,46 +1,86 @@
 import { asset } from '../lib/asset';
 import { css } from '../lib/css';
-import type { Pose } from '../state/usePantry';
+import type { BigPose, Pose } from '../state/usePantry';
 
 /**
  * Pantry — the canister with the spoon.
  *
- * The character is drawn art, not code. A generated sheet goes through
- * `scripts/cut-mascot.py`, which keys out the background by flooding in from
- * the edges and cuts each pose into its own transparent file, and then through
- * `scripts/mascot-poses.py`, which scales them all by the height of the BODY
- * rather than of the image and stands them on a common floor line. That second
- * part is the one that matters here: a pose holding a spoon up is a taller
- * picture than one that is not, and if you scale by picture height, the corner
- * of the screen shows a character that shrinks and sinks every time the pose
- * changes. Scaled by body and floored together, it changes pose instead.
+ * The character is drawn art, not code. Sheets go through
+ * `scripts/cut-mascot.py`, which keys out the background and cuts each pose
+ * into its own transparent file, and then `scripts/mascot-poses.py`, which
+ * scales them all to a common jar width and stands them on a common floor.
+ * That second part is what stops the character shrinking and sinking every
+ * time it changes pose.
  *
- * Which is why the aspect ratio below is a constant rather than left to the
- * image: every pose is written to the same canvas, so the box never moves and
- * nothing reflows when one file arrives before another.
+ * There are two sets, because a corner sticker and a full-width illustration
+ * want different canvases. The four poses in `mascot/` hold nothing, so their
+ * canvas is barely wider than the character. The seven in `mascot/big/` are
+ * holding a barbell, a plate of breakfast or a purse, and need half again as
+ * much room — put those in a corner at corner size and the character shrinks
+ * to nothing to make space for a prop nobody can see.
  *
- * Two nested elements because two animations both want the transform property:
- * the outer one hops the character in when a screen arrives, the inner one
- * breathes. Separate rather than one composite keyframe, so the hop can be
- * short and springy while the bob stays long and slow.
+ * Both are sized by the JAR rather than by the image: `jar` is how wide the
+ * character itself should come out, and everything else follows from the
+ * canvas it was written on. Sizing by the image instead would make the pose
+ * with the widest prop the smallest character on screen.
  */
-const ASPECT = 189 / 251;
+const SET = {
+  small: { dir: 'mascot', w: 290, h: 336 },
+  big: { dir: 'mascot/big', w: 523, h: 358 },
+} as const;
 
-export function Mascot({ pose = 'walk', height = 68 }: { pose?: Pose; height?: number }) {
+/** How wide the jar itself is inside each canvas, from mascot-poses.py. */
+const JAR = 150;
+
+export function Mascot({ pose = 'walk', jar = 41 }: { pose?: Pose; jar?: number }) {
+  return <Figure set="small" pose={pose} jar={jar} className="pg-mascot" hop bob />;
+}
+
+/** The same character, big, standing in a screen rather than over one. */
+export function MascotBig({ pose, jar = 96 }: { pose: BigPose; jar?: number }) {
+  return <Figure set="big" pose={pose} jar={jar} className="pg-mascot-big" hop bob />;
+}
+
+function Figure({
+  set,
+  pose,
+  jar,
+  className,
+  hop,
+  bob,
+}: {
+  set: keyof typeof SET;
+  pose: string;
+  jar: number;
+  className: string;
+  hop?: boolean;
+  bob?: boolean;
+}) {
+  const { dir, w, h } = SET[set];
+  const width = Math.round((jar * w) / JAR);
+  const height = Math.round((jar * h) / JAR);
   return (
     <div
-      className="pg-mascot"
+      className={className}
       aria-hidden="true"
       style={css(
-        `width:${Math.round(height * ASPECT)}px;height:${height}px;animation:pgHop .52s cubic-bezier(.2,.9,.3,1.4) both`,
+        `width:${width}px;height:${height}px` +
+          (hop ? ';animation:pgHop .52s cubic-bezier(.2,.9,.3,1.4) both' : ''),
       )}
     >
-      <div style={css('width:100%;height:100%;animation:pgBob 3.4s ease-in-out infinite;transform-origin:50% 96%')}>
+      {/* Two nested elements because the hop and the bob both want `transform`.
+          Nested, the hop can be short and springy while the bob stays slow. */}
+      <div
+        style={css(
+          'width:100%;height:100%' +
+            (bob ? ';animation:pgBob 3.4s ease-in-out infinite;transform-origin:50% 96%' : ''),
+        )}
+      >
         <img
-          src={asset(`mascot/${pose}.webp`)}
+          src={asset(`${dir}/${pose}.webp`)}
           alt=""
           decoding="async"
-          width={Math.round(height * ASPECT)}
+          width={width}
           height={height}
           style={css('width:100%;height:100%;display:block;object-fit:contain')}
         />

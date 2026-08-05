@@ -404,3 +404,18 @@ select {
   backdrop-filter: blur(14px);
   border-top: 1px solid rgba(32, 30, 29, 0.08);
 }
+
+/* The big character, standing inside a screen rather than over one. Shrinks on
+   a short window so the Goal screen's chips and its note never get pushed off
+   the bottom by a picture — the picture is the reward for answering, not the
+   question. */
+.pg-mascot-big {
+  flex: none;
+  max-width: 100%;
+}
+@media (max-height: 700px) {
+  .pg-mascot-big {
+    height: 118px !important;
+    width: auto !important;
+  }
+}

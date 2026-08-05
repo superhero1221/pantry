@@ -114,8 +114,11 @@ interface FxCache extends Fx {
   at: number;
 }
 
-/** The poses that exist as files in `public/mascot`. */
+/** Poses in `public/mascot` — small, empty-handed, for the corner. */
 export type Pose = 'walk' | 'wink' | 'think' | 'cheer';
+
+/** Poses in `public/mascot/big` — holding something, for a screen. */
+export type BigPose = 'point' | 'celebrate' | 'lose' | 'gain' | 'muscle' | 'cheap' | 'energy';
 
 export interface PantryState {
   screen: Screen;
@@ -1742,8 +1745,15 @@ export function usePantry() {
 
     /* Whether the character in the corner is standing there. Read as "not
        false" rather than "is true" so that a profile saved before it existed
-       shows it, the same as a fresh install would. */
-    mascot: S.toggles.mascot !== false,
+       shows it, the same as a fresh install would.
+
+       It stands down on a screen that is already showing the big one. Two of
+       the same character on one screen is one too many, and on the Goal screen
+       the corner is exactly where the Next button is. */
+    mascot:
+      S.toggles.mascot !== false &&
+      screen !== 'after' &&
+      !(screen === 'goal' && !!S.profile.goal),
 
     /* Which pose. Not decoration for its own sake: the character is the only
        thing on screen that reacts to where you are, and a cook who has just
@@ -1757,6 +1767,24 @@ export function usePantry() {
         : screen === 'results' || screen === 'cook' || screen === 'shop'
           ? 'wink'
           : 'walk') as Pose,
+
+    /* And the big one, which is the whole point of having a character at all.
+       Answer "what are you after?" and it acts the answer out: on the scales
+       for losing weight, holding a barbell for building muscle, counting the
+       change in a purse for doing it cheaply. Nothing else on the Goal screen
+       tells you the app heard you — the chip goes dark, and that is it.
+
+       `recomp` shares the barbell with `muscle` and `gain` shares the loaded
+       plate with nothing, because six drawings for seven goals is honest and
+       a seventh drawn to fill a gap would look like it. No goal, no picture. */
+    goalPose: ({
+      lose: 'lose',
+      gain: 'gain',
+      muscle: 'muscle',
+      recomp: 'muscle',
+      cheap: 'cheap',
+      energy: 'energy',
+    }[S.profile.goal] ?? null) as BigPose | null,
 
     /* ── Onboarding ─────────────────────────────────────────────────────── */
     start: () => go('goal'),

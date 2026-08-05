@@ -24,12 +24,16 @@ whole sheet into one piece. Clustering also puts a character back together with
 the things that belong to it — its cast shadow, the little speed ticks behind a
 swinging arm — which are separate blobs of ink but not separate drawings.
 
-    python3 scripts/cut-mascot.py sheet.png public/mascot --prefix pantry
+    python3 scripts/cut-mascot.py sheet.png out/ --prefix pantry
+    python3 scripts/cut-mascot.py in-a-kitchen.png out/ --prefix pantry --room
 
 Anything smaller than a fiftieth of the sheet is dropped, which is what gets
-rid of stray sparkles and motion ticks. Speech bubbles are large and will come
-out as their own file; look at what lands in the folder and delete what you did
-not want.
+rid of stray sparkles and motion ticks. Banners and speech bubbles are large
+and come out as their own file; look at what lands in the folder and delete
+what you did not want.
+
+`--room` is for a drawing with real scenery behind it rather than a flat field.
+See `subject_mask`.
 """
 
 import sys
@@ -53,6 +57,10 @@ MIN_SHARE = 1 / 2500
 FIGURE_SHARE = 0.2
 # How far a small blob may sit from a figure and still belong to it.
 CLUSTER = 0.03
+# Darker than this on every channel is outline ink, for --room.
+INK_DARK = 90
+# Ink drawn thinner than this is scenery, not the character's outline.
+INK_THIN = 3
 
 
 def background_mask(rgb: np.ndarray) -> np.ndarray:
@@ -80,6 +88,37 @@ def background_mask(rgb: np.ndarray) -> np.ndarray:
         if grown.sum() == reach.sum():
             return reach
         reach = grown
+
+
+def subject_mask(rgb: np.ndarray) -> np.ndarray:
+    """The character, cut out of a drawing that has a whole room behind it.
+
+    `--room`. The flood fill above needs the background to be one flat colour
+    it can wash through; give it a picture with a wooden floor and a wall and
+    it washes the wall, stops at the skirting, and hands back a character
+    standing on a plank.
+
+    This works the other way round. The character is drawn with a heavy black
+    outline and nothing in the background is: take the darkest pixels, throw
+    away everything drawn thinner than the character's outline, fill in
+    whatever the surviving outlines enclose, and the biggest thing that comes
+    back is the character.
+
+    The thinning step is not optional, which cost an attempt to find out.
+    Floorboard lines and the scribbled shadow under the scales are dark too,
+    and they touch — line to shadow to scales to character — so filling what
+    they enclose returns the entire picture, background and all. They are two
+    or three pixels wide against ten for a character outline, so an opening
+    removes them and leaves the drawing.
+    """
+    dark = rgb.astype(np.int16).max(2) <= INK_DARK
+    thick = ndimage.binary_opening(dark, np.ones((INK_THIN, INK_THIN), bool))
+    solid = ndimage.binary_fill_holes(ndimage.binary_closing(thick, np.ones((7, 7), bool)))
+    labels, count = ndimage.label(solid)
+    if not count:
+        return solid
+    sizes = ndimage.sum(solid, labels, range(1, count + 1))
+    return labels == (int(np.argmax(sizes)) + 1)
 
 
 def distance(a, b) -> float:
@@ -123,7 +162,7 @@ def main() -> int:
 
     img = Image.open(sheet).convert('RGB')
     rgb = np.asarray(img)
-    ink = ~background_mask(rgb)
+    ink = subject_mask(rgb) if '--room' in sys.argv else ~background_mask(rgb)
 
     rgba = np.dstack([rgb, np.where(ink, 255, 0).astype(np.uint8)])
     outdir.mkdir(parents=True, exist_ok=True)

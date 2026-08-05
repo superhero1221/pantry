@@ -119,9 +119,23 @@ elbows, white gloves. That idiom is public property and has been for decades;
 the characters other people have drawn in it are not, and none of them are in
 here.
 
-Four poses ship, in `public/mascot`, and the screen decides which one you get:
-thinking through the setup questions, cheering on Stats and Passport and on the
-screen after you finish cooking, winking on a recipe, walking everywhere else.
+Eleven poses ship, in two sets, because a corner sticker and a full-width
+illustration want different canvases.
+
+`public/mascot` holds the four that are empty-handed — walking, winking,
+thinking, cheering — and the screen decides which one stands in the corner.
+`public/mascot/big` holds the seven that are holding something: pointing with
+the spoon, celebrating, and one for each answer to "what are you after?" —
+standing on bathroom scales, carrying a loaded plate, lifting a barbell,
+counting the change in a purse, bouncing with stars for eyes. Pick a goal and
+the character acts it out; nothing else on that screen tells you the app heard
+you. The corner one stands down whenever a big one is on screen.
+
+Two of the drawings arrived with English painted on them — a "RECIPE
+COMPLETED!" banner and a speech bubble reading "cheapest, nearby, all
+ingredients". Both were cut off and thrown away. This app speaks six languages
+including two written right to left, and a picture cannot translate or be read
+aloud. The headings say those things instead, in yours.
 
 Two scripts turn a sheet into those files, and both are in `scripts`:
 
@@ -132,13 +146,20 @@ Two scripts turn a sheet into those files, and both are in `scripts`:
   finding blobs of ink and taking the big ones as figures, because a raised
   spoon in one pose reaches over the pose below it and any method based on
   empty rows and columns welds the sheet into one piece.
-- `mascot-poses.py` scales every pose by the height of its BODY rather than of
-  its image, and stands them all on one floor line. Scale by image height and
-  the pose holding a spoon up comes out shorter than the one that is not — so
-  in a fixed corner of the screen the character appears to shrink and sink
-  every time the pose changes.
+  A second mode, `--room`, handles a drawing with real scenery behind it: it
+  keeps the ink drawn thicker than a floorboard line, fills whatever those
+  outlines enclose, and takes the biggest thing that comes back.
+- `mascot-poses.py` scales every pose to a common jar WIDTH and stands them all
+  on one floor line, lined up over one point. Scaling by image height is the
+  obvious approach and it is wrong — a pose holding a spoon overhead is a
+  taller picture, so the character comes out smaller in it, and in a fixed
+  corner that reads as the character shrinking and sinking every time it
+  changes pose. Scaling by body height fails too, because half these drawings
+  come with a prop and a barbell held overhead measures as body. The jar is a
+  cylinder, so its width is the commonest measurement in the drawing by a wide
+  margin, and nothing else occupies enough rows to outvote it.
 
-It stands 68 pixels tall and bobs about three pixels every three and a half
+It bobs about three pixels every three and a half
 seconds, which is as much movement as an app for people who are easily pulled
 away from things has any business making. `prefers-reduced-motion` stops it
 along with everything else, and there is a switch on the Settings screen to

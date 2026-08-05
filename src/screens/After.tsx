@@ -2,6 +2,7 @@ import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { Kicker } from '../ui/bits';
 import { CameraOff, Flame } from '../ui/Icon';
+import { MascotBig } from '../ui/Mascot';
 import { PlateDrop } from '../ui/PlateDrop';
 import type { Pantry } from '../state/usePantry';
 
@@ -17,6 +18,14 @@ export function After({ v }: { v: Pantry }) {
       <p dir="auto" style={css('font-size:15px;line-height:1.5;margin:9px 0 0;color:#645c50;text-wrap:pretty')}>
         {v.t.afterSub} {v.t.afterOptional}
       </p>
+
+      {/* You just cooked something. The drawing came with "RECIPE COMPLETED!"
+          painted across a banner, and the banner was cut off it and thrown
+          away: this app speaks six languages and a picture cannot. The heading
+          above says it, in yours. */}
+      <div style={css('display:flex;justify-content:center;margin-top:6px')}>
+        <MascotBig pose="celebrate" jar={82} />
+      </div>
 
       {v.photoSkipped && (
         <Btn
