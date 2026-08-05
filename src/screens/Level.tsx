@@ -95,7 +95,7 @@ export function Level({ v }: { v: Pantry }) {
 
         <Btn
           onClick={v.levelNext}
-          css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:16.5px;font-weight:700;margin-top:12px"
+          css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:12px"
           hover="background:#b2622d"
         >
           {v.levelCta}

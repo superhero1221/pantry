@@ -64,6 +64,22 @@ export function Results({ v }: { v: Pantry }) {
         </div>
       </div>
 
+      {/* The verb, in the first viewport, directly under the price.
+          It used to sit below four nutrition tiles, a black savings panel and
+          two alternates — so somebody who had already decided had to scroll
+          past the app's justification for a decision they had made. Price wins
+          the eye, which is right; it should not also win the hand. */}
+      <div style={css('margin:16px 22px 0')}>
+        <Btn
+          onClick={v.toShop}
+          css="width:100%;height:58px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+          hover="background:#b2622d"
+        >
+          {v.t.shopTitle}
+          <ChevronRight size={21} stroke="#fff" />
+        </Btn>
+      </div>
+
       <div style={css('display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 22px 0')}>
         {v.macros.map((m) => (
           <div key={m.key} style={css(`padding:13px 6px;border-radius:22px;background:${m.bg};text-align:center`)}>
@@ -97,7 +113,7 @@ export function Results({ v }: { v: Pantry }) {
               <span style={css('flex:none;width:70px;text-align:end;font-size:12.5px;color:#645c50')}>{n.amount}</span>
             </div>
           ))}
-          <p dir="auto" style={css('margin:10px 0 0;font-size:12px;line-height:1.5;color:#82796a')}>
+          <p dir="auto" style={css('margin:10px 0 0;font-size:12px;line-height:1.5;color:#645c50')}>
             {v.u.barsNote}
           </p>
         </div>
@@ -133,22 +149,11 @@ export function Results({ v }: { v: Pantry }) {
       {v.timeOverNote && (
         <p
           dir="auto"
-          style={css('margin:9px 22px 0;font-size:12.5px;line-height:1.5;color:#82796a;text-wrap:pretty')}
+          style={css('margin:9px 22px 0;font-size:12.5px;line-height:1.5;color:#645c50;text-wrap:pretty')}
         >
           {v.timeOverNote}
         </p>
       )}
-
-      <div style={css('margin:20px 22px 0')}>
-        <Btn
-          onClick={v.toShop}
-          css="width:100%;height:60px;border-radius:999px;background:#c67139;color:#fff;font-size:17.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
-          hover="background:#b2622d"
-        >
-          {v.t.resCook}
-          <ChevronRight size={21} stroke="#fff" />
-        </Btn>
-      </div>
 
       <div style={css('margin:26px 22px 0')}>
         <Kicker>{v.twoOthersLabel}</Kicker>
@@ -169,7 +174,7 @@ export function Results({ v }: { v: Pantry }) {
                 <span style={css("display:block;font-family:'Caprasimo',serif;font-size:19px;color:#8c491a")}>
                   {a.price}
                 </span>
-                <span style={css('display:block;font-size:11px;color:#82796a;margin-top:2px')}>
+                <span style={css('display:block;font-size:11px;color:#645c50;margin-top:2px')}>
                   {v.t.resServing}
                 </span>
               </span>

@@ -48,14 +48,18 @@ export const Dots = ({
 /** The small uppercase section label used across every screen. */
 export const Kicker = ({
   children,
-  color = '#82796a',
+  color = '#645c50',
   style,
+  id,
 }: {
   children: ReactNode;
   color?: string;
   style?: React.CSSProperties;
+  /** So a chip row can point aria-labelledby at its own heading. */
+  id?: string;
 }) => (
   <div
+    id={id}
     style={{
       fontSize: 11.5,
       fontWeight: 700,

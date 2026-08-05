@@ -37,6 +37,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'Could not reach the sign-in service — usually that is no signal. Everything else carries on working on this device.',
 
+    /* ── Tonight, answered ── */
+    /* The home screen opens on a dish rather than on a form. These are
+       the words around it: what it is offering, how to take it, how to
+       decline it, and how to say all that to a screen reader when the
+       name changes in place. */
+    tonightId: 'Tonight, I\'d cook',
+    cookThis: 'Cook this',
+    another: 'Show me another',
+    refine: 'Something else in mind?',
+    nowShowing: 'Now showing: {d}',
+
     /* ── The one question ── */
     /* Lifted from each language's own tierSkillSub with the sentence about
        dragging cut off the front, so these are real translations rather
@@ -261,6 +272,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'No he podido conectar con el servicio de acceso; casi siempre es falta de señal. Todo lo demás sigue funcionando en este dispositivo.',
 
+    /* ── Tonight, answered ── */
+    /* The home screen opens on a dish rather than on a form. These are
+       the words around it: what it is offering, how to take it, how to
+       decline it, and how to say all that to a screen reader when the
+       name changes in place. */
+    tonightId: 'Esta noche cocinaría',
+    cookThis: 'Cocinar esto',
+    another: 'Enséñame otra',
+    refine: '¿Tienes otra cosa en mente?',
+    nowShowing: 'Ahora se muestra: {d}',
+
     /* ── The one question ── */
     /* Lifted from each language's own tierSkillSub with the sentence about
        dragging cut off the front, so these are real translations rather
@@ -474,6 +496,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'Sur cet appareil uniquement',
     cloudUnreachable:
       'Impossible de joindre le service de connexion — le plus souvent, c’est le réseau. Tout le reste continue de fonctionner sur cet appareil.',
+
+    /* ── Tonight, answered ── */
+    /* The home screen opens on a dish rather than on a form. These are
+       the words around it: what it is offering, how to take it, how to
+       decline it, and how to say all that to a screen reader when the
+       name changes in place. */
+    tonightId: 'Ce soir, je cuisinerais',
+    cookThis: 'Cuisiner ça',
+    another: 'Montrez-m’en un autre',
+    refine: 'Une autre idée en tête ?',
+    nowShowing: 'À l’écran maintenant : {d}',
 
     /* ── The one question ── */
     /* Lifted from each language's own tierSkillSub with the sentence about
@@ -690,6 +723,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'Nie udało się połączyć z usługą logowania — zwykle to brak zasięgu. Cała reszta działa dalej na tym urządzeniu.',
 
+    /* ── Tonight, answered ── */
+    /* The home screen opens on a dish rather than on a form. These are
+       the words around it: what it is offering, how to take it, how to
+       decline it, and how to say all that to a screen reader when the
+       name changes in place. */
+    tonightId: 'Dziś ugotowałbym',
+    cookThis: 'Ugotuj to',
+    another: 'Pokaż inne',
+    refine: 'Masz coś innego na myśli?',
+    nowShowing: 'Teraz pokazuję: {d}',
+
     /* ── The one question ── */
     /* Lifted from each language's own tierSkillSub with the sentence about
        dragging cut off the front, so these are real translations rather
@@ -903,6 +947,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     cloudUnreachable:
       'سائن اِن سروس تک رسائی نہیں ہو سکی — عام طور پر سگنل نہ ہونے کی وجہ سے۔ باقی سب کچھ اسی آلے پر چلتا رہے گا۔',
 
+    /* ── Tonight, answered ── */
+    /* The home screen opens on a dish rather than on a form. These are
+       the words around it: what it is offering, how to take it, how to
+       decline it, and how to say all that to a screen reader when the
+       name changes in place. */
+    tonightId: 'آج رات میں یہ پکاتا',
+    cookThis: 'یہی پکائیں',
+    another: 'کوئی اور دکھائیں',
+    refine: 'کچھ اور ذہن میں ہے؟',
+    nowShowing: 'اب دکھایا جا رہا ہے: {d}',
+
     /* ── The one question ── */
     /* Lifted from each language's own tierSkillSub with the sentence about
        dragging cut off the front, so these are real translations rather
@@ -1112,6 +1167,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'على هذا الجهاز فقط',
     cloudUnreachable:
       'تعذّر الوصول إلى خدمة تسجيل الدخول — غالباً بسبب انقطاع الشبكة. كل شيء آخر يواصل العمل على هذا الجهاز.',
+
+    /* ── Tonight, answered ── */
+    /* The home screen opens on a dish rather than on a form. These are
+       the words around it: what it is offering, how to take it, how to
+       decline it, and how to say all that to a screen reader when the
+       name changes in place. */
+    tonightId: 'الليلة كنت سأطبخ',
+    cookThis: 'اطبخ هذا',
+    another: 'أرني طبقاً آخر',
+    refine: 'في بالك شيء آخر؟',
+    nowShowing: 'يُعرض الآن: {d}',
 
     /* ── The one question ── */
     /* Lifted from each language's own tierSkillSub with the sentence about

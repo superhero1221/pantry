@@ -109,7 +109,7 @@ export class Boundary extends Component<Props, State> {
         </Btn>
 
         <div style={css('margin-top:20px;padding:14px 16px;border-radius:22px;background:#f9f4ed')}>
-          <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#82796a')}>
+          <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#645c50')}>
             {x('crashWhat')}
           </div>
           {/* One line, in the direction the runtime wrote it, wrapping rather

@@ -54,7 +54,7 @@ export function Kitchen({ v }: { v: Pantry }) {
             </span>
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:14.5px;font-weight:700')}>{p.name}</span>
-              <span style={css('display:block;font-size:12px;color:#82796a;margin-top:2px')}>{p.amount}</span>
+              <span style={css('display:block;font-size:12px;color:#645c50;margin-top:2px')}>{p.amount}</span>
             </span>
             <Btn
               onClick={p.use}

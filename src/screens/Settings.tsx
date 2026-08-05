@@ -63,7 +63,7 @@ export function Settings({ v }: { v: Pantry }) {
               </Btn>
             ))}
           </div>
-          <p dir="auto" style={css('font-size:12.5px;line-height:1.55;color:#82796a;margin:11px 2px 0;text-wrap:pretty')}>
+          <p dir="auto" style={css('font-size:12.5px;line-height:1.55;color:#645c50;margin:11px 2px 0;text-wrap:pretty')}>
             {v.u.langNote}
           </p>
         </>
@@ -107,7 +107,7 @@ export function Settings({ v }: { v: Pantry }) {
           >
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:14.5px;font-weight:700')}>{t.label}</span>
-              <span style={css('display:block;font-size:12.5px;color:#82796a;margin-top:3px')}>{t.sub}</span>
+              <span style={css('display:block;font-size:12.5px;color:#645c50;margin-top:3px')}>{t.sub}</span>
             </span>
             <span
               style={css(`flex:none;width:50px;height:30px;border-radius:999px;background:${t.trackBg};position:relative;transition:background .2s`)}
@@ -135,7 +135,7 @@ export function Settings({ v }: { v: Pantry }) {
           >
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:14px;font-weight:700;color:#201e1d')}>{s.name}</span>
-              <span style={css('display:block;font-size:12px;color:#82796a;margin-top:3px')}>{s.use}</span>
+              <span style={css('display:block;font-size:12px;color:#645c50;margin-top:3px')}>{s.use}</span>
             </span>
             <span style={css('flex:none;display:flex;align-items:center;gap:6px')}>
               {s.note && (
@@ -190,7 +190,7 @@ export function Settings({ v }: { v: Pantry }) {
         </div>
       </div>
 
-      <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#82796a;margin:12px 2px 0;text-wrap:pretty')}>
+      <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#645c50;margin:12px 2px 0;text-wrap:pretty')}>
         {v.u.picNote}
       </p>
 
@@ -208,7 +208,7 @@ export function Settings({ v }: { v: Pantry }) {
         <Download size={22} stroke="#645c50" style={{ flex: 'none' }} />
         <span style={css('flex:1;min-width:0')}>
           <span style={css('display:block;font-size:15px;font-weight:700')}>{v.xt('dataExport')}</span>
-          <span dir="auto" style={css('display:block;font-size:12.5px;line-height:1.45;color:#82796a;margin-top:3px;text-wrap:pretty')}>
+          <span dir="auto" style={css('display:block;font-size:12.5px;line-height:1.45;color:#645c50;margin-top:3px;text-wrap:pretty')}>
             {v.xt('dataExportSub')}
           </span>
         </span>
@@ -229,13 +229,13 @@ export function Settings({ v }: { v: Pantry }) {
         <Upload size={22} stroke="#645c50" style={{ flex: 'none' }} />
         <span style={css('flex:1;min-width:0')}>
           <span style={css('display:block;font-size:15px;font-weight:700')}>{v.xt('dataImport')}</span>
-          <span dir="auto" style={css('display:block;font-size:12.5px;line-height:1.45;color:#82796a;margin-top:3px;text-wrap:pretty')}>
+          <span dir="auto" style={css('display:block;font-size:12.5px;line-height:1.45;color:#645c50;margin-top:3px;text-wrap:pretty')}>
             {v.xt('dataImportSub')}
           </span>
         </span>
       </label>
       {v.importCloudNote && (
-        <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#82796a;margin:9px 2px 0;text-wrap:pretty')}>
+        <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#645c50;margin:9px 2px 0;text-wrap:pretty')}>
           {v.importCloudNote}
         </p>
       )}
@@ -255,7 +255,7 @@ export function Settings({ v }: { v: Pantry }) {
               <span dir="auto" style={css('display:block;font-size:14px;font-weight:700;color:#201e1d')}>
                 {l.name}
               </span>
-              <span dir="auto" style={css('display:block;font-size:12px;color:#82796a;margin-top:3px')}>
+              <span dir="auto" style={css('display:block;font-size:12px;color:#645c50;margin-top:3px')}>
                 {l.sub}
               </span>
             </span>

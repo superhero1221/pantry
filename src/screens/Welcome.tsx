@@ -56,7 +56,7 @@ export function Welcome({ v }: { v: Pantry }) {
         </div>
         <Btn
           onClick={v.start}
-          css="width:100%;height:58px;border-radius:999px;background:#c67139;color:#fff;font-size:17.5px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+          css="width:100%;height:58px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16)"
           hover="background:#b2622d"
         >
           {v.u.setMe}

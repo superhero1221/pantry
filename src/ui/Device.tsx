@@ -39,7 +39,7 @@ export function Device({ v }: { v: Pantry }) {
             </Btn>
           )}
           {pwa.iosOnly && (
-            <p dir="auto" style={css('margin:11px 0 0;font-size:12.5px;line-height:1.5;color:#82796a;font-weight:600')}>
+            <p dir="auto" style={css('margin:11px 0 0;font-size:12.5px;line-height:1.5;color:#645c50;font-weight:600')}>
               {x('installIos')}
             </p>
           )}
@@ -55,7 +55,7 @@ export function Device({ v }: { v: Pantry }) {
               <span>{x('notifyGranted')}</span>
             </div>
           ) : pwa.permission === 'denied' ? (
-            <div dir="auto" style={css(NOTE + ';background:#f9f4ed;color:#82796a')}>
+            <div dir="auto" style={css(NOTE + ';background:#f9f4ed;color:#645c50')}>
               {x('notifyDenied')}
             </div>
           ) : (

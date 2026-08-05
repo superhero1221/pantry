@@ -119,6 +119,9 @@ export interface PantryState {
   located: boolean;
   query: string;
   budget: number;
+  /** How many times you have asked for a different dinner this visit. */
+  reroll: number;
+  refineOpen: boolean;
   budgetOtherOpen: boolean;
   budgetDraft: string;
   maxTime: number;
@@ -200,6 +203,8 @@ const INITIAL: PantryState = {
   located: false,
   query: '',
   budget: 6,
+  reroll: 0,
+  refineOpen: false,
   budgetOtherOpen: false,
   budgetDraft: '',
   maxTime: 60,
@@ -956,6 +961,8 @@ export function usePantry() {
     // typed in local money is stored as a different amount than it read.
     setState({
       budget: v / (c.idx * fx),
+      // A new budget is a new question, so the offer starts again from the top.
+      reroll: 0,
       budgetOtherOpen: false,
       budgetDraft: '',
       budgetErr: false,
@@ -1434,6 +1441,15 @@ export function usePantry() {
   const screen = S.screen;
   const cityNow = S.liveCity || c.city;
 
+  /** What the app would cook you tonight if you said nothing at all.
+   *
+   *  The top of the ranked list, walked down one place each time you ask for
+   *  something else. Computed here rather than on navigation because the Home
+   *  screen now opens on it: there is no "submit" any more, so the answer has
+   *  to exist before anybody presses anything. Wraps, so it cannot dead-end. */
+  const pool = ranked();
+  const offer: Recipe = pool.length ? pool[S.reroll % pool.length] : recipe;
+
   const buy = toBuy(recipe);
   const whole = allIn(recipe);
   const saved = whole - buy;
@@ -1704,7 +1720,20 @@ export function usePantry() {
        the corner is exactly where the Next button is. */
     mascot:
       S.toggles.mascot !== false &&
-      screen !== 'after' &&
+      /* Suppressed outright on the three screens where a character is in the
+         way rather than company.
+
+         Cook is the important one. You are looking up from a hot pan trying to
+         find your place again, the screen shows one step because that is the
+         whole point of it, and something bobbing in the corner is exactly the
+         movement-that-means-nothing this app wrote its own rules to prevent.
+
+         Shop is a column of money. A cartoon standing next to the numbers
+         competes with the one thing the screen exists to make legible.
+
+         After already shows the big one, and two of the same character on one
+         screen is one too many — as does Goal, once you have answered it. */
+      ['cook', 'shop', 'after'].indexOf(screen) < 0 &&
       !(screen === 'goal' && !!S.profile.goal),
 
     /* Which pose. Not decoration for its own sake: the character is the only
@@ -2014,7 +2043,44 @@ export function usePantry() {
       pick: () => setState({ maxTime: t.m }),
     })),
     searchCta: S.query ? hs('findMe', 'Find me {q}', { q: S.query.toLowerCase() }) : T.homeGo,
-    search: () => go('results', { pickId: ranked()[0].id, showMicro: false }),
+    search: () => go('results', { pickId: ranked()[0].id, showMicro: false, reroll: 0 }),
+
+    /* ── Tonight, answered ──────────────────────────────────────────────────
+       The screen used to open as a form: what do you fancy, how much, how long,
+       then a button. Four decisions on the one screen whose entire job is to
+       end decision paralysis — which is the fridge-staring loop rebuilt inside
+       the app.
+
+       It opens on an answer now. Everything needed to pick is already known —
+       diets, cupboard, goal, budget, the time you last said — so the app
+       commits first and the first thing you do is REACT rather than GENERATE.
+       That distinction is the whole point: inventing a desire is expensive when
+       you are depleted, reacting to an offer is cheap. The craving box, the
+       money and the time have not gone anywhere; they moved below the answer,
+       behind one tap, for the minority who arrive knowing what they want. */
+    tonightDish: dish(offer),
+    tonightCuisine: cuisineWord(offer.cuisine),
+    tonightPic: offer.pic,
+    tonightTotal: fmt(toBuy(offer)),
+    tonightPer: fmt(toBuy(offer) / offer.servings),
+    tonightPerSub: word('aServing', 'a serving'),
+    tonightSub:
+      word('toBuyFor', 'to buy, for') + ' ' + offer.servings + ' ' + word('servings', 'servings'),
+    tonightMins: offer.total + ' ' + word('minutes', 'min'),
+    tonightOpen: () => go('results', { pickId: offer.id, showMicro: false }),
+    /* Walks down the ranked list rather than shuffling, so pressing it four
+       times shows four different dinners instead of the same one twice. It
+       wraps, so it can never dead-end. */
+    tonightAgain: () => setState({ reroll: S.reroll + 1 }),
+    /* Announced rather than shown: the dish name changes in place, and a screen
+       reader would otherwise be told nothing at all. */
+    tonightSaid: fill(xt(lg, 'nowShowing'), { d: dish(offer) }),
+    refineOpen: S.refineOpen,
+    toggleRefine: () => setState({ refineOpen: !S.refineOpen }),
+    refineLabel: xt(lg, 'refine'),
+    tonightId: xt(lg, 'tonightId'),
+    tonightCta: xt(lg, 'cookThis'),
+    tonightAgainCta: xt(lg, 'another'),
     decideForMe: () => {
       const pool = ranked();
       // Nothing has been asked for by name here, so the budget is a line: the

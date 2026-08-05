@@ -58,7 +58,7 @@ export function Passport({ v }: { v: Pantry }) {
               <span style={css("display:block;font-family:'Caprasimo',serif;font-size:18px;color:#8c491a")}>
                 {p.price}
               </span>
-              <span style={css('display:block;font-size:10.5px;color:#82796a;margin-top:2px')}>
+              <span style={css('display:block;font-size:10.5px;color:#645c50;margin-top:2px')}>
                 {v.t.resServing}
               </span>
             </span>

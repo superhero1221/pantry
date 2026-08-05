@@ -74,7 +74,7 @@ export function PlateDrop({
               <circle cx="12" cy="12" r="3.4" />
             </svg>
           </span>
-          <span dir="auto" style={css('font-size:13.5px;font-weight:600;color:#82796a;line-height:1.45;text-wrap:pretty')}>
+          <span dir="auto" style={css('font-size:13.5px;font-weight:600;color:#645c50;line-height:1.45;text-wrap:pretty')}>
             {placeholder}
           </span>
         </div>

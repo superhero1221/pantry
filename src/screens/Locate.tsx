@@ -63,7 +63,7 @@ export function Locate({ v }: { v: Pantry }) {
               </p>
               <Btn
                 onClick={v.useLocation}
-                css="width:100%;height:50px;border-radius:999px;background:#c67139;color:#fff;font-size:15.5px;font-weight:700;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:9px"
+                css="width:100%;height:50px;border-radius:999px;background:#8c491a;color:#fff;font-size:15.5px;font-weight:700;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:9px"
                 hover="background:#b2622d"
               >
                 <Pin size={19} stroke="#fff" />
@@ -130,7 +130,7 @@ export function Locate({ v }: { v: Pantry }) {
 
           <Btn
             onClick={v.finishOnboarding}
-            css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:16.5px;font-weight:700;margin-top:20px"
+            css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:20px"
             hover="background:#b2622d"
           >
             {v.u.thatsMe}

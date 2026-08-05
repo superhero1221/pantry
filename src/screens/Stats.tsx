@@ -79,7 +79,7 @@ export function Stats({ v }: { v: Pantry }) {
             <DishPic src={d.pic} size={44} radius={15} style={{ background: '#ebddc5' }} />
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:14.5px;font-weight:700;line-height:1.25')}>{d.name}</span>
-              <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>{d.meta}</span>
+              <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>{d.meta}</span>
               <span style={css('display:block;height:5px;border-radius:999px;background:#eee7db;margin-top:7px;overflow:hidden')}>
                 <span style={css(`display:block;height:100%;width:${d.barW};border-radius:999px;background:#d67f48`)} />
               </span>
@@ -120,7 +120,7 @@ export function Stats({ v }: { v: Pantry }) {
               <Btn
                 key={o.key}
                 onClick={o.pick}
-                css="padding:12px 17px;border-radius:999px;background:#c67139;color:#fff;font-size:14px;font-weight:700"
+                css="padding:12px 17px;border-radius:999px;background:#8c491a;color:#fff;font-size:14px;font-weight:700"
                 hover="background:#b2622d"
               >
                 {o.label}

@@ -46,7 +46,7 @@ export function Shop({ v }: { v: Pantry }) {
               <span style={css(`display:block;font-family:'Caprasimo',serif;font-size:22px;color:${s.priceFg}`)}>
                 {s.price}
               </span>
-              <span style={css('display:block;font-size:11px;color:#82796a;margin-top:2px')}>{s.delta}</span>
+              <span style={css('display:block;font-size:11px;color:#645c50;margin-top:2px')}>{s.delta}</span>
             </span>
           </Btn>
         ))}
@@ -58,7 +58,7 @@ export function Shop({ v }: { v: Pantry }) {
             line and the total with them, with a seven-pixel dot changing
             colour as the only tell. This slot says it is looking while it is
             looking, and goes back to the count when it is done. */}
-        <div aria-live="polite" style={css('font-size:12.5px;color:#82796a')}>
+        <div aria-live="polite" style={css('font-size:12.5px;color:#645c50')}>
           {v.pricesBusy ? v.xt('pricesChecking') : v.listSummary}
         </div>
       </div>
@@ -95,7 +95,7 @@ export function Shop({ v }: { v: Pantry }) {
                 >
                   {i.name}
                 </span>
-                <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
+                <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
                   {i.community
                     ? `${i.community.reports} ${v.xt(i.community.openData ? 'priceOpen' : 'priceCommunity')} · ${i.community.newest}`
                     : i.sub}
@@ -128,7 +128,7 @@ export function Shop({ v }: { v: Pantry }) {
         <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:15px 0 13px')}>
           <span style={css('flex:1;min-width:0')}>
             <span style={css('display:block;font-size:16px;font-weight:700')}>{v.t.shopTotal}</span>
-            <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
+            <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
               {v.xt('totalMeans')}
             </span>
           </span>
@@ -156,7 +156,7 @@ export function Shop({ v }: { v: Pantry }) {
             </div>
           ))}
         </div>
-        <p dir="auto" style={css('margin:11px 0 0;font-size:12px;line-height:1.5;color:#82796a;text-wrap:pretty')}>
+        <p dir="auto" style={css('margin:11px 0 0;font-size:12px;line-height:1.5;color:#645c50;text-wrap:pretty')}>
           {v.honestyLine}
         </p>
         {/* The store list is OpenStreetMap and the medians are Open Prices.
@@ -184,7 +184,7 @@ export function Shop({ v }: { v: Pantry }) {
           </div>
           <div style={css('display:flex;gap:9px;margin-top:12px')}>
             <label style={css('flex:1;min-width:0')}>
-              <span style={css('display:block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#82796a;margin-bottom:6px')}>
+              <span style={css('display:block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#645c50;margin-bottom:6px')}>
                 {v.xt('priceWhat')}
               </span>
               <span style={css('display:flex;align-items:center;gap:6px;padding-inline:14px 12px;height:50px;border-radius:999px;background:#fff')}>
@@ -201,7 +201,7 @@ export function Shop({ v }: { v: Pantry }) {
               </span>
             </label>
             <label style={css('flex:1;min-width:0')}>
-              <span style={css('display:block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#82796a;margin-bottom:6px')}>
+              <span style={css('display:block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#645c50;margin-bottom:6px')}>
                 {v.xt('pricePack')}
               </span>
               <span style={css('display:flex;align-items:center;gap:6px;padding-inline:14px 12px;height:50px;border-radius:999px;background:#fff')}>
@@ -212,7 +212,7 @@ export function Shop({ v }: { v: Pantry }) {
                   placeholder="500"
                   style={css('width:100%;min-width:0;border:0;outline:none;background:none;font-size:16px;font-weight:700')}
                 />
-                <span style={css('font-size:13px;font-weight:700;color:#82796a')}>g</span>
+                <span style={css('font-size:13px;font-weight:700;color:#645c50')}>g</span>
               </span>
             </label>
           </div>
@@ -221,7 +221,7 @@ export function Shop({ v }: { v: Pantry }) {
               onClick={v.submitReport}
               disabled={v.reportBusy}
               css={
-                'flex:1;height:48px;border-radius:999px;background:#c67139;color:#fff;font-size:14.5px;font-weight:700' +
+                'flex:1;height:48px;border-radius:999px;background:#8c491a;color:#fff;font-size:14.5px;font-weight:700' +
                 (v.reportBusy ? ';opacity:.62' : '')
               }
               hover="background:#b2622d"
@@ -241,7 +241,7 @@ export function Shop({ v }: { v: Pantry }) {
 
       <Btn
         onClick={v.toCook}
-        css="width:100%;height:60px;border-radius:999px;background:#c67139;color:#fff;font-size:17.5px;font-weight:700;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+        css="width:100%;height:60px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:18px;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
         hover="background:#b2622d"
       >
         {v.t.shopGo}

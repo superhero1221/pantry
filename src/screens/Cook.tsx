@@ -141,7 +141,7 @@ export function Cook({ v }: { v: Pantry }) {
           </Btn>
           <Btn
             onClick={v.nextStep}
-            css="flex:1;height:60px;border-radius:999px;background:#c67139;color:#fff;font-size:17.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+            css="flex:1;height:60px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
             hover="background:#b2622d"
           >
             {v.nextCta}

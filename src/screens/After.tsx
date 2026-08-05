@@ -34,7 +34,7 @@ export function After({ v }: { v: Pantry }) {
           hover="background:#eee7db"
         >
           <CameraOff size={19} stroke="#a19786" style={{ flex: 'none' }} />
-          <span style={css('flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#82796a')}>
+          <span style={css('flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#645c50')}>
             {v.u.noPhoto}
           </span>
         </Btn>
@@ -161,7 +161,7 @@ export function After({ v }: { v: Pantry }) {
 
           <Btn
             onClick={v.finishMeal}
-            css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:16.5px;font-weight:700;margin-top:16px"
+            css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:16px"
             hover="background:#b2622d"
           >
             {v.u.doneThanks}

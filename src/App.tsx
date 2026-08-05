@@ -1,26 +1,38 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { css } from './lib/css';
 import { usePantry } from './state/usePantry';
 import { Boundary } from './ui/Boundary';
 import { Mascot } from './ui/Mascot';
 import { Nav } from './ui/Nav';
-import { After } from './screens/After';
-import { Browse } from './screens/Browse';
-import { Cook } from './screens/Cook';
-import { Diet } from './screens/Diet';
-import { Goal } from './screens/Goal';
 import { Home } from './screens/Home';
-import { Kitchen } from './screens/Kitchen';
-import { Legal } from './screens/Legal';
-import { Locate } from './screens/Locate';
-import { Passport } from './screens/Passport';
-import { Plan } from './screens/Plan';
-import { Results } from './screens/Results';
-import { Settings } from './screens/Settings';
-import { Shop } from './screens/Shop';
-import { Stats } from './screens/Stats';
-import { Level } from './screens/Level';
 import { Welcome } from './screens/Welcome';
+
+/* Two screens ship in the first chunk, because between them they are every
+   possible first paint: Welcome if you have never been here, Tonight if you
+   have. The other fifteen arrive when you walk to them.
+
+   This is the whole reason screens were built to hold no state — a screen is a
+   pure function of the one object the hook returns, so it can be code-split
+   without a single other line changing. The service worker keeps each one after
+   its first visit, so the cost is paid once and never offline.
+
+   The dynamic imports are written out longhand rather than generated from a
+   map, because a bundler can only split what it can see statically. */
+const After = lazy(() => import('./screens/After').then((m) => ({ default: m.After })));
+const Browse = lazy(() => import('./screens/Browse').then((m) => ({ default: m.Browse })));
+const Cook = lazy(() => import('./screens/Cook').then((m) => ({ default: m.Cook })));
+const Diet = lazy(() => import('./screens/Diet').then((m) => ({ default: m.Diet })));
+const Goal = lazy(() => import('./screens/Goal').then((m) => ({ default: m.Goal })));
+const Kitchen = lazy(() => import('./screens/Kitchen').then((m) => ({ default: m.Kitchen })));
+const Legal = lazy(() => import('./screens/Legal').then((m) => ({ default: m.Legal })));
+const Level = lazy(() => import('./screens/Level').then((m) => ({ default: m.Level })));
+const Locate = lazy(() => import('./screens/Locate').then((m) => ({ default: m.Locate })));
+const Passport = lazy(() => import('./screens/Passport').then((m) => ({ default: m.Passport })));
+const Plan = lazy(() => import('./screens/Plan').then((m) => ({ default: m.Plan })));
+const Results = lazy(() => import('./screens/Results').then((m) => ({ default: m.Results })));
+const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
+const Shop = lazy(() => import('./screens/Shop').then((m) => ({ default: m.Shop })));
+const Stats = lazy(() => import('./screens/Stats').then((m) => ({ default: m.Stats })));
 
 export default function App() {
   const v = usePantry();
@@ -64,6 +76,12 @@ export default function App() {
               adds no element between .pg-main and the screen, so the desktop
               measure rule still lands. */}
           <Boundary lang={v.lang} dir={v.dir} resetKey={v.screen + '/' + v.pickId}>
+            {/* Nothing rather than a spinner. A screen arrives in a few
+                milliseconds from the same origin and instantly once the worker
+                has it; a flash of loading furniture would be more disruptive
+                than the wait it describes, on an app built for people who lose
+                their thread. */}
+            <Suspense fallback={null}>
             {v.isWelcome && <Welcome v={v} />}
           {v.isGoal && <Goal v={v} />}
           {v.isTier && <Level v={v} />}
@@ -81,6 +99,7 @@ export default function App() {
           {v.isPlan && <Plan v={v} />}
             {v.isSettings && <Settings v={v} />}
           {v.isLegal && <Legal v={v} />}
+            </Suspense>
           </Boundary>
         </main>
 

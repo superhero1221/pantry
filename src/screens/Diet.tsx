@@ -40,7 +40,7 @@ export function Diet({ v }: { v: Pantry }) {
       <div style={css('margin-top:auto;padding-top:20px')}>
         <Btn
           onClick={v.toLocate}
-          css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:16.5px;font-weight:700"
+          css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700"
           hover="background:#b2622d"
         >
           {v.t.tierNext}

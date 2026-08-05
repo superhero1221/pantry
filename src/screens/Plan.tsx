@@ -54,7 +54,7 @@ export function Plan({ v }: { v: Pantry }) {
 
       <Btn
         onClick={v.buildPlan}
-        css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:16.5px;font-weight:700;margin-top:20px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+        css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:20px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
         hover="background:#b2622d"
       >
         {v.planEmpty ? x('planBuild') : x('planRebuild')}
@@ -103,7 +103,7 @@ export function Plan({ v }: { v: Pantry }) {
                       <span style={css('display:block;font-size:14.5px;font-weight:700;line-height:1.25')}>
                         {cell.name}
                       </span>
-                      <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
+                      <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
                         {cell.meta}
                       </span>
                     </span>
@@ -141,7 +141,7 @@ export function Plan({ v }: { v: Pantry }) {
                   >
                     {l.name}
                   </span>
-                  <span style={css('display:block;font-size:11.5px;color:#82796a;margin-top:3px')}>
+                  <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
                     {l.sub}
                   </span>
                 </span>
@@ -171,7 +171,7 @@ export function Plan({ v }: { v: Pantry }) {
           ) : (
             <p
               dir="auto"
-              style={css('margin:16px 2px 0;font-size:12.5px;line-height:1.55;color:#82796a;text-wrap:pretty')}
+              style={css('margin:16px 2px 0;font-size:12.5px;line-height:1.55;color:#645c50;text-wrap:pretty')}
             >
               {x('planNeedsAccount')}
             </p>

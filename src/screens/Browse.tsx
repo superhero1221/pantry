@@ -37,7 +37,7 @@ export function Browse({ v }: { v: Pantry }) {
             <DishPic src={x.pic} size={74} radius={22} />
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:15.5px;font-weight:700;line-height:1.25')}>{x.name}</span>
-              <span style={css('display:block;font-size:12.5px;color:#82796a;margin-top:3px')}>{x.cuisine}</span>
+              <span style={css('display:block;font-size:12.5px;color:#645c50;margin-top:3px')}>{x.cuisine}</span>
               <span
                 style={css(
                   `display:inline-block;margin-top:8px;padding:4px 11px;border-radius:999px;background:${x.diffBg};color:${x.diffFg};font-size:11px;font-weight:700`,
@@ -50,7 +50,7 @@ export function Browse({ v }: { v: Pantry }) {
               <span style={css("display:block;font-family:'Caprasimo',serif;font-size:20px;color:#8c491a")}>
                 {x.per}
               </span>
-              <span style={css('display:block;font-size:10.5px;color:#82796a;margin-top:2px')}>
+              <span style={css('display:block;font-size:10.5px;color:#645c50;margin-top:2px')}>
                 {v.t.resServing}
               </span>
             </span>
