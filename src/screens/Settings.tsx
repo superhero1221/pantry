@@ -18,6 +18,26 @@ export function Settings({ v }: { v: Pantry }) {
 
       <Account v={v} />
 
+      {/* Stats stopped being a tab. It is a readout you land on rather than a
+          place you launch from — but it is also where the app tells you what
+          it has worked out about you and lets you delete any of it, so it goes
+          near the top of You rather than at the bottom with the small print. */}
+      <Btn
+        onClick={v.statsRow.go}
+        css="display:flex;gap:11px;align-items:center;padding:14px 16px;border-radius:24px;background:#f9f4ed;width:100%;text-align:start;margin-top:16px"
+        hover="background:#eee7db"
+      >
+        <span style={css('flex:1;min-width:0')}>
+          <span dir="auto" style={css('display:block;font-size:14px;font-weight:700;color:#201e1d')}>
+            {v.statsRow.name}
+          </span>
+          <span dir="auto" style={css('display:block;font-size:12px;color:#645c50;margin-top:3px')}>
+            {v.statsRow.sub}
+          </span>
+        </span>
+        <ChevronRight size={18} stroke="#a19786" style={{ flex: 'none' }} />
+      </Btn>
+
       <Kicker style={{ marginTop: 24 }}>{v.t.setDiet}</Kicker>
       <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
         {v.dietChips.map((d) => (

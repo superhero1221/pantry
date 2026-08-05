@@ -96,6 +96,61 @@ export function Home({ v }: { v: Pantry }) {
         {v.tonightAgainCta}
       </Btn>
 
+      {/* The one question the app ever asks unprompted, and only after six
+          cooks. It used to live on Stats, which is no longer a tab — and it is
+          not a readout anyway: the answer changes what gets offered here. It
+          renders nothing at all until there is something to ask. */}
+      {v.questions.map((q) => (
+        <div key={q.key} style={css('margin-top:22px;padding:20px;border-radius:30px;background:#fff2eb;animation:pgUp .3s ease-out both')}>
+          <div style={css('display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:#ffe1d0;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8c491a')}>
+            {v.patternLabel}
+          </div>
+          <div dir="auto" style={css('font-size:17px;font-weight:700;color:#643312;line-height:1.32;margin-top:11px;text-wrap:pretty')}>
+            {q.q}
+          </div>
+          <p dir="auto" style={css('margin:8px 0 0;font-size:14px;line-height:1.5;color:#8c491a;text-wrap:pretty')}>
+            {q.why}
+          </p>
+          <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:15px')}>
+            {q.opts.map((o) => (
+              <Btn
+                key={o.key}
+                onClick={o.pick}
+                css="padding:12px 17px;border-radius:999px;background:#8c491a;color:#fff;font-size:14px;font-weight:700"
+                hover="background:#b2622d"
+              >
+                {o.label}
+              </Btn>
+            ))}
+            <Btn
+              onClick={q.skip}
+              css="padding:12px 17px;border-radius:999px;background:#ffe1d0;color:#8c491a;font-size:14px;font-weight:700"
+              hover="background:#ffc6a5"
+            >
+              {v.t.notNow}
+            </Btn>
+          </div>
+        </div>
+      ))}
+
+      <Btn
+        onClick={v.goBrowse}
+        css="width:100%;height:46px;border-radius:999px;font-size:15px;font-weight:700;color:#8c491a;background:#fff2eb;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"
+        hover="background:#ffe1d0"
+      >
+        {v.t.homeBrowse}
+        <span style={css('font-size:12.5px;font-weight:600;opacity:.75')}>{v.browseCount}</span>
+      </Btn>
+
+      <Btn
+        onClick={v.goPlan}
+        css="width:100%;height:46px;border-radius:999px;font-size:15px;font-weight:700;color:#3d472b;background:#e1eecc;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px"
+        hover="background:#ccdbb2"
+      >
+        {v.xt('planTitle')}
+        <span style={css('font-size:12.5px;font-weight:600;opacity:.8')}>{v.planDays}</span>
+      </Btn>
+
       {/* ── The refinement, for anyone who arrived knowing ─────────────────
           A real <details>, so it needs no state of its own and the keyboard
           works for free. Everything the old form asked for lives in here. */}
@@ -195,23 +250,7 @@ export function Home({ v }: { v: Pantry }) {
         </div>
       </details>
 
-      <Btn
-        onClick={v.goBrowse}
-        css="width:100%;height:46px;border-radius:999px;font-size:15px;font-weight:700;color:#8c491a;background:#fff2eb;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"
-        hover="background:#ffe1d0"
-      >
-        {v.t.homeBrowse}
-        <span style={css('font-size:12.5px;font-weight:600;opacity:.75')}>{v.browseCount}</span>
-      </Btn>
 
-      <Btn
-        onClick={v.goPlan}
-        css="width:100%;height:46px;border-radius:999px;font-size:15px;font-weight:700;color:#3d472b;background:#e1eecc;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px"
-        hover="background:#ccdbb2"
-      >
-        {v.xt('planTitle')}
-        <span style={css('font-size:12.5px;font-weight:600;opacity:.8')}>{v.planDays}</span>
-      </Btn>
 
       <Btn
         onClick={v.goKitchen}

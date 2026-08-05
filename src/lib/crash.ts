@@ -70,8 +70,17 @@ let painted = false;
 function paint(message: string) {
   if (painted) return;
   const root = document.getElementById('root');
-  if (!root || root.childElementCount > 0) return;
+  if (!root) return;
+  // index.html ships a hardcoded English card inside #root, for the visitor
+  // whose bundle never arrived at all. React empties the container at its
+  // first commit — but until that commit the card is a child, and "has
+  // children" used to mean "React painted, do not take its screen". Which
+  // meant this function could never run in the one case it was written for:
+  // nothing loaded, nothing painted, #fallback still standing.
+  const fallback = root.querySelector('#fallback');
+  if (root.childElementCount > (fallback ? 1 : 0)) return;
   painted = true;
+  fallback?.remove();
 
   const lang = langOf();
   const dir = dirOf(lang);
@@ -145,40 +154,51 @@ function paint(message: string) {
   root.appendChild(page);
 }
 
+/** One automatic reload per tab session, ever. Returns whether it fired. */
+function reloadOnce(): boolean {
+  // Yesterday's shell against today's chunks. One reload fixes it; a loop would
+  // be worse than the bug, so the flag is checked and set together and never
+  // cleared. No sessionStorage means no way to stop a loop — so do not start
+  // one.
+  let already = true;
+  try {
+    already = sessionStorage.getItem(RELOADED) === '1';
+    sessionStorage.setItem(RELOADED, '1');
+  } catch {
+    already = true;
+  }
+  if (already) return false;
+  window.location.reload();
+  return true;
+}
+
+/**
+ * A dynamic import that failed somewhere it was caught.
+ *
+ * The listeners below only ever see *unhandled* rejections, so a try/catch
+ * around an import buys you a page that works and quietly costs you the reload
+ * that would have fixed it. This is how a caller hands the failure back.
+ *
+ * Deliberately never paints: a language that did not arrive is a page in
+ * English, not a page that is gone.
+ */
+export function reportStale(raw: unknown): void {
+  const message = textOf(raw);
+  console.error('pantry: language pack did not load', message, raw);
+  if (STALE.test(message)) reloadOnce();
+}
+
 /** Install before anything renders — the net has to be up before the fall. */
 export function installCrashNet(): void {
   const handle = (raw: unknown) => {
     const message = textOf(raw);
     console.error('pantry: uncaught', message, raw);
-
-    if (STALE.test(message)) {
-      // Yesterday's shell against today's chunks. One reload fixes it; a loop
-      // would be worse than the bug, so the flag is checked and set together
-      // and never cleared. No sessionStorage means no way to stop a loop —
-      // so do not start one.
-      let already = true;
-      try {
-        already = sessionStorage.getItem(RELOADED) === '1';
-        sessionStorage.setItem(RELOADED, '1');
-      } catch {
-        already = true;
-      }
-      if (!already) {
-        window.location.reload();
-        return;
-      }
-    }
-
+    if (STALE.test(message) && reloadOnce()) return;
     // Anything else: if React painted, the screen is still standing and a
     // stray rejection has not earned the right to take it. If it never
     // painted, this is the difference between a crash page and a white one.
     paint(message);
   };
-
   window.addEventListener('error', (e: ErrorEvent) => handle(e.error || e.message));
   window.addEventListener('unhandledrejection', (e: PromiseRejectionEvent) => handle(e.reason));
 }
-
-/** Re-exported so the boundary can name the same key without importing the
- *  state layer that may be exactly what threw. */
-export { STORE_KEY };

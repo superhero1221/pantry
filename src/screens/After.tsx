@@ -1,7 +1,7 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { Kicker } from '../ui/bits';
-import { CameraOff, Flame } from '../ui/Icon';
+import { CameraOff, Flame, X } from '../ui/Icon';
 import { MascotBig } from '../ui/Mascot';
 import { PlateDrop } from '../ui/PlateDrop';
 import type { Pantry } from '../state/usePantry';
@@ -9,6 +9,20 @@ import type { Pantry } from '../state/usePantry';
 export function After({ v }: { v: Pantry }) {
   return (
     <div style={css('padding:14px 22px 26px')}>
+      {/* The way out. After is the end of the funnel, so this is an exit and
+          not a back — stepping into Cook from here is stepping backwards
+          through a meal you have already eaten. Until this existed, a reader
+          who did not want to answer the waste question had no control on the
+          screen at all: no chrome, no tab bar, and the only way forward sitting
+          inside the question. */}
+      <Btn
+        aria-label={v.t.navTonight}
+        onClick={v.goHome}
+        css="flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-inline-start:-6px;margin-bottom:6px"
+        hover="background:#eee7db"
+      >
+        <X size={19} stroke="#645c50" />
+      </Btn>
       <h1
         dir="auto"
         style={css("font-family:'Caprasimo',serif;font-weight:400;font-size:34px;line-height:1.04;margin:0;letter-spacing:-.4px")}

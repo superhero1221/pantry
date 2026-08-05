@@ -1,8 +1,27 @@
 import { readdirSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { COUNTRIES, DIETS, HISTORY, PASSPORT, RECIPES, SKILL_CARDS, SKILL_LEVELS, STORES_BY_COUNTRY } from './cookbook';
 import { ENFORCEABLE, meetsDiet } from '../lib/diets';
-import { EXTRA, orphaned, untranslated } from './extra-copy';
+import { CRASH } from './crash-copy';
+import { EXTRA } from './extra-copy';
+import { loadPack, packOf } from './lang-pack';
+import * as es from './lang/es';
+import * as fr from './lang/fr';
+import * as pl from './lang/pl';
+import * as ur from './lang/ur';
+import * as ar from './lang/ar';
+
+/**
+ * The five languages that are not in the main chunk, imported directly.
+ *
+ * Not through pack() or strings() or xt(): every one of those English-backs a
+ * missing language by design, so an assertion that goes through them compares
+ * English to English and passes whatever has gone missing. That is not
+ * theoretical — with all five deleted from the source, every test in this file
+ * passed and strings('ar').navTonight answered 'Tonight'. These read the
+ * files.
+ */
+const REST: Record<string, typeof es> = { es, fr, pl, ur, ar };
 import { LANGS, pack, strings } from './pantry-i18n';
 
 describe('the cookbook', () => {
@@ -82,6 +101,29 @@ describe('the cookbook', () => {
 });
 
 describe('translations', () => {
+  // The accessor-level tests below go through pack(), which cannot answer for a
+  // language it has not been handed. Fill the registry the way the app does,
+  // then check it actually filled — an empty registry would make every one of
+  // them pass while checking nothing at all.
+  beforeAll(async () => {
+    await Promise.all(LANGS.map((l) => loadPack(l.code)));
+    for (const code of Object.keys(REST)) {
+      expect(packOf(code), `${code} did not load`).toBeTruthy();
+    }
+  });
+
+  it('says the same thing in the crash copy as in the language it came from', () => {
+    // These five keys are deliberately in two places: crash-copy.ts, which is
+    // eager because the crash net cannot wait for a file to arrive, and the
+    // language itself. A correction applied to one and not the other is a
+    // crash page that disagrees with the app around it.
+    const keys = ['crashBody', 'crashReload', 'crashSave', 'crashTitle', 'crashWhat'];
+    for (const code of Object.keys(CRASH)) {
+      expect(Object.keys(CRASH[code]).sort(), code).toEqual(keys);
+      for (const k of keys) expect(CRASH[code][k], `${code}.${k}`).toBe(REST[code].extra[k]);
+    }
+  });
+
   it('keeps the level names 1-indexed and complete in every language', () => {
     // The onboarding question shows one of these on each of four buttons, and
     // Settings capitalises one on every render. A hole in the array used to be
@@ -111,15 +153,28 @@ describe('translations', () => {
     }
   });
 
-  it('covers every added string in all six languages', () => {
-    for (const l of LANGS) {
-      expect(untranslated(l.code), `${l.code} is missing keys`).toEqual([]);
-      expect(orphaned(l.code), `${l.code} has keys English does not`).toEqual([]);
+  it('ships every flat interface string in all six languages', () => {
+    // Nothing tested this until the languages moved into their own files. A
+    // key added to English and forgotten in Urdu renders the English word,
+    // silently, because every reader of this table falls back to it.
+    const en = Object.keys(strings('en')).sort();
+    for (const code of Object.keys(REST)) {
+      expect(Object.keys(REST[code].strings).sort(), code).toEqual(en);
     }
   });
 
-  it('ships a block for each language the picker offers', () => {
-    for (const l of LANGS) expect(Object.keys(EXTRA[l.code] ?? {}).length).toBeGreaterThan(0);
+  it('ships every design-pack section in all six languages', () => {
+    const en = Object.keys(pack('en')).sort();
+    for (const code of Object.keys(REST)) {
+      expect(Object.keys(REST[code].pack).sort(), code).toEqual(en);
+    }
+  });
+
+  it('covers every added string in all six languages', () => {
+    const en = Object.keys(EXTRA.en).sort();
+    for (const code of Object.keys(REST)) {
+      expect(Object.keys(REST[code].extra).sort(), code).toEqual(en);
+    }
   });
 
   it('keeps the design pack English-backed, so no key can render blank', () => {

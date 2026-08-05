@@ -27,6 +27,7 @@ Fifteen screens, all client-side:
 | Flow | Screens |
 | --- | --- |
 | Onboarding | Welcome → Goals → What can you already do? → Diet → Location |
+| Tabs | Tonight · Kitchen · Passport · You. Stats lives inside You — it is a readout you land on, not a place you launch from |
 | Deciding | Tonight, Browse, Results |
 | Doing | Shop, Cook, After |
 | Planning | The week — days x meals, one shopping list |

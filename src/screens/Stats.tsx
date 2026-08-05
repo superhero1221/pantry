@@ -1,11 +1,17 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
-import { DishPic, Kicker } from '../ui/bits';
+import { BackBtn, DishPic, Kicker } from '../ui/bits';
 import type { Pantry } from '../state/usePantry';
 
 export function Stats({ v }: { v: Pantry }) {
   return (
     <div style={css('padding:14px 22px 26px')}>
+      {/* This screen keeps its address but no longer has a tab, so it needs a
+          way back that is not the tab bar — an installed phone has no browser
+          chrome to fall back on. */}
+      <div style={css('margin-bottom:10px')}>
+        <BackBtn label={v.t.back} onClick={v.back} />
+      </div>
       <h1
         dir="auto"
         style={css("font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.04;margin:0;letter-spacing:-.4px")}
@@ -103,39 +109,6 @@ export function Stats({ v }: { v: Pantry }) {
           </div>
         ))}
       </div>
-
-      {v.questions.map((q) => (
-        <div key={q.key} style={css('margin-top:22px;padding:20px;border-radius:30px;background:#fff2eb;animation:pgUp .3s ease-out both')}>
-          <div style={css('display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:#ffe1d0;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8c491a')}>
-            {v.patternLabel}
-          </div>
-          <div dir="auto" style={css('font-size:17px;font-weight:700;color:#643312;line-height:1.32;margin-top:11px;text-wrap:pretty')}>
-            {q.q}
-          </div>
-          <p dir="auto" style={css('margin:8px 0 0;font-size:14px;line-height:1.5;color:#8c491a;text-wrap:pretty')}>
-            {q.why}
-          </p>
-          <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:15px')}>
-            {q.opts.map((o) => (
-              <Btn
-                key={o.key}
-                onClick={o.pick}
-                css="padding:12px 17px;border-radius:999px;background:#8c491a;color:#fff;font-size:14px;font-weight:700"
-                hover="background:#b2622d"
-              >
-                {o.label}
-              </Btn>
-            ))}
-            <Btn
-              onClick={q.skip}
-              css="padding:12px 17px;border-radius:999px;background:#ffe1d0;color:#8c491a;font-size:14px;font-weight:700"
-              hover="background:#ffc6a5"
-            >
-              {v.t.notNow}
-            </Btn>
-          </div>
-        </div>
-      ))}
 
       <Kicker style={{ marginTop: 24 }}>{v.t.statsLearned}</Kicker>
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:11px')}>

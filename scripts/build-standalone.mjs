@@ -128,9 +128,18 @@ async function inlinePhotos() {
 /* ── Assemble ───────────────────────────────────────────────────────── */
 const html = readFileSync(join(DIST, 'index.html'), 'utf8');
 const assets = readdirSync(join(DIST, 'assets'));
-const jsName = assets.find((f) => f.endsWith('.js'));
+const jsFiles = assets.filter((f) => f.endsWith('.js'));
 const cssName = assets.find((f) => f.endsWith('.css'));
-if (!jsName) throw new Error('no bundle in dist/assets — run the vite build first');
+/* The five language packs are dynamic imports, folded back in by
+   inlineDynamicImports. If that ever stops happening, `find` would take
+   whichever file readdir handed back first and ship a single page missing four
+   languages out of five, with nothing said. */
+if (jsFiles.length !== 1) {
+  throw new Error(
+    `expected exactly one bundle in dist/assets, found ${jsFiles.length}: ${jsFiles.join(', ')}`,
+  );
+}
+const jsName = jsFiles[0];
 
 let js = readFileSync(join(DIST, 'assets', jsName), 'utf8');
 const css = cssName ? readFileSync(join(DIST, 'assets', cssName), 'utf8') : '';

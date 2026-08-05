@@ -38,6 +38,7 @@ import { fromLocal, toLocal } from '../lib/money';
 import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
 import { xt } from '../data/extra-copy';
+import { loadPack, needsPack, ready as packReady } from '../data/lang-pack';
 import { exportBackup, readBackup, readStore, STORE_KEY } from '../lib/backup';
 import {
   pullCooks,
@@ -191,6 +192,8 @@ export interface PantryState {
   /** The ingredient table has landed. Held here only because a render has to
    *  happen when it does — nothing reads it. English never needs it at all. */
   foodReady: boolean;
+  /** Never read for its value — see the memos below. */
+  packAt: string;
 }
 
 const INITIAL: PantryState = {
@@ -255,6 +258,7 @@ const INITIAL: PantryState = {
   planSaved: false,
   fx: null,
   foodReady: false,
+  packAt: '',
 };
 
 /* ── What survives a reload ────────────────────────────────────────────────
@@ -429,6 +433,19 @@ function saveFx(f: FxCache) {
 function initialState(): PantryState {
   const saved = load();
   const s = { ...INITIAL, ...saved, fx: loadFx() };
+  /* The browser's language before the first frame rather than in an effect
+     after it. `dir` is computed from this, so a first-time Arabic or Urdu
+     visitor used to get an English left-to-right frame and then a flip — with
+     all six languages fully bundled, so it was never the loading that caused
+     it. Guarded the way crash.ts guards the same call: a runtime with no
+     `navigator` is not a reason to render nothing. */
+  if (!s.lang) {
+    try {
+      s.lang = i18n.detect();
+    } catch {
+      /* no navigator — English, which is what detect() would have said */
+    }
+  }
   if (s.seen) s.screen = 'home';
   // Where the address bar says, within reason. Someone who has not been
   // through the setup starts at the welcome whatever the hash claims, and
@@ -638,11 +655,6 @@ export function usePantry() {
 
   useEffect(() => save(S), [S]);
 
-  /* Language: the browser's, until the user says otherwise. */
-  useEffect(() => {
-    if (!ref.current.lang) setState({ lang: i18n.detect() });
-  }, [setState]);
-
   /* The ingredient names for whatever language that turned out to be. English
      is the key rather than a translation, so an English kitchen fetches
      nothing; every other one fetches the table once and the worker keeps it. */
@@ -650,6 +662,29 @@ export function usePantry() {
     if (!food.needsTable(S.lang || 'en') || food.ready()) return;
     food.loadTable().then((ok) => {
       if (ok) setState({ foodReady: true });
+    });
+  }, [S.lang, setState]);
+
+  /* The interface pack for whatever language that turned out to be. English is
+     the fallback for the other five, so an English reader fetches nothing;
+     every other one fetches about 16 kB once and the worker keeps it.
+
+     Usually a no-op — main.tsx already waited for this before the first frame.
+     It is here for the three ways a language can arrive later: the boot wait
+     ran out of patience, a signed-in profile brought a different one down from
+     the cloud, or the picker in Settings changed it.
+
+     `packAt` is never read for its value. It is in the dependency lists of T
+     and P below and nowhere else, because those two are keyed on the language,
+     and a pack that lands without the language changing would otherwise never
+     be picked up — leaving the whole interface in English until the next time
+     somebody touched the language picker. Same job as foodReady, and out of
+     KEEP for the same reason: it describes this boot, not this profile. */
+  useEffect(() => {
+    const code = S.lang || 'en';
+    if (!needsPack(code) || packReady(code)) return;
+    loadPack(code).then((ok) => {
+      if (ok) setState({ packAt: code });
     });
   }, [S.lang, setState]);
 
@@ -860,8 +895,15 @@ export function usePantry() {
 
   /* ── Language ─────────────────────────────────────────────────────────── */
   const lg = S.lang || 'en';
-  const T = useMemo(() => i18n.strings(lg), [lg]);
-  const P = useMemo(() => i18n.pack(lg), [lg]);
+  /* S.packAt is the second dependency and it is never read. Without it a pack
+     that lands after the first render is invisible: both memos are keyed on the
+     language, the language has not changed, and the entire interface stays in
+     English for the rest of the session. StrictMode will not reproduce it and
+     no test can — both render passes happen in the same task. */
+  const T = useMemo(() => i18n.strings(lg), [lg, S.packAt]);
+  const P = useMemo(() => i18n.pack(lg), [lg, S.packAt]);
+  /* Unmemoised and correct on the first paint whatever happens: dirOf reads
+     only LANGS, which never leaves the main chunk. */
   const dir = i18n.dirOf(lg);
 
   const dish = (r: { id?: string; name: string }) => (r.id && P.dishes[r.id]) || r.name;
@@ -1642,6 +1684,14 @@ export function usePantry() {
     }
   })();
 
+  /* Four, not five. Stats came out because it is a readout you land on rather
+     than a place you launch from — it lives in You now, under its own title,
+     "What I know". Passport stayed: it is the only collection in the app, and
+     its only other way in is the streak flame on Tonight, which disappears by
+     definition on the day a lapsing cook most needs something to come back to.
+     Browse stayed out too. It is a corridor rather than a hub — every card in
+     it opens the same results screen the answer does — and this app was just
+     rebuilt around not asking a depleted reader to generate a desire. */
   const navItems = [
     { id: 'home' as const, t: 'navTonight', label: 'Tonight', d: 'M3 11.5 12 4l9 7.5M5.5 9.8V20h13V9.8' },
     {
@@ -1650,7 +1700,6 @@ export function usePantry() {
       label: 'Kitchen',
       d: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM3 10h18M7 6.5v1M7 14v2',
     },
-    { id: 'stats' as const, t: 'navStats', label: 'Stats', d: 'M3 20h18M7 20v-7M12 20V6M17 20v-11' },
     {
       id: 'passport' as const,
       t: 'navPassport',
@@ -1702,6 +1751,15 @@ export function usePantry() {
       // translator sees the whole thought, and the test still counts one key.
       body: xt(lg, k + 'B').split('\n').filter(Boolean),
     })),
+    /* Stats is where the app tells you what it has worked out about you, and
+       where you delete any of it. That is a disclosure, which reads better as
+       a row in You than as a permanent tab — its own title in all six
+       languages is already "What I know". */
+    statsRow: {
+      name: T.statsTitle,
+      sub: xt(lg, 'statsRowSub'),
+      go: () => go('stats'),
+    },
     legalKicker: xt(lg, 'legalKicker'),
     legalLinks: [
       { key: 'privacy', name: xt(lg, 'privacyRow'), sub: xt(lg, 'privacyRowSub'), go: () => go('privacy') },
@@ -1885,6 +1943,7 @@ export function usePantry() {
     goKitchen: () => go('kitchen'),
     goPassport: () => go('passport'),
     goBrowse: () => go('browse'),
+    goStats: () => go('stats'),
 
     /* ── Diet ───────────────────────────────────────────────────────────── */
     dietChips: DIETS.map((d) => ({
@@ -2063,7 +2122,7 @@ export function usePantry() {
     tonightPic: offer.pic,
     tonightTotal: fmt(toBuy(offer)),
     tonightPer: fmt(toBuy(offer) / offer.servings),
-    tonightPerSub: word('aServing', 'a serving'),
+    tonightPerSub: T.resServing,
     tonightSub:
       word('toBuyFor', 'to buy, for') + ' ' + offer.servings + ' ' + word('servings', 'servings'),
     tonightMins: offer.total + ' ' + word('minutes', 'min'),
@@ -2463,7 +2522,7 @@ export function usePantry() {
       label: x.label,
       style:
         'flex:1;padding:15px 8px;border-radius:24px;background:#f9f4ed;box-shadow:inset 0 0 0 1px rgba(32,30,29,.07);transition:background .15s',
-      pick: () => {
+      pick: async () => {
         // The cook is already in the log; this annotates it. The same row goes
         // back up to the cloud, where the upsert on client id overwrites.
         // currentCookId re-finds the row after a reload has dropped the
@@ -2493,7 +2552,15 @@ export function usePantry() {
        signed out, set a flag, toast "Tomorrow 12:30 —", and then nothing on
        earth would fire — a promise with no machinery behind it. Signed out,
        the honest line says what it needs instead. */
+    /* Gated on the pack because this is the only place in the app where a
+       late-arriving language is permanent rather than a one-frame wobble.
+       setReminder composes the notification body out of the pack and writes
+       the finished sentence to Supabase; the edge function replays that stored
+       text a day later, verbatim. Offer it before the pack lands and an Arabic
+       reader gets a right-to-left-framed English push tomorrow, unfixable
+       after the fact. */
     canRemind:
+      packReady(lg) &&
       recipe.keeps && !S.reminded && S.waste !== 'none' && !!S.toggles.leftover && !!auth.userId,
     remindNeedsAccount:
       recipe.keeps && !S.reminded && S.waste !== 'none' && !!S.toggles.leftover && !auth.userId && cloudEnabled,
@@ -3036,13 +3103,22 @@ export function usePantry() {
       key: l.code,
       native: l.native,
       style: (lg === l.code ? PILL_ON : PILL_OFF) + 'flex:none;font-size:14.5px;padding:11px 18px;',
-      // The interface pack is bundled, the ingredient names are not: wait for
-      // them before switching, so the screen changes language once rather than
-      // in two passes. Offline the wait ends in a no, and the names stay
-      // English — which is what an untranslated name reads as anyway.
+      // Both the interface and the ingredient names are fetched now, and both
+      // are waited for, so the screen changes language once rather than in two
+      // passes. A switch that cannot complete does not happen at all: offline,
+      // an Arabic label sitting over an English interface is worse than the
+      // English label you already had, and you would have to find your way back
+      // through it.
       pick: async () => {
-        if (food.needsTable(l.code)) await food.loadTable();
-        setState({ lang: l.code, langOpen: false });
+        const [got] = await Promise.all([
+          loadPack(l.code),
+          food.needsTable(l.code) ? food.loadTable() : Promise.resolve(true),
+        ]);
+        if (!got) {
+          ping(fill(xt(lg, 'langOffline'), { n: i18n.nativeOf(l.code) }));
+          return;
+        }
+        setState({ lang: l.code, langOpen: false, packAt: l.code });
       },
     })),
     /* Nominatim and Overpass run for real when you grant location, Open Prices

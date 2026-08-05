@@ -1,9 +1,16 @@
 import { css } from '../lib/css';
+import { BackBtn } from '../ui/bits';
 import type { Pantry } from '../state/usePantry';
 
 export function Passport({ v }: { v: Pantry }) {
   return (
     <div style={css('padding:14px 22px 26px')}>
+      {/* This screen keeps its address but no longer has a tab, so it needs a
+          way back that is not the tab bar — an installed phone has no browser
+          chrome to fall back on. */}
+      <div style={css('margin-bottom:10px')}>
+        <BackBtn label={v.t.back} onClick={v.back} />
+      </div>
       <h1
         dir="auto"
         style={css("font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.04;margin:0;letter-spacing:-.4px")}
