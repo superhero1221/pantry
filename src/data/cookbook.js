@@ -8,24 +8,22 @@ export const SKILL_CARDS = [
   { id: 'dough', label: 'Knead dough', w: 3 },
   { id: 'fish', label: 'Fillet a fish', w: 4 },
 ];
-export const TIME_CARDS = [
-  { id: 't10', label: '10 minutes', m: 10 },
-  { id: 't20', label: '20 minutes', m: 20 },
-  { id: 't30', label: '30 minutes', m: 30 },
-  { id: 't45', label: '45 minutes', m: 45 },
-  { id: 't60', label: 'An hour or more', m: 90 },
-];
-export const SKILL_TIERS = [
-  { key: 'S', label: 'Done it loads', badgeBg: '#d67f48', badgeFg: '#fff' },
-  { key: 'A', label: "I've done it once or twice", badgeBg: '#8fa073', badgeFg: '#fff' },
-  { key: 'B', label: 'Makes me nervous', badgeBg: '#dcd3c4', badgeFg: '#474238' },
-  { key: 'C', label: 'Never, and not today', badgeBg: '#eee7db', badgeFg: '#82796a' },
-];
-export const TIME_TIERS = [
-  { key: 'S', label: 'Any day of the week', badgeBg: '#d67f48', badgeFg: '#fff' },
-  { key: 'A', label: 'Most days', badgeBg: '#8fa073', badgeFg: '#fff' },
-  { key: 'B', label: 'Weekends only', badgeBg: '#dcd3c4', badgeFg: '#474238' },
-  { key: 'C', label: 'Not happening', badgeBg: '#eee7db', badgeFg: '#82796a' },
+/** The four answers to "What can you already do?", in ascending order of what
+ *  they take, two acts each.
+ *
+ *  Two rather than the weights' own grouping, which would be 2/3/2/1 and would
+ *  leave "Fillet a fish" standing alone at the top — a question most confident
+ *  cooks answer no to, which would push them down a rung. Weights sum 2, 4, 5
+ *  and 7: still a ladder, just an even one. Every card is used exactly once,
+ *  and every one of those strings is already translated six ways.
+ *
+ *  `lvl` is the number stored in state and the only thing about you that
+ *  ranking reads. */
+export const SKILL_LEVELS = [
+  { lvl: 1, ids: ['onion', 'rice'] },
+  { lvl: 2, ids: ['sear', 'sauce'] },
+  { lvl: 3, ids: ['temp', 'dough'] },
+  { lvl: 4, ids: ['fry', 'fish'] },
 ];
 export const DIETS = [
   { id: 'vegan', label: 'Vegan' }, { id: 'vegetarian', label: 'Vegetarian' },

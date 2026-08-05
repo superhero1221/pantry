@@ -24,7 +24,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     account: 'Account',
     accountTitle: 'Keep this across your devices',
     accountBody:
-      'Optional. Your goal, tier lists, diets, cook log and cupboard follow you to another phone or a laptop. Everything works the same signed out — this only decides where it is kept.',
+      'Optional. Your goal, how much cooking you have done, diets, cook log and cupboard follow you to another phone or a laptop. Everything works the same signed out — this only decides where it is kept.',
     emailLabel: 'Email address',
     emailPlaceholder: 'you@example.com',
     sendLink: 'Send me a link',
@@ -36,6 +36,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'On this device only',
     cloudUnreachable:
       'Could not reach the sign-in service — usually that is no signal. Everything else carries on working on this device.',
+
+    /* ── The one question ── */
+    /* Lifted from each language's own tierSkillSub with the sentence about
+       dragging cut off the front, so these are real translations rather
+       than six new ones. */
+    levelSub: 'There is no wrong answer. This just stops me suggesting things that will annoy you.',
+    stepOf: 'Step {n} of {of}',
+    resLevel: 'for your level',
 
     /* ── Mascot ── */
     mascotN: 'Pantry, in the corner',
@@ -126,7 +134,6 @@ export const EXTRA: Record<string, Record<string, string>> = {
     liveLook: 'Tap to look for shops near you',
 
     /* ── Getting around without a mouse ── */
-    tierPlaceIn: 'Put the selected card in this row: {t}',
     stepBack: 'Previous step',
     passportNudgeReal:
       '{n} countries in here you have never cooked from. The cheapest you are missing is {c} — {d} lands at {a} a serving.',
@@ -174,7 +181,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     crashSave: "Save a copy of my data first",
     dataTitle: "Your data",
     dataExport: "Save a copy",
-    dataExportSub: "One file with your tier lists, diets, budget, cupboard and every cook you have logged. It goes to your device and nowhere else.",
+    dataExportSub: "One file with how much cooking you have done, diets, budget, cupboard and every cook you have logged. It goes to your device and nowhere else.",
     dataImport: "Load a copy back",
     dataImportSub: "Pick a file you saved here. It replaces what is on this device, and Pantry restarts.",
     dataImportCloud: "You are signed in: your cook log will merge, but your account’s settings win the next time it syncs. Sign out first if this file should replace them.",
@@ -197,7 +204,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     privTitle: "Privacy",
     privIntro: "Pantry runs on your phone. Most of what you do here never leaves it. This page says exactly what does, when it goes, and who sees it — no more than that, and no less.",
     privLocalH: "Signed out, nothing leaves this device",
-    privLocalB: "Everything you tell Pantry is written to your browser's local storage under one key: pantry.v1. It holds whether you have been through the setup, your two tier lists, your diets, your country, your budget, your time limit, your language, the leftover nudge toggle, your cook log, the answers you gave the questions on Stats, your saved week, and what you have ticked as already in your cupboard.\nThere is one other key, pantry.fx.v1, holding the day's exchange rate. That is a fact about money, not about you.\nNone of it is sent anywhere. There is no account, no server, no request. Clear this site's data in your browser and it is gone, and so is everything the app knew.",
+    privLocalB: "Everything you tell Pantry is written to your browser's local storage under one key: pantry.v1. It holds whether you have been through the setup, how much cooking you have done, your diets, your country, your budget, your time limit, your language, the leftover nudge toggle, your cook log, the answers you gave the questions on Stats, your saved week, and what you have ticked as already in your cupboard.\nThere is one other key, pantry.fx.v1, holding the day's exchange rate. That is a fact about money, not about you.\nNone of it is sent anywhere. There is no account, no server, no request. Clear this site's data in your browser and it is gone, and so is everything the app knew.",
     privAccountH: "Signed in, and only then",
     privAccountB: "Signing in is optional and the app works the same without it. You type an email address and get a link back. There is no password, so there is none to store.\nYour email address and your sign-in session are held by Supabase, the database and sign-in service this app uses.\nFrom there: profiles holds the settings listed above, so the same account works on your laptop. cook_log holds what you cooked — the dish, the date, what it cost, servings, calories, protein, carbs, difficulty, and how much went in the bin. saved_plans and plan_meals hold a week, if you save one. price_reports holds a price, if you report one. push_subscriptions and reminders hold the notification, if you turn it on.\nNothing is written to any of them until you do the thing that writes to it. The sample eight weeks on the Stats screen are never uploaded — they are a stage set, not your history. What you have ticked as already in your cupboard stays on this device; it is not synced.",
     privDietH: "Diets, and the thing worth knowing about them",
@@ -240,7 +247,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     account: 'Cuenta',
     accountTitle: 'Consérvalo en todos tus dispositivos',
     accountBody:
-      'Opcional. Tu objetivo, tus listas por niveles, tus dietas, tu registro de cocina y tu despensa te siguen a otro móvil o a un portátil. Todo funciona igual sin sesión: esto solo decide dónde se guarda.',
+      'Opcional. Tu objetivo, cuánto has cocinado, tus dietas, tu registro de cocina y tu despensa te siguen a otro móvil o a un portátil. Todo funciona igual sin sesión: esto solo decide dónde se guarda.',
     emailLabel: 'Correo electrónico',
     emailPlaceholder: 'tu@ejemplo.com',
     sendLink: 'Envíame un enlace',
@@ -253,6 +260,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'Solo en este dispositivo',
     cloudUnreachable:
       'No he podido conectar con el servicio de acceso; casi siempre es falta de señal. Todo lo demás sigue funcionando en este dispositivo.',
+
+    /* ── The one question ── */
+    /* Lifted from each language's own tierSkillSub with the sentence about
+       dragging cut off the front, so these are real translations rather
+       than six new ones. */
+    levelSub: 'No hay respuesta incorrecta. Esto solo evita que te sugiera cosas que te van a fastidiar.',
+    stepOf: 'Paso {n} de {of}',
+    resLevel: 'para tu nivel',
 
     /* ── Mascot ── */
     mascotN: 'Pantry, en la esquina',
@@ -341,7 +356,6 @@ export const EXTRA: Record<string, Record<string, string>> = {
     liveLook: 'Toca para buscar tiendas cerca de ti',
 
     /* ── Getting around without a mouse ── */
-    tierPlaceIn: 'Pon la tarjeta seleccionada en esta fila: {t}',
     stepBack: 'Paso anterior',
     passportNudgeReal:
       '{n} países de este recetario de los que nunca has cocinado. El más barato que te falta es {c}: {d} sale a {a} la ración.',
@@ -381,7 +395,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     crashSave: "Guardar antes una copia de mis datos",
     dataTitle: "Tus datos",
     dataExport: "Guardar una copia",
-    dataExportSub: "Un archivo con tus listas por niveles, tus dietas, tu presupuesto, tu despensa y cada comida que has registrado. Va a tu dispositivo y a ningún otro sitio.",
+    dataExportSub: "Un archivo con cuánto has cocinado, tus dietas, tu presupuesto, tu despensa y cada comida que has registrado. Va a tu dispositivo y a ningún otro sitio.",
     dataImport: "Volver a cargar una copia",
     dataImportSub: "Elige un archivo que hayas guardado aquí. Sustituye lo que hay en este dispositivo y Pantry se reinicia.",
     dataImportCloud: "Has iniciado sesión: tu registro de comidas se fusionará, pero los ajustes de tu cuenta ganan en la siguiente sincronización. Cierra sesión antes si este archivo debe sustituirlos.",
@@ -404,7 +418,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     privTitle: "Privacidad",
     privIntro: "Pantry funciona en tu teléfono. Casi todo lo que haces aquí nunca sale de él. Esta página dice exactamente qué sí sale, cuándo, y quién lo ve — ni más, ni menos.",
     privLocalH: "Sin sesión iniciada, nada sale de este dispositivo",
-    privLocalB: "Todo lo que le dices a Pantry se escribe en el almacenamiento local de tu navegador bajo una sola clave: pantry.v1. Contiene si has pasado por la configuración, tus dos listas de niveles, tus dietas, tu país, tu presupuesto, tu límite de tiempo, tu idioma, el interruptor del aviso de sobras, tu registro de comidas, las respuestas que diste a las preguntas de Estadísticas, tu semana guardada, y lo que has marcado como ya presente en tu despensa.\nHay otra clave, pantry.fx.v1, con el tipo de cambio del día. Eso es un dato sobre el dinero, no sobre ti.\nNada de esto se envía a ningún sitio. No hay cuenta, ni servidor, ni petición. Borra los datos de este sitio en tu navegador y desaparece, y con ello todo lo que la app sabía.",
+    privLocalB: "Todo lo que le dices a Pantry se escribe en el almacenamiento local de tu navegador bajo una sola clave: pantry.v1. Contiene si has pasado por la configuración, cuánto has cocinado, tus dietas, tu país, tu presupuesto, tu límite de tiempo, tu idioma, el interruptor del aviso de sobras, tu registro de comidas, las respuestas que diste a las preguntas de Estadísticas, tu semana guardada, y lo que has marcado como ya presente en tu despensa.\nHay otra clave, pantry.fx.v1, con el tipo de cambio del día. Eso es un dato sobre el dinero, no sobre ti.\nNada de esto se envía a ningún sitio. No hay cuenta, ni servidor, ni petición. Borra los datos de este sitio en tu navegador y desaparece, y con ello todo lo que la app sabía.",
     privAccountH: "Con sesión iniciada, y solo entonces",
     privAccountB: "Iniciar sesión es opcional y la app funciona igual sin ello. Escribes un correo y recibes un enlace. No hay contraseña, así que no hay ninguna que guardar.\nTu correo y tu sesión los guarda Supabase, la base de datos y el servicio de acceso que usa esta app.\nA partir de ahí: profiles guarda los ajustes de arriba, para que la misma cuenta funcione en tu portátil. cook_log guarda lo que cocinaste — el plato, la fecha, lo que costó, raciones, calorías, proteína, carbohidratos, dificultad y cuánto acabó en la basura. saved_plans y plan_meals guardan una semana, si guardas alguna. price_reports guarda un precio, si informas de alguno. push_subscriptions y reminders guardan el aviso, si lo activas.\nNo se escribe nada en ninguna de ellas hasta que haces lo que la escribe. Las ocho semanas de ejemplo de Estadísticas nunca se suben — son un decorado, no tu historial. Lo que marcas como ya presente en tu despensa se queda en este dispositivo; no se sincroniza.",
     privDietH: "Las dietas, y lo que conviene saber sobre ellas",
@@ -447,7 +461,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     account: 'Compte',
     accountTitle: 'Gardez tout ça sur tous vos appareils',
     accountBody:
-      'Facultatif. Votre objectif, vos classements, vos régimes, votre journal de cuisine et vos placards vous suivent sur un autre téléphone ou un ordinateur. Tout fonctionne pareil sans compte : ceci décide seulement où c’est gardé.',
+      'Facultatif. Votre objectif, ce que vous savez déjà cuisiner, vos régimes, votre journal de cuisine et vos placards vous suivent sur un autre téléphone ou un ordinateur. Tout fonctionne pareil sans compte : ceci décide seulement où c’est gardé.',
     emailLabel: 'Adresse e-mail',
     emailPlaceholder: 'vous@exemple.com',
     sendLink: 'Envoyez-moi un lien',
@@ -460,6 +474,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'Sur cet appareil uniquement',
     cloudUnreachable:
       'Impossible de joindre le service de connexion — le plus souvent, c’est le réseau. Tout le reste continue de fonctionner sur cet appareil.',
+
+    /* ── The one question ── */
+    /* Lifted from each language's own tierSkillSub with the sentence about
+       dragging cut off the front, so these are real translations rather
+       than six new ones. */
+    levelSub: 'Il n’y a pas de mauvaise réponse. Cela m’évite simplement de vous proposer des choses qui vous agaceront.',
+    stepOf: 'Étape {n} sur {of}',
+    resLevel: 'pour votre niveau',
 
     /* ── Mascot ── */
     mascotN: 'Pantry, dans le coin',
@@ -548,7 +570,6 @@ export const EXTRA: Record<string, Record<string, string>> = {
     liveLook: 'Touchez pour chercher des magasins près de vous',
 
     /* ── Getting around without a mouse ── */
-    tierPlaceIn: 'Mettre la carte sélectionnée dans cette rangée : {t}',
     stepBack: 'Étape précédente',
     passportNudgeReal:
       '{n} pays d’ici dont vous n’avez jamais rien cuisiné. Le moins cher qui vous manque est {c} : {d} revient à {a} la portion.',
@@ -589,7 +610,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     crashSave: "Sauvegarder d’abord une copie de mes données",
     dataTitle: "Vos données",
     dataExport: "Sauvegarder une copie",
-    dataExportSub: "Un fichier avec vos classements, vos régimes, votre budget, vos placards et chaque plat que vous avez enregistré. Il va sur votre appareil et nulle part ailleurs.",
+    dataExportSub: "Un fichier avec ce que vous savez déjà cuisiner, vos régimes, votre budget, vos placards et chaque plat que vous avez enregistré. Il va sur votre appareil et nulle part ailleurs.",
     dataImport: "Recharger une copie",
     dataImportSub: "Choisissez un fichier sauvegardé ici. Il remplace ce qui est sur cet appareil, et Pantry redémarre.",
     dataImportCloud: "Vous êtes connecté : votre journal de cuisine fusionnera, mais les réglages de votre compte l’emportent à la prochaine synchronisation. Déconnectez-vous d’abord si ce fichier doit les remplacer.",
@@ -612,7 +633,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     privTitle: "Confidentialité",
     privIntro: "Pantry tourne sur votre téléphone. Presque tout ce que vous y faites n’en sort jamais. Cette page dit exactement ce qui en sort, quand, et qui le voit — ni plus, ni moins.",
     privLocalH: "Déconnecté, rien ne quitte cet appareil",
-    privLocalB: "Tout ce que vous dites à Pantry est écrit dans le stockage local de votre navigateur sous une seule clé : pantry.v1. Elle contient si vous avez fait la configuration, vos deux classements, vos régimes, votre pays, votre budget, votre limite de temps, votre langue, l’interrupteur du rappel de restes, votre journal de cuisine, les réponses données aux questions de l’écran Chiffres, votre semaine enregistrée, et ce que vous avez coché comme déjà présent dans votre placard.\nIl y a une autre clé, pantry.fx.v1, qui garde le taux de change du jour. C’est un fait sur l’argent, pas sur vous.\nRien de tout cela n’est envoyé nulle part. Pas de compte, pas de serveur, pas de requête. Effacez les données de ce site dans votre navigateur et tout disparaît, y compris tout ce que l’app savait.",
+    privLocalB: "Tout ce que vous dites à Pantry est écrit dans le stockage local de votre navigateur sous une seule clé : pantry.v1. Elle contient si vous avez fait la configuration, ce que vous savez déjà cuisiner, vos régimes, votre pays, votre budget, votre limite de temps, votre langue, l’interrupteur du rappel de restes, votre journal de cuisine, les réponses données aux questions de l’écran Chiffres, votre semaine enregistrée, et ce que vous avez coché comme déjà présent dans votre placard.\nIl y a une autre clé, pantry.fx.v1, qui garde le taux de change du jour. C’est un fait sur l’argent, pas sur vous.\nRien de tout cela n’est envoyé nulle part. Pas de compte, pas de serveur, pas de requête. Effacez les données de ce site dans votre navigateur et tout disparaît, y compris tout ce que l’app savait.",
     privAccountH: "Connecté, et seulement alors",
     privAccountB: "Se connecter est facultatif et l’app fonctionne pareil sans. Vous tapez une adresse e-mail et recevez un lien. Pas de mot de passe, donc aucun à stocker.\nVotre adresse e-mail et votre session sont gardées par Supabase, la base de données et le service de connexion utilisés par cette app.\nEnsuite : profiles garde les réglages ci-dessus, pour que le même compte marche sur votre portable. cook_log garde ce que vous avez cuisiné — le plat, la date, le coût, les portions, calories, protéines, glucides, difficulté, et ce qui est parti à la poubelle. saved_plans et plan_meals gardent une semaine, si vous en enregistrez une. price_reports garde un prix, si vous en signalez un. push_subscriptions et reminders gardent la notification, si vous l’activez.\nRien n’y est écrit tant que vous n’avez pas fait la chose qui l’écrit. Les huit semaines d’exemple de l’écran Chiffres ne sont jamais envoyées — c’est un décor, pas votre historique. Ce que vous cochez comme déjà présent dans votre placard reste sur cet appareil ; ce n’est pas synchronisé.",
     privDietH: "Les régimes, et ce qu’il faut savoir",
@@ -655,7 +676,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     account: 'Konto',
     accountTitle: 'Zachowaj to na wszystkich urządzeniach',
     accountBody:
-      'Opcjonalnie. Twój cel, listy poziomów, diety, dziennik gotowania i szafka przeniosą się na inny telefon albo laptop. Bez logowania działa tak samo — to decyduje tylko o tym, gdzie się to trzyma.',
+      'Opcjonalnie. Twój cel, ile już gotowałeś, diety, dziennik gotowania i szafka przeniosą się na inny telefon albo laptop. Bez logowania działa tak samo — to decyduje tylko o tym, gdzie się to trzyma.',
     emailLabel: 'Adres e-mail',
     emailPlaceholder: 'ty@przyklad.pl',
     sendLink: 'Wyślij mi link',
@@ -668,6 +689,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'Tylko na tym urządzeniu',
     cloudUnreachable:
       'Nie udało się połączyć z usługą logowania — zwykle to brak zasięgu. Cała reszta działa dalej na tym urządzeniu.',
+
+    /* ── The one question ── */
+    /* Lifted from each language's own tierSkillSub with the sentence about
+       dragging cut off the front, so these are real translations rather
+       than six new ones. */
+    levelSub: 'Nie ma złej odpowiedzi. To tylko po to, żebym nie proponował ci rzeczy, które cię zirytują.',
+    stepOf: 'Krok {n} z {of}',
+    resLevel: 'dla twojego poziomu',
 
     /* ── Mascot ── */
     mascotN: 'Pantry, w rogu',
@@ -756,7 +785,6 @@ export const EXTRA: Record<string, Record<string, string>> = {
     liveLook: 'Dotknij, aby poszukać sklepów w pobliżu',
 
     /* ── Getting around without a mouse ── */
-    tierPlaceIn: 'Umieść wybraną kartę w tym rzędzie: {t}',
     stepBack: 'Poprzedni krok',
     passportNudgeReal:
       '{n} krajów z tej książki, z których nigdy nie gotowałeś. Najtańszy, którego ci brakuje, to {c} — {d} wychodzi {a} za porcję.',
@@ -796,7 +824,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     crashSave: "Najpierw zapisz kopię moich danych",
     dataTitle: "Twoje dane",
     dataExport: "Zapisz kopię",
-    dataExportSub: "Jeden plik z Twoimi listami poziomów, dietami, budżetem, szafką i każdym zapisanym gotowaniem. Trafia na Twoje urządzenie i nigdzie indziej.",
+    dataExportSub: "Jeden plik z tym, ile już gotowałeś, dietami, budżetem, szafką i każdym zapisanym gotowaniem. Trafia na Twoje urządzenie i nigdzie indziej.",
     dataImport: "Wczytaj kopię z powrotem",
     dataImportSub: "Wybierz plik zapisany tutaj. Zastąpi to, co jest na tym urządzeniu, i Pantry uruchomi się ponownie.",
     dataImportCloud: "Jesteś zalogowany: dziennik gotowania się połączy, ale ustawienia z Twojego konta wygrają przy następnej synchronizacji. Wyloguj się najpierw, jeśli ten plik ma je zastąpić.",
@@ -819,7 +847,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     privTitle: "Prywatność",
     privIntro: "Pantry działa na twoim telefonie. Prawie nic z tego, co tu robisz, nigdy go nie opuszcza. Ta strona mówi dokładnie, co go opuszcza, kiedy i kto to widzi — nic więcej i nic mniej.",
     privLocalH: "Bez logowania nic nie opuszcza tego urządzenia",
-    privLocalB: "Wszystko, co mówisz Pantry, jest zapisywane w pamięci lokalnej przeglądarki pod jednym kluczem: pantry.v1. Zawiera on to, czy przeszedłeś konfigurację, twoje dwie listy poziomów, diety, kraj, budżet, limit czasu, język, przełącznik przypomnienia o resztkach, dziennik gotowania, odpowiedzi na pytania z ekranu Liczby, zapisany tydzień oraz to, co zaznaczyłeś jako już obecne w szafce.\nJest jeszcze jeden klucz, pantry.fx.v1, z dzisiejszym kursem walut. To fakt o pieniądzach, nie o tobie.\nNic z tego nigdzie nie jest wysyłane. Nie ma konta, serwera ani żadnego zapytania. Wyczyść dane tej strony w przeglądarce, a wszystko zniknie — razem ze wszystkim, co aplikacja wiedziała.",
+    privLocalB: "Wszystko, co mówisz Pantry, jest zapisywane w pamięci lokalnej przeglądarki pod jednym kluczem: pantry.v1. Zawiera on to, czy przeszedłeś konfigurację, ile już gotowałeś, diety, kraj, budżet, limit czasu, język, przełącznik przypomnienia o resztkach, dziennik gotowania, odpowiedzi na pytania z ekranu Liczby, zapisany tydzień oraz to, co zaznaczyłeś jako już obecne w szafce.\nJest jeszcze jeden klucz, pantry.fx.v1, z dzisiejszym kursem walut. To fakt o pieniądzach, nie o tobie.\nNic z tego nigdzie nie jest wysyłane. Nie ma konta, serwera ani żadnego zapytania. Wyczyść dane tej strony w przeglądarce, a wszystko zniknie — razem ze wszystkim, co aplikacja wiedziała.",
     privAccountH: "Po zalogowaniu — i dopiero wtedy",
     privAccountB: "Logowanie jest opcjonalne, a aplikacja działa tak samo bez niego. Wpisujesz adres e-mail i dostajesz link. Nie ma hasła, więc nie ma czego przechowywać.\nTwój adres e-mail i sesję logowania przechowuje Supabase — baza danych i usługa logowania, z których korzysta ta aplikacja.\nDalej: profiles przechowuje ustawienia wymienione wyżej, żeby to samo konto działało na laptopie. cook_log przechowuje to, co ugotowałeś — danie, datę, koszt, porcje, kalorie, białko, węglowodany, trudność i ile trafiło do kosza. saved_plans i plan_meals przechowują tydzień, jeśli go zapiszesz. price_reports przechowuje cenę, jeśli ją zgłosisz. push_subscriptions i reminders przechowują powiadomienie, jeśli je włączysz.\nDo żadnej z nich nic nie trafia, dopóki nie zrobisz rzeczy, która to zapisuje. Osiem przykładowych tygodni na ekranie Liczby nigdy nie jest wysyłanych — to dekoracja, nie twoja historia. To, co zaznaczyłeś jako obecne w szafce, zostaje na tym urządzeniu; nie jest synchronizowane.",
     privDietH: "Diety i to, co warto o nich wiedzieć",
@@ -862,7 +890,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     account: 'اکاؤنٹ',
     accountTitle: 'اسے اپنے تمام آلات پر محفوظ رکھیں',
     accountBody:
-      'اختیاری۔ آپ کا ہدف، درجہ بندی کی فہرستیں، غذائی ترجیحات، کھانا پکانے کا ریکارڈ اور آپ کی الماری کسی دوسرے فون یا لیپ ٹاپ پر آپ کے ساتھ چلے جائیں گے۔ بغیر لاگ اِن کے بھی سب کچھ ویسے ہی کام کرتا ہے — یہ صرف یہ طے کرتا ہے کہ سب کچھ کہاں رکھا جائے۔',
+      'اختیاری۔ آپ کا ہدف، آپ نے کتنا کھانا پکایا ہے، غذائی ترجیحات، کھانا پکانے کا ریکارڈ اور آپ کی الماری کسی دوسرے فون یا لیپ ٹاپ پر آپ کے ساتھ چلے جائیں گے۔ بغیر لاگ اِن کے بھی سب کچھ ویسے ہی کام کرتا ہے — یہ صرف یہ طے کرتا ہے کہ سب کچھ کہاں رکھا جائے۔',
     emailLabel: 'ای میل ایڈریس',
     emailPlaceholder: 'you@example.com',
     sendLink: 'مجھے لنک بھیجیں',
@@ -874,6 +902,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'صرف اسی آلے پر',
     cloudUnreachable:
       'سائن اِن سروس تک رسائی نہیں ہو سکی — عام طور پر سگنل نہ ہونے کی وجہ سے۔ باقی سب کچھ اسی آلے پر چلتا رہے گا۔',
+
+    /* ── The one question ── */
+    /* Lifted from each language's own tierSkillSub with the sentence about
+       dragging cut off the front, so these are real translations rather
+       than six new ones. */
+    levelSub: 'کوئی جواب غلط نہیں۔ یہ صرف اس لیے ہے کہ میں آپ کو ایسی چیزیں تجویز نہ کروں جو آپ کو بری لگیں۔',
+    stepOf: 'مرحلہ {n} از {of}',
+    resLevel: 'آپ کے درجے کے لیے',
 
     /* ── Mascot ── */
     mascotN: 'پینٹری، کونے میں',
@@ -959,7 +995,6 @@ export const EXTRA: Record<string, Record<string, string>> = {
     liveLook: 'اپنے قریب دکانیں تلاش کرنے کے لیے چھوئیں',
 
     /* ── Getting around without a mouse ── */
-    tierPlaceIn: 'منتخب کارڈ اس قطار میں رکھیں: {t}',
     stepBack: 'پچھلا مرحلہ',
     passportNudgeReal:
       'اس کتاب میں {n} ممالک ایسے ہیں جن کا کھانا آپ نے کبھی نہیں پکایا۔ ان میں سب سے سستا {c} ہے — {d} فی حصہ {a} پڑتا ہے۔',
@@ -999,7 +1034,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     crashSave: "پہلے میرے ڈیٹا کی نقل محفوظ کریں",
     dataTitle: "آپ کا ڈیٹا",
     dataExport: "ایک نقل محفوظ کریں",
-    dataExportSub: "ایک فائل جس میں آپ کی درجہ بندی کی فہرستیں، غذائیں، بجٹ، الماری اور ہر درج شدہ پکوان شامل ہے۔ یہ آپ کے آلے پر جاتی ہے، کہیں اور نہیں۔",
+    dataExportSub: "ایک فائل جس میں آپ نے کتنا کھانا پکایا ہے، غذائیں، بجٹ، الماری اور ہر درج شدہ پکوان شامل ہے۔ یہ آپ کے آلے پر جاتی ہے، کہیں اور نہیں۔",
     dataImport: "نقل واپس لوڈ کریں",
     dataImportSub: "یہاں محفوظ کی گئی کوئی فائل چنیں۔ یہ اِس آلے کے مواد کی جگہ لے لے گی اور Pantry دوبارہ شروع ہوگا۔",
     dataImportCloud: "آپ سائن اِن ہیں: آپ کا پکوان ریکارڈ مل جائے گا، مگر اگلی مطابقت پذیری پر آپ کے اکاؤنٹ کی ترتیبات غالب رہیں گی۔ اگر یہ فائل اُنہیں بدلنی ہے تو پہلے سائن آؤٹ کریں۔",
@@ -1022,7 +1057,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     privTitle: "پرائیویسی",
     privIntro: "Pantry آپ کے فون پر چلتی ہے۔ یہاں آپ جو کچھ کرتے ہیں، اُس کا بیشتر حصہ کبھی فون سے باہر نہیں جاتا۔ یہ صفحہ ٹھیک ٹھیک بتاتا ہے کہ کیا باہر جاتا ہے، کب جاتا ہے، اور کون دیکھتا ہے — نہ اس سے زیادہ، نہ کم۔",
     privLocalH: "سائن آؤٹ کی حالت میں کچھ بھی اس ڈیوائس سے باہر نہیں جاتا",
-    privLocalB: "آپ Pantry کو جو کچھ بتاتے ہیں وہ آپ کے براؤزر کے لوکل اسٹوریج میں ایک ہی کلید کے تحت لکھا جاتا ہے: pantry.v1۔ اس میں یہ ہوتا ہے کہ آپ نے سیٹ اپ مکمل کیا یا نہیں، آپ کی دو ٹئیر فہرستیں، آپ کی غذائی ترجیحات، ملک، بجٹ، وقت کی حد، زبان، بچے ہوئے کھانے کی یاد دہانی کا بٹن، آپ کا کُکنگ لاگ، اعداد و شمار والی اسکرین کے سوالوں کے جواب، آپ کا محفوظ کیا ہوا ہفتہ، اور وہ چیزیں جو آپ نے پہلے سے الماری میں موجود کے طور پر نشان زد کیں۔\nایک اور کلید ہے، pantry.fx.v1، جس میں دن کی زرِ مبادلہ کی شرح ہوتی ہے۔ یہ پیسے کے بارے میں حقیقت ہے، آپ کے بارے میں نہیں۔\nاِن میں سے کچھ بھی کہیں نہیں بھیجا جاتا۔ نہ کوئی اکاؤنٹ، نہ سرور، نہ کوئی درخواست۔ براؤزر میں اس سائٹ کا ڈیٹا صاف کریں اور سب ختم — اور اُس کے ساتھ وہ سب بھی جو ایپ جانتی تھی۔",
+    privLocalB: "آپ Pantry کو جو کچھ بتاتے ہیں وہ آپ کے براؤزر کے لوکل اسٹوریج میں ایک ہی کلید کے تحت لکھا جاتا ہے: pantry.v1۔ اس میں یہ ہوتا ہے کہ آپ نے سیٹ اپ مکمل کیا یا نہیں، آپ نے کتنا کھانا پکایا ہے، آپ کی غذائی ترجیحات، ملک، بجٹ، وقت کی حد، زبان، بچے ہوئے کھانے کی یاد دہانی کا بٹن، آپ کا کُکنگ لاگ، اعداد و شمار والی اسکرین کے سوالوں کے جواب، آپ کا محفوظ کیا ہوا ہفتہ، اور وہ چیزیں جو آپ نے پہلے سے الماری میں موجود کے طور پر نشان زد کیں۔\nایک اور کلید ہے، pantry.fx.v1، جس میں دن کی زرِ مبادلہ کی شرح ہوتی ہے۔ یہ پیسے کے بارے میں حقیقت ہے، آپ کے بارے میں نہیں۔\nاِن میں سے کچھ بھی کہیں نہیں بھیجا جاتا۔ نہ کوئی اکاؤنٹ، نہ سرور، نہ کوئی درخواست۔ براؤزر میں اس سائٹ کا ڈیٹا صاف کریں اور سب ختم — اور اُس کے ساتھ وہ سب بھی جو ایپ جانتی تھی۔",
     privAccountH: "سائن اِن ہونے پر، اور صرف تب",
     privAccountB: "سائن اِن کرنا اختیاری ہے اور ایپ اس کے بغیر بھی ویسے ہی کام کرتی ہے۔ آپ ای میل لکھتے ہیں اور جواب میں ایک لنک آتا ہے۔ کوئی پاس ورڈ نہیں، سو محفوظ کرنے کو کچھ نہیں۔\nآپ کا ای میل پتہ اور سائن اِن سیشن Supabase کے پاس رہتے ہیں — یہی ڈیٹابیس اور سائن اِن سروس یہ ایپ استعمال کرتی ہے۔\nاُس کے بعد: profiles اوپر بیان کردہ ترتیبات رکھتا ہے، تاکہ وہی اکاؤنٹ آپ کے لیپ ٹاپ پر بھی چلے۔ cook_log وہ رکھتا ہے جو آپ نے پکایا — ڈش، تاریخ، لاگت، حصے، کیلوریز، پروٹین، کاربوہائیڈریٹ، دشواری، اور کتنا کوڑے میں گیا۔ saved_plans اور plan_meals ایک ہفتہ رکھتے ہیں، اگر آپ محفوظ کریں۔ price_reports ایک قیمت رکھتا ہے، اگر آپ اطلاع دیں۔ push_subscriptions اور reminders اطلاع رکھتے ہیں، اگر آپ اسے آن کریں۔\nاِن میں سے کسی میں کچھ بھی نہیں لکھا جاتا جب تک آپ وہ کام نہ کریں جو اسے لکھتا ہے۔ اعداد و شمار والی اسکرین کے نمونے کے آٹھ ہفتے کبھی اپ لوڈ نہیں ہوتے — وہ ایک سجاوٹ ہیں، آپ کی تاریخ نہیں۔ آپ نے الماری میں موجود کے طور پر جو نشان زد کیا وہ اسی ڈیوائس پر رہتا ہے؛ وہ سنک نہیں ہوتا۔",
     privDietH: "غذائی ترجیحات، اور اُن کے بارے میں جاننے کی بات",
@@ -1065,7 +1100,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     account: 'الحساب',
     accountTitle: 'احتفظ بهذا على كل أجهزتك',
     accountBody:
-      'اختياري. هدفك وقوائم مستوياتك وتفضيلاتك الغذائية وسجل طبخك وخزانتك تنتقل معك إلى هاتف آخر أو حاسوب. كل شيء يعمل كما هو من دون تسجيل الدخول — هذا يحدّد فقط أين يُحفظ.',
+      'اختياري. هدفك وكم طبخت من قبل وتفضيلاتك الغذائية وسجل طبخك وخزانتك تنتقل معك إلى هاتف آخر أو حاسوب. كل شيء يعمل كما هو من دون تسجيل الدخول — هذا يحدّد فقط أين يُحفظ.',
     emailLabel: 'البريد الإلكتروني',
     emailPlaceholder: 'you@example.com',
     sendLink: 'أرسل لي رابطاً',
@@ -1077,6 +1112,14 @@ export const EXTRA: Record<string, Record<string, string>> = {
     localOnly: 'على هذا الجهاز فقط',
     cloudUnreachable:
       'تعذّر الوصول إلى خدمة تسجيل الدخول — غالباً بسبب انقطاع الشبكة. كل شيء آخر يواصل العمل على هذا الجهاز.',
+
+    /* ── The one question ── */
+    /* Lifted from each language's own tierSkillSub with the sentence about
+       dragging cut off the front, so these are real translations rather
+       than six new ones. */
+    levelSub: 'لا توجد إجابة خاطئة. هذا فقط يمنعني من اقتراح أشياء ستزعجك.',
+    stepOf: 'الخطوة {n} من {of}',
+    resLevel: 'حسب مستواك',
 
     /* ── Mascot ── */
     mascotN: 'بانتري، في الزاوية',
@@ -1162,7 +1205,6 @@ export const EXTRA: Record<string, Record<string, string>> = {
     liveLook: 'المس للبحث عن متاجر قريبة منك',
 
     /* ── Getting around without a mouse ── */
-    tierPlaceIn: 'ضع البطاقة المختارة في هذا الصف: {t}',
     stepBack: 'الخطوة السابقة',
     passportNudgeReal:
       '{n} بلداً في هذا الكتاب لم تطبخ من مطبخها قط. أرخص ما يفوتك {c} — {d} يكلّف {a} للحصة.',
@@ -1202,7 +1244,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     crashSave: "احفظ نسخة من بياناتي أولاً",
     dataTitle: "بياناتك",
     dataExport: "احفظ نسخة",
-    dataExportSub: "ملف واحد يضمّ قوائم مستوياتك وحمياتك وميزانيتك وخزانتك وكلّ طبخة سجّلتها. يذهب إلى جهازك ولا مكان آخر.",
+    dataExportSub: "ملف واحد يضمّ كم طبخت من قبل وحمياتك وميزانيتك وخزانتك وكلّ طبخة سجّلتها. يذهب إلى جهازك ولا مكان آخر.",
     dataImport: "أعِد تحميل نسخة",
     dataImportSub: "اختر ملفاً حفظته من هنا. سيحلّ محلّ ما على هذا الجهاز، ويعيد Pantry التشغيل.",
     dataImportCloud: "أنت مسجّل الدخول: سجلّ طبخك سيُدمج، لكن إعدادات حسابك تغلب في المزامنة التالية. سجّل الخروج أولاً إن كان هذا الملف يجب أن يحلّ محلّها.",
@@ -1225,7 +1267,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     privTitle: "الخصوصية",
     privIntro: "يعمل Pantry على هاتفك. ومعظم ما تفعله هنا لا يغادره أبداً. هذه الصفحة تقول بالضبط ما الذي يغادر، ومتى، ومن يراه — لا أكثر ولا أقل.",
     privLocalH: "دون تسجيل الدخول، لا شيء يغادر هذا الجهاز",
-    privLocalB: "كل ما تخبر به Pantry يُكتب في التخزين المحلي لمتصفّحك تحت مفتاح واحد: pantry.v1. يحتوي على ما إذا كنت أنهيت الإعداد، وقائمتَي التصنيف، وأنظمتك الغذائية، وبلدك، وميزانيتك، وحدّك الزمني، ولغتك، ومفتاح تذكير البقايا، وسجلّ طبخك، وإجاباتك على أسئلة شاشة الأرقام، والأسبوع الذي حفظته، وما أشّرت عليه كموجود في خزانتك.\nوهناك مفتاح آخر، pantry.fx.v1، يحمل سعر صرف اليوم. وهذه حقيقة عن المال، لا عنك.\nلا شيء من ذلك يُرسل إلى أي مكان. لا حساب، ولا خادم، ولا طلب. امسح بيانات هذا الموقع من متصفّحك ويختفي كل شيء — ومعه كل ما كان التطبيق يعرفه.",
+    privLocalB: "كل ما تخبر به Pantry يُكتب في التخزين المحلي لمتصفّحك تحت مفتاح واحد: pantry.v1. يحتوي على ما إذا كنت أنهيت الإعداد، وكم طبخت من قبل، وأنظمتك الغذائية، وبلدك، وميزانيتك، وحدّك الزمني، ولغتك، ومفتاح تذكير البقايا، وسجلّ طبخك، وإجاباتك على أسئلة شاشة الأرقام، والأسبوع الذي حفظته، وما أشّرت عليه كموجود في خزانتك.\nوهناك مفتاح آخر، pantry.fx.v1، يحمل سعر صرف اليوم. وهذه حقيقة عن المال، لا عنك.\nلا شيء من ذلك يُرسل إلى أي مكان. لا حساب، ولا خادم، ولا طلب. امسح بيانات هذا الموقع من متصفّحك ويختفي كل شيء — ومعه كل ما كان التطبيق يعرفه.",
     privAccountH: "عند تسجيل الدخول، وعندها فقط",
     privAccountB: "تسجيل الدخول اختياري، والتطبيق يعمل كما هو بدونه. تكتب بريداً إلكترونياً فيصلك رابط. لا كلمة مرور، فلا شيء لتخزينه.\nبريدك الإلكتروني وجلسة دخولك يحتفظ بهما Supabase، وهو قاعدة البيانات وخدمة الدخول التي يستخدمها هذا التطبيق.\nومن هناك: profiles يحمل الإعدادات المذكورة أعلاه، ليعمل الحساب نفسه على حاسوبك. cook_log يحمل ما طبخته — الطبق، والتاريخ، والتكلفة، والحصص، والسعرات، والبروتين، والكربوهيدرات، والصعوبة، وكم ذهب إلى القمامة. saved_plans وplan_meals يحملان أسبوعاً إن حفظته. price_reports يحمل سعراً إن أبلغت عنه. push_subscriptions وreminders يحملان الإشعار إن فعّلته.\nلا يُكتب شيء في أيٍّ منها حتى تفعل ما يكتب فيه. أسابيع العيّنة الثمانية في شاشة الأرقام لا تُرفع أبداً — فهي ديكور لا سِجلّك. وما أشّرت عليه كموجود في خزانتك يبقى على هذا الجهاز؛ ولا يُزامَن.",
     privDietH: "الأنظمة الغذائية، وما يستحق أن تعرفه عنها",

@@ -126,7 +126,7 @@ export function Results({ v }: { v: Pantry }) {
         </div>
         <div style={css('flex:1;padding:14px;border-radius:22px;background:#eee7db;text-align:center')}>
           <div style={css("font-family:'Caprasimo',serif;font-size:21px;line-height:1")}>{v.diffLabel}</div>
-          <div style={css('font-size:11.5px;color:#645c50;margin-top:5px')}>{v.u.resTier}</div>
+          <div style={css('font-size:11.5px;color:#645c50;margin-top:5px')}>{v.resLevelLabel}</div>
         </div>
       </div>
 

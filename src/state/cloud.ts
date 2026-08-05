@@ -81,7 +81,13 @@ export interface CloudProfile {
   dismissed: Record<string, boolean>;
   nudges: Record<string, boolean>;
   onboarded: boolean;
+  /** The old pantry-globe build's column. Nothing in this app reads or writes
+   *  it; its constraints are not in any migration here. Left declared so the
+   *  select below keeps typechecking, and left alone otherwise. */
   skill: number;
+  /** How much cooking you have done, 1..4. Backfilled from skill_cards once by
+   *  20260805120000_skill_level.sql; written by this build from then on. */
+  skill_level: number | null;
 }
 
 export async function pullProfile(userId: string): Promise<CloudProfile | null> {
@@ -90,7 +96,7 @@ export async function pullProfile(userId: string): Promise<CloudProfile | null> 
   const { data, error } = await db
     .from('profiles')
     .select(
-      'goal, language, max_time, budget_amount, streak, country, diets, skill_cards, time_cards, learned, dismissed, nudges, onboarded, skill',
+      'goal, language, max_time, budget_amount, streak, country, diets, skill_cards, time_cards, learned, dismissed, nudges, onboarded, skill, skill_level',
     )
     .eq('id', userId)
     .maybeSingle();

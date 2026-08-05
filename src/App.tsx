@@ -19,7 +19,7 @@ import { Results } from './screens/Results';
 import { Settings } from './screens/Settings';
 import { Shop } from './screens/Shop';
 import { Stats } from './screens/Stats';
-import { Tier } from './screens/Tier';
+import { Level } from './screens/Level';
 import { Welcome } from './screens/Welcome';
 
 export default function App() {
@@ -66,7 +66,7 @@ export default function App() {
           <Boundary lang={v.lang} dir={v.dir} resetKey={v.screen + '/' + v.pickId}>
             {v.isWelcome && <Welcome v={v} />}
           {v.isGoal && <Goal v={v} />}
-          {v.isTier && <Tier v={v} />}
+          {v.isTier && <Level v={v} />}
           {v.isDiet && <Diet v={v} />}
           {v.isLocate && <Locate v={v} />}
           {v.isHome && <Home v={v} />}
@@ -93,8 +93,6 @@ export default function App() {
         {v.showNav && <Nav v={v} />}
       </div>
 
-      {/* The card that follows your finger while you drag it into a tier row. */}
-      {v.dragging && <div style={css(v.ghostStyle)}>{v.dragLabel}</div>}
     </div>
   );
 }

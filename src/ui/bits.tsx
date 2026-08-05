@@ -16,9 +16,21 @@ export const BackBtn = ({ label, onClick }: { label: string; onClick: () => void
   </Btn>
 );
 
-/** Onboarding progress — one filled dot for where you are. */
-export const Dots = ({ at, of = 5, width = 22 }: { at: number; of?: number; width?: number }) => (
-  <div style={{ display: 'flex', gap: 6 }}>
+/** Onboarding progress. Decorative to look at and, until now, silent — a row
+ *  of dots with a label is the difference between "step 2 of 4" and nothing at
+ *  all for anybody not looking at the screen. */
+export const Dots = ({
+  at,
+  of = 4,
+  width = 22,
+  label,
+}: {
+  at: number;
+  of?: number;
+  width?: number;
+  label?: string;
+}) => (
+  <div role="img" aria-label={label} style={{ display: 'flex', gap: 6 }}>
     {Array.from({ length: of }, (_, i) => (
       <span
         key={i}

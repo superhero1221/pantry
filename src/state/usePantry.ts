@@ -21,12 +21,10 @@ import {
   PILL_ON,
   RECIPES as RAW_RECIPES,
   SKILL_CARDS,
-  SKILL_TIERS,
+  SKILL_LEVELS,
   SOURCES,
   STAPLES,
   STORES_BY_COUNTRY,
-  TIME_CARDS,
-  TIME_TIERS,
 } from '../data/cookbook';
 import type { HistoryRow, Item, Recipe, Store, TechniqueCard } from '../data/types';
 import * as food from '../lib/food-table';
@@ -37,6 +35,7 @@ import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
 import { DERIVED, meetsDiet } from '../lib/diets';
 import { fromLocal, toLocal } from '../lib/money';
+import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
 import { xt } from '../data/extra-copy';
 import { exportBackup, readBackup, readStore, STORE_KEY } from '../lib/backup';
@@ -95,17 +94,6 @@ export type Screen =
 
 type Waste = 'none' | 'some' | 'lots';
 
-interface Drag {
-  id: string;
-  label: string;
-  x: number;
-  y: number;
-  ox: number;
-  oy: number;
-  moved: boolean;
-  over: string | null;
-}
-
 /** Live rates as last seen, plus the moment we saw them. `at` is ours, not the
  *  ECB's, and it is what holds the app to one ask a day. Null anywhere means it
  *  is running on the rates it shipped with — which is also exactly where a
@@ -123,9 +111,8 @@ export type BigPose = 'point' | 'celebrate' | 'lose' | 'gain' | 'muscle' | 'chea
 export interface PantryState {
   screen: Screen;
   seen: boolean;
-  tierStep: 0 | 1;
-  skill: Record<string, string>;
-  time: Record<string, string>;
+  /** How much cooking you have done, 1..4, or null for never said. */
+  level: Level | null;
   diets: string[];
   country: string | null;
   locating: boolean;
@@ -158,8 +145,6 @@ export interface PantryState {
   cookLogId: string | null;
   reminded: boolean;
   notif: string | null;
-  drag: Drag | null;
-  sel: string | null;
   toggles: Record<string, boolean>;
   lang: string | null;
   langOpen: boolean;
@@ -208,9 +193,7 @@ export interface PantryState {
 const INITIAL: PantryState = {
   screen: 'welcome',
   seen: false,
-  tierStep: 0,
-  skill: {},
-  time: {},
+  level: null,
   diets: [],
   country: null,
   locating: false,
@@ -235,8 +218,6 @@ const INITIAL: PantryState = {
   cookLogId: null,
   reminded: false,
   notif: null,
-  drag: null,
-  sel: null,
   toggles: { leftover: true, mascot: true },
   lang: null,
   langOpen: false,
@@ -272,16 +253,16 @@ const INITIAL: PantryState = {
 };
 
 /* ── What survives a reload ────────────────────────────────────────────────
-   Only what the user actually told the app: their languages, their tier
-   lists, their diets, what they cooked. Never the transient screen state.
+   Only what the user actually told the app: their languages, how much cooking
+   they have done, their diets, what they cooked. Never the transient screen
+   state.
    "Start over" in Settings clears the lot. */
 // STORE_KEY itself now lives in lib/backup.ts, imported above: the crash
 // screen and the export both have to name it, and neither can afford to
 // import this file.
-const KEEP = [
+export const KEEP = [
   'seen',
-  'skill',
-  'time',
+  'level',
   'diets',
   'country',
   'budget',
@@ -313,10 +294,14 @@ const MAX_BASE = 1000;
  *  nothing but save() below writes that key. An imported file is a different
  *  proposition, so both now go through the same gate, and a key of the wrong
  *  shape is dropped rather than handed to a screen that will call .map on it. */
-const SHAPE: Record<string, (x: unknown) => boolean> = {
+export const SHAPE: Record<string, (x: unknown) => boolean> = {
   seen: (x) => typeof x === 'boolean',
-  skill: isObj,
-  time: isObj,
+  /* A gate, not a coercion: anything outside 1..4 is dropped rather than
+     clamped, and skillLevel() supplies the default. Adding a name to KEEP
+     without a line here is not a missing key — SHAPE[k] is called
+     unconditionally, the throw is swallowed by load()'s catch, and the whole
+     profile is silently wiped. persist.test.ts exists to catch exactly that. */
+  level: (x) => x === null || (typeof x === 'number' && Number.isInteger(x) && x >= 1 && x <= 4),
   diets: Array.isArray,
   country: (x) => x === null || typeof x === 'string',
   budget: (x) => isNum(x) && (x as number) > 0 && (x as number) <= MAX_BASE,
@@ -345,7 +330,7 @@ const SHAPE: Record<string, (x: unknown) => boolean> = {
  * next save, and up into the cloud profile, forever. A file someone hands you
  * can carry anything at all, including `__proto__`: JSON.parse makes that an
  * ordinary own property rather than the setter, and this loop only ever reads
- * the eighteen names it was given, so neither route reaches anything.
+ * the seventeen names it was given, so neither route reaches anything.
  */
 /** Re-key a saved map through the alias map.
  *
@@ -361,9 +346,19 @@ const realias = <T,>(map: Record<string, T>): Record<string, T> => {
   return out;
 };
 
-function pick(blob: Record<string, unknown>): Partial<PantryState> {
+export function pick(blob: Record<string, unknown>): Partial<PantryState> {
   const out: Record<string, unknown> = {};
   for (const k of KEEP) if (k in blob && SHAPE[k](blob[k])) out[k] = blob[k];
+  /* A tier list saved by an older build. The loop above only ever looks at KEEP
+     names, so the moment 'skill' left KEEP these maps became invisible to it —
+     they have to be read straight off the blob.
+     This is the only chance there will ever be. usePantry's very first effect
+     is save(S), and save writes KEEP and nothing else, so one render after an
+     unmigrated boot the old maps are gone from storage with no backup. Both
+     callers reach here: the boot read and an imported file. */
+  if (out.level == null && isObj(blob.skill)) {
+    out.level = levelFromCards(blob.skill as Record<string, unknown>);
+  }
   if (isObj(out.toggles)) {
     const was = out.toggles as Record<string, boolean>;
     out.toggles = { leftover: was.leftover ?? true, mascot: was.mascot ?? true };
@@ -470,6 +465,19 @@ const keyOf = (name: string) => canonical(name.split(',')[0].trim());
 /** The budget presets the design ships, in GBP: the chip row on Home, and the
  *  set that a typed-in amount is measured against. */
 const BUDGETS = [3, 5, 6, 8, 12];
+
+/** One of the four answers to "What can you already do?".
+ *
+ *  Not PILL_ON: white on #c67139 is 3.61:1, under AA at this size, and colour
+ *  on its own is not a state anyway. This is the highlight the tier rows
+ *  already used — a peach fill inside an orange ring — plus a tick, so the
+ *  chosen row survives both a contrast check and a greyscale screenshot. */
+const LEVEL_ROW =
+  'display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-height:64px;' +
+  'padding:13px 16px;border-radius:22px;text-align:start;color:#201e1d;' +
+  'transition:background .15s,box-shadow .15s;';
+const LEVEL_ON = 'background:#ffe1d0;box-shadow:inset 0 0 0 2px #c67139;';
+const LEVEL_OFF = 'background:#f9f4ed;box-shadow:inset 0 0 0 1px rgba(32,30,29,.06);';
 
 /** Days since a cook. Real rows age with the calendar; seeded sample rows keep
  *  the age they shipped with, because a stage set should not rot — the sample
@@ -707,26 +715,6 @@ export function usePantry() {
     };
   }, []);
 
-  const place = useCallback(
-    (id: string, tier: string) => {
-      const s = ref.current;
-      const key = s.tierStep === 0 ? 'skill' : 'time';
-      setState({ [key]: { ...s[key], [id]: tier }, sel: null } as Partial<PantryState>);
-    },
-    [setState],
-  );
-
-  const pull = useCallback(
-    (id: string) => {
-      const s = ref.current;
-      const key = s.tierStep === 0 ? 'skill' : 'time';
-      const m = { ...s[key] };
-      delete m[id];
-      setState({ [key]: m } as Partial<PantryState>);
-    },
-    [setState],
-  );
-
   const ping = useCallback(
     (text: string) => {
       setState({ notif: text });
@@ -770,8 +758,7 @@ export function usePantry() {
     streak: streakFrom(s.history),
     country: s.country || 'GB',
     diets: s.diets,
-    skill_cards: s.skill,
-    time_cards: s.time,
+    skill_level: s.level,
     learned: s.profile,
     dismissed: s.dismissed,
     nudges: s.toggles,
@@ -816,8 +803,14 @@ export function usePantry() {
         diets: remote.diets ?? local.diets,
         maxTime: remote.max_time ?? local.maxTime,
         budget: Number(remote.budget_amount ?? local.budget),
-        skill: remote.skill_cards ?? local.skill,
-        time: remote.time_cards ?? local.time,
+        /* skill_level only, never skill_cards. An upsert touches only the
+           columns it names, so the moment this build stopped writing
+           skill_cards that map froze at whatever an older client last dragged
+           into it. Falling back to it would let a stale tier list overrule the
+           answer you tapped on your other phone. The migration read it once,
+           server-side, to fill this column in — which is the only time it
+           should ever be read again. */
+        level: remote.skill_level == null ? local.level : clampLevel(remote.skill_level),
         profile: remote.learned ?? local.profile,
         dismissed: remote.dismissed ?? local.dismissed,
         toggles: remote.nudges ?? local.toggles,
@@ -853,47 +846,12 @@ export function usePantry() {
     S.diets,
     S.maxTime,
     S.budget,
-    S.skill,
-    S.time,
+    S.level,
     S.profile,
     S.dismissed,
     S.toggles,
     S.seen,
   ]);
-
-  /* Dragging a technique card. The pointer listeners live on the window so a
-     card can be dropped anywhere, including outside its row. */
-  useEffect(() => {
-    const move = (e: PointerEvent) => {
-      const d = ref.current.drag;
-      if (!d) return;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const row = el?.closest('[data-tier]');
-      setState({
-        drag: {
-          ...d,
-          x: e.clientX,
-          y: e.clientY,
-          over: row ? row.getAttribute('data-tier') : null,
-          moved: d.moved || Math.abs(e.clientX - d.ox) + Math.abs(e.clientY - d.oy) > 5,
-        },
-      });
-    };
-    const up = () => {
-      const d = ref.current.drag;
-      if (!d) return;
-      if (d.over) place(d.id, d.over);
-      else if (!d.moved) setState({ sel: d.id });
-      setState({ drag: null });
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-    return () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setState]);
 
   /* ── Language ─────────────────────────────────────────────────────────── */
   const lg = S.lang || 'en';
@@ -1082,25 +1040,21 @@ export function usePantry() {
     r.items.filter((i) => !i.opt || wantsExtra(i.n)).reduce((a, i) => a + i.s * mult, 0);
   void allIn;
 
-  /* ── The tier lists ───────────────────────────────────────────────────── */
-  const skillLevel = () => {
-    if (!Object.values(S.skill).length) return 2;
-    let sc = 0;
-    SKILL_CARDS.forEach((cd) => {
-      const t = S.skill[cd.id];
-      if (t === 'S') sc += (cd.w ?? 0) * 1.1;
-      else if (t === 'A') sc += (cd.w ?? 0) * 0.7;
-    });
-    return Math.max(1, Math.min(4, Math.round(sc / 4)));
-  };
-  const timeLevel = () => {
-    let best = 0;
-    TIME_CARDS.forEach((cd) => {
-      const t = S.time[cd.id];
-      if ((t === 'S' || t === 'A') && (cd.m ?? 0) > best) best = cd.m ?? 0;
-    });
-    return best || 45;
-  };
+  /* ── How much cooking you have done ───────────────────────────────────── */
+  /** One number, 1..4, and the only thing about you that ranking reads.
+   *
+   *  Clamped here as well as in SHAPE, because SHAPE gates localStorage and
+   *  imported files and a signed-in hydrate goes nowhere near it. Everything
+   *  downstream indexes P.levels with this on every render of every screen, and
+   *  that indexing happens inside App's own render — so an out-of-range number
+   *  would not break a Settings row, it would take the app down past the error
+   *  boundary. The 2 is the same default the empty tier list used to give.
+   *
+   *  There is no timeLevel() any more. It read a second tier list that never
+   *  wrote S.maxTime, so it governed nothing: fitsTime() has always read
+   *  S.maxTime, which only the Home screen's time chips set. All it did was
+   *  print a sentence that could disagree with them. */
+  const skillLevel = () => clampLevel(S.level ?? 2);
 
   /* ── Ranking ──────────────────────────────────────────────────────────── */
   /** The time budget, taken literally. Everything that reads it treats it as a
@@ -1182,7 +1136,7 @@ export function usePantry() {
     scored.sort((a, b) => rank(a) - rank(b) || a.s - b.s);
     return scored.map((x) => x.r);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [S.query, S.budget, S.maxTime, S.diets, S.profile, S.skill, toBuy]);
+  }, [S.query, S.budget, S.maxTime, S.diets, S.profile, S.level, toBuy]);
 
   /* ── Real location, real shops ────────────────────────────────────────── */
   const live = () => import('../data/pantry-live');
@@ -1479,11 +1433,6 @@ export function usePantry() {
   /* ── Derived view values ──────────────────────────────────────────────── */
   const screen = S.screen;
   const cityNow = S.liveCity || c.city;
-  const tierIsSkill = S.tierStep === 0;
-  const cards: TechniqueCard[] = tierIsSkill ? SKILL_CARDS : TIME_CARDS;
-  const tiers = tierIsSkill ? SKILL_TIERS : TIME_TIERS;
-  const placed = tierIsSkill ? S.skill : S.time;
-  const dragOver = S.drag ? S.drag.over : null;
 
   const buy = toBuy(recipe);
   const whole = allIn(recipe);
@@ -1527,11 +1476,14 @@ export function usePantry() {
     .filter((i) => onList(recipe, i))
     .reduce((a, i) => a + lineCost(i), 0);
 
-  const cardWord = (cd: TechniqueCard) => P.skill[cd.id] || P.times[cd.id] || cd.label;
-  const tierWord = (t: { key: string; label: string }) =>
-    (tierIsSkill ? P.sTiers[t.key] : P.tTiers[t.key]) || t.label;
+  /** What one technique is called, in your language. */
+  const actWord = (id: string) => P.skill[id] || id;
 
   const skillWords = P.levels;
+  /** P.levels are lowercase sentence fragments — they were written to finish
+   *  "Reads like: {w}." Everywhere one is shown as a label it gets capitalised,
+   *  and this is a harmless no-op in Urdu and Arabic. */
+  const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
   const R = P.r;
   const SH = P.s;
   const X = P.x;
@@ -1802,13 +1754,98 @@ export function usePantry() {
       pick: () =>
         setState({ profile: { ...S.profile, ...(g === 'none' ? { goal: '' } : { goal: g }) } }),
     })),
-    toTier: () => go('tier', { tierStep: 0 }),
+    toTier: () => go('tier'),
+    /** "Step 2 of 4" for the dot row, which was a picture with nothing to read. */
+    dotsLabel: (at: number) => fill(xt(lg, 'stepOf'), { n: at + 1, of: 4 }),
+    resLevelLabel: xt(lg, 'resLevel'),
     skipOnboarding: () => go('home', { seen: true }),
+
+    /* ── How much cooking you have done ─────────────────────────────────── */
+    /* One question, four answers, one tap. It used to be two screens of
+       drag-and-drop — eight technique cards into four rows, then five time
+       cards into four more — thirteen drags on a phone to produce one number
+       between 1 and 4 and a sentence that governed nothing.
+
+       The acts lead and the level name follows, deliberately. Asking what
+       somebody can DO is the one genuinely good idea the tier list had:
+       nobody rates their own cooking accurately, but everybody knows whether
+       they have kneaded dough. It also sidesteps a problem the old readout
+       had but a button would not survive — P.levels is masculine in Spanish,
+       French, Polish and Arabic ("cocinero", "un cuisinier sûr de lui"), and
+       promoting it to the thing you press would misgender about half the
+       people who press it. A verb phrase has no gender in any of the six. */
+    levelSub: xt(lg, 'levelSub'),
+    /* Hidden for anyone who already finished setup and arrived from Settings:
+       "step 2 of 4" means nothing to somebody who set up last March. */
+    levelDots: !S.seen,
+    levelOptions: SKILL_LEVELS.map((row, i) => ({
+      key: String(row.lvl),
+      /* The roving-tabindex group has to be able to move focus, and a screen
+         holds no state to do it with. */
+      id: 'pg-level-' + row.lvl,
+      acts: row.ids.map(actWord),
+      name: cap(skillWords[row.lvl] || ''),
+      on: S.level === row.lvl,
+      /* Exactly one radio is tabbable. With nothing chosen yet it is the
+         first, so one Tab reaches the group and the arrows do the rest. */
+      tabIndex: (S.level == null ? i === 0 : S.level === row.lvl) ? 0 : -1,
+      style: LEVEL_ROW + (S.level === row.lvl ? LEVEL_ON : LEVEL_OFF),
+      hover: S.level === row.lvl ? '' : 'background:#f2ece1',
+      pick: () => setState({ level: row.lvl as Level }),
+      /* In a radio group the arrows move AND choose, which is what makes four
+         alternatives reachable without sight or a mouse. Up and Down only:
+         Home and End need no mirroring for Arabic and Urdu, and Left and Right
+         would. Enter and Space are the button's own and land on `pick`. */
+      onKey: (e: ReactKeyboardEvent) => {
+        const n = SKILL_LEVELS.length;
+        const to =
+          e.key === 'ArrowDown' ? (i + 1) % n
+          : e.key === 'ArrowUp' ? (i - 1 + n) % n
+          : e.key === 'Home' ? 0
+          : e.key === 'End' ? n - 1
+          : -1;
+        if (to < 0) return;
+        e.preventDefault();
+        const lv = SKILL_LEVELS[to].lvl as Level;
+        setState({ level: lv });
+        window.requestAnimationFrame(() => document.getElementById('pg-level-' + lv)?.focus());
+      },
+    })),
+    /* Empty until you have answered. Four labelled rows explain themselves, and
+       the old "Place a few and I will tell you what I make of it" was about a
+       half-filled deck that no longer exists. The element stays mounted either
+       way so its live region is there before the text arrives. */
+    levelReadout:
+      S.level == null
+        ? ''
+        : vs('readsLike', 'Reads like: {w}. {p}', {
+            w: skillWords[S.level] || '',
+            p: V['plan' + S.level] || '',
+          }),
+    levelReadoutStyle:
+      S.level == null
+        ? 'margin:0;padding:0'
+        : 'margin-top:14px;padding:13px 15px;border-radius:20px;background:#e1eecc;' +
+          'font-size:13.5px;line-height:1.5;color:#3d472b;text-wrap:pretty',
+    levelCta: T.tierNext,
+    /* Skip and Next are the same door with two labels, deliberately: the answer
+       is optional and skillLevel() defaults to 2 either way. A returning cook
+       who came from Settings goes back to Settings rather than being walked
+       through Diet and Locate a second time. */
+    levelNext: () => go(S.seen ? 'settings' : 'diet'),
     back: () => {
-      if (screen === 'tier' && S.tierStep === 1) return setState({ tierStep: 0 });
       if (depthOf() > 0) return window.history.back();
-      if (screen === 'tier') return go('welcome');
-      if (screen === 'diet') return go('tier', { tierStep: 1 });
+      /* No stack. A single-file build opened from file:// has an opaque origin,
+         pushState throws, writeHash swallows it and depthOf() stays 0 forever —
+         so in the standalone build this ladder IS the router rather than a rare
+         fallback, and it has to walk setup backwards a screen at a time.
+         Three things were wrong with it before: 'tier' went back to Welcome and
+         skipped Goal, 'diet' set a tier step that no longer exists, and there
+         was no 'goal' case at all, so Back from the first question dropped an
+         unfinished visitor on Home with the nav bar showing and `seen` false. */
+      if (screen === 'goal') return go('welcome');
+      if (screen === 'tier') return go('goal');
+      if (screen === 'diet') return go('tier');
       if (screen === 'locate') return go('diet');
       if (screen === 'shop') return go('results');
       // Arrived by link, so there is no stack. Back goes where the link lives.
@@ -1819,114 +1856,6 @@ export function usePantry() {
     goKitchen: () => go('kitchen'),
     goPassport: () => go('passport'),
     goBrowse: () => go('browse'),
-
-    /* ── Tier list ──────────────────────────────────────────────────────── */
-    dot1: S.tierStep === 0 ? '#c67139' : '#dcd3c4',
-    dot2: S.tierStep === 1 ? '#c67139' : '#dcd3c4',
-    tierTitle: tierIsSkill ? T.tierSkill : T.tierTime,
-    tierSub: tierIsSkill ? vs('tierSkillSub', '') : vs('tierTimeSub', ''),
-    trayLabel: Object.keys(placed).length ? word('leftToPlace', 'left to place') : word('theCards', 'The cards'),
-    trayEmpty: Object.keys(placed).length >= cards.length,
-    tierRows: tiers.map((t) => {
-      const mine = cards.filter((cd) => placed[cd.id] === t.key);
-      const hot = dragOver === t.key || (S.sel && !mine.length);
-      return {
-        key: t.key,
-        label: tierWord(t),
-        badgeBg: t.badgeBg,
-        badgeFg: t.badgeFg,
-        empty: mine.length === 0,
-        style:
-          'display:flex;gap:11px;align-items:center;padding:8px;border-radius:22px;width:100%;text-align:start;min-height:62px;transition:background .15s,box-shadow .15s;background:' +
-          (dragOver === t.key ? '#ffe1d0' : '#f9f4ed') +
-          (hot ? ';box-shadow:inset 0 0 0 2px #c67139' : ';box-shadow:inset 0 0 0 1px rgba(32,30,29,.06)'),
-        onDrop: () => {
-          if (S.sel) place(S.sel, t.key);
-        },
-        /** The same drop, reached from the keyboard. The badge in each row is a
-         *  real button — the row itself cannot be one, because the cards sitting
-         *  in it are — and this is what pressing it does. The click is stopped
-         *  here so the row's own handler does not place the card a second time. */
-        place: (e: ReactMouseEvent) => {
-          e.stopPropagation();
-          if (S.sel) place(S.sel, t.key);
-        },
-        placeLabel: fill(xt(lg, 'tierPlaceIn'), { t: tierWord(t) }),
-        cards: mine.map((cd) => ({
-          key: cd.id,
-          label: cardWord(cd),
-          pull: (e: ReactMouseEvent) => {
-            e.stopPropagation();
-            pull(cd.id);
-          },
-        })),
-      };
-    }),
-    tray: cards
-      .filter((cd) => !placed[cd.id])
-      .map((cd) => ({
-        key: cd.id,
-        label: cardWord(cd),
-        on: S.sel === cd.id,
-        style:
-          'padding:11px 15px;border-radius:999px;font-size:13.5px;font-weight:600;touch-action:none;user-select:none;transition:transform .12s;background:' +
-          (S.sel === cd.id ? '#c67139;color:#fff' : '#fff;color:#201e1d') +
-          ';box-shadow:0 1px 2px rgba(46,43,37,.14)' +
-          (S.drag && S.drag.id === cd.id ? ';opacity:.3' : ''),
-        grab: (e: ReactPointerEvent) => {
-          e.preventDefault();
-          setState({
-            drag: {
-              id: cd.id,
-              label: cardWord(cd),
-              x: e.clientX,
-              y: e.clientY,
-              ox: e.clientX,
-              oy: e.clientY,
-              moved: false,
-              over: null,
-            },
-          });
-        },
-        /** A pointer picks a card up on pointerdown, which a keyboard never
-         *  sends. Enter and Space do here what a tap does — arm the card, so the
-         *  next Enter on a row's badge places it. */
-        onKey: (e: ReactKeyboardEvent) => {
-          if (e.key !== 'Enter' && e.key !== ' ') return;
-          e.preventDefault();
-          setState({ sel: S.sel === cd.id ? null : cd.id });
-        },
-      })),
-    tierReadout: tierIsSkill
-      ? Object.keys(S.skill).length
-        ? vs('readsLike', 'Reads like: {w}. {p}', { w: skillWords[lvl], p: V['plan' + lvl] || '' })
-        : vs('placeFew', 'Place a few and I will tell you what I make of it.')
-      : Object.keys(S.time).length
-        ? vs('timeRead', 'Right — I will keep everything under {m} minutes on a normal day.', { m: timeLevel() })
-        : vs('placeFew', 'Place a few and I will tell you what I make of it.'),
-    tierCta: T.tierNext,
-    tierNext: () => (tierIsSkill ? setState({ tierStep: 1, sel: null }) : go('diet')),
-
-    dragging: !!S.drag,
-    dragLabel: S.drag ? S.drag.label : '',
-    ghostStyle: S.drag
-      ? {
-          position: 'fixed' as const,
-          left: S.drag.x,
-          top: S.drag.y,
-          transform: 'translate(-50%,-50%) rotate(-3deg) scale(1.06)',
-          padding: '11px 15px',
-          borderRadius: 999,
-          background: '#c67139',
-          color: '#fff',
-          fontSize: 13.5,
-          fontWeight: 600,
-          pointerEvents: 'none' as const,
-          zIndex: 999,
-          boxShadow: '0 12px 32px rgba(46,43,37,.34)',
-          whiteSpace: 'nowrap' as const,
-        }
-      : undefined,
 
     /* ── Diet ───────────────────────────────────────────────────────────── */
     dietChips: DIETS.map((d) => ({
@@ -2924,33 +2853,23 @@ export function usePantry() {
     nudgesLabel: X.nudges,
     insteadLabel: X.insteadOf,
     twoOthersLabel: X.twoOthers,
-    /* The technique-card count belongs to the skill line — it used to sit in
-       the sentence about the time budget, counting the wrong deck. Each line
-       now counts its own cards. */
-    skillSummary:
-      word('skillIs', 'Skill') +
-      ': ' +
-      skillWords[lvl].charAt(0).toUpperCase() +
-      skillWords[lvl].slice(1) +
-      '. ' +
-      Object.keys(S.skill).length +
-      ' ' +
-      word('ofThem', 'of') +
-      ' ' +
-      SKILL_CARDS.length +
-      ' ' +
-      word('cardsPlaced', 'technique cards placed') +
-      '.',
+    skillSummary: word('skillIs', 'Skill') + ': ' + cap(skillWords[lvl] || '') + '.',
+    /* Reads the number that actually governs what gets offered. It used to read
+       the time tier list, which wrote nothing — so this line could, and did,
+       disagree with the time chips on the Home screen. The 999 branch is not
+       optional: "No rush" is stored as 999 minutes. */
     timeSummary:
-      word('timeIs', 'Time') +
-      ': ' +
-      word('upTo', 'up to') +
-      ' ' +
-      timeLevel() +
-      ' ' +
-      word('minutesNormal', 'minutes on a normal day') +
-      '.',
-    redoTier: () => go('tier', { tierStep: 0 }),
+      S.maxTime === 999
+        ? word('timeIs', 'Time') + ': ' + R.noRush + '.'
+        : word('timeIs', 'Time') +
+          ': ' +
+          word('upTo', 'up to') +
+          ' ' +
+          S.maxTime +
+          ' ' +
+          word('minutesNormal', 'minutes on a normal day') +
+          '.',
+    redoTier: () => go('tier'),
     /* Two switches, both of which do something. The other two rows that used
        to sit here gated nothing: "portion learning" belonged to the shrink
        offer (now gone), and "shop closing alerts" described a feature with no
@@ -2994,7 +2913,7 @@ export function usePantry() {
             return;
           }
           // Through the same filter the boot read uses. A file can carry
-          // anything; only the eighteen keys in KEEP, each of the right shape,
+          // anything; only the seventeen keys in KEEP, each of the right shape,
           // get past here.
           const keep = pick(got.data);
           const cooks = Array.isArray(keep.history)

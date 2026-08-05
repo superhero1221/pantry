@@ -1,6 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { COUNTRIES, DIETS, HISTORY, PASSPORT, RECIPES, STORES_BY_COUNTRY } from './cookbook';
+import { COUNTRIES, DIETS, HISTORY, PASSPORT, RECIPES, SKILL_CARDS, SKILL_LEVELS, STORES_BY_COUNTRY } from './cookbook';
 import { ENFORCEABLE, meetsDiet } from '../lib/diets';
 import { EXTRA, orphaned, untranslated } from './extra-copy';
 import { LANGS, pack, strings } from './pantry-i18n';
@@ -82,6 +82,35 @@ describe('the cookbook', () => {
 });
 
 describe('translations', () => {
+  it('keeps the level names 1-indexed and complete in every language', () => {
+    // The onboarding question shows one of these on each of four buttons, and
+    // Settings capitalises one on every render. A hole in the array used to be
+    // a blank fragment in a small readout; it is now a blank button, and the
+    // .charAt that capitalises it runs inside App's own render.
+    for (const l of LANGS) {
+      const p = pack(l.code);
+      expect(p.levels, l.code).toHaveLength(5);
+      expect(p.levels[0], l.code).toBe('');
+      for (const n of [1, 2, 3, 4]) expect(p.levels[n], `${l.code}[${n}]`).toBeTruthy();
+    }
+  });
+
+  it('translates every technique the question shows', () => {
+    for (const l of LANGS) {
+      const p = pack(l.code);
+      for (const id of SKILL_LEVELS.flatMap((r) => r.ids)) {
+        expect(p.skill[id], `${l.code}.${id}`).toBeTruthy();
+      }
+    }
+  });
+
+  it('spells out every technique card, not just the ones on a button', () => {
+    for (const l of LANGS) {
+      const p = pack(l.code);
+      for (const cd of SKILL_CARDS) expect(p.skill[cd.id], `${l.code}.${cd.id}`).toBeTruthy();
+    }
+  });
+
   it('covers every added string in all six languages', () => {
     for (const l of LANGS) {
       expect(untranslated(l.code), `${l.code} is missing keys`).toEqual([]);

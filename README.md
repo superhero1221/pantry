@@ -26,7 +26,7 @@ Fifteen screens, all client-side:
 
 | Flow | Screens |
 | --- | --- |
-| Onboarding | Welcome → Goals → Tier list (skill, then time) → Diet → Location |
+| Onboarding | Welcome → Goals → What can you already do? → Diet → Location |
 | Deciding | Tonight, Browse, Results |
 | Doing | Shop, Cook, After |
 | Planning | The week — days x meals, one shopping list |
@@ -34,8 +34,11 @@ Fifteen screens, all client-side:
 
 The decisions behind them, from the design conversation:
 
-- **Tier list** — S/A/B/C rows you drag technique cards into, then time cards. Skill is derived from
-  what you have actually done rather than a self-rating. Drag works, or tap a card then tap a row.
+- **What can you already do?** — one question, four answers, one tap. Each answer names two
+  things you might have done rather than asking you to rate yourself, because nobody rates their
+  own cooking accurately and everybody knows whether they have kneaded dough. This was two
+  screens of drag-and-drop until it was not: thirteen drags on a phone, before you had seen a
+  single recipe, to produce one number between 1 and 4.
 - **Tonight** — craving box, budget chips with an Other field, time chips, one big button, and
   "I don't care — just pick one", because deciding is the expensive part.
 - **Results** — four big macro numbers up front, micronutrients behind one tap, price per serving
@@ -57,14 +60,14 @@ The decisions behind them, from the design conversation:
 
 Optional and reversible. Signed out, the app is what it always was: local, and
 nothing leaves the device. Signing in — email magic link, no password —
-moves your goal, tier lists, diets, budget, language, cook log, streak and
+moves your goal, how much cooking you have done, diets, budget, language, cook log, streak and
 cupboard into Postgres behind row-level security, so the same account works on
 your phone and your laptop.
 
 Local-first throughout. Sign in and whatever you already did on this device is
 adopted, not overwritten: cooks logged before you had an account are pushed up
 and merged by client id, so signing in twice cannot duplicate them. Profile
-writes are throttled, so a burst of taps on the tier list is one round trip.
+writes are throttled, so a burst of taps on the chips is one round trip.
 
 The eight weeks of sample cooks the app ships with are marked `seeded` and
 **never** reach anyone's account — they exist so the Stats screen is legible
@@ -87,7 +90,7 @@ is not something this app should hand out.
 ## The week
 
 Days x meals a day x how many you're feeding, filled from the same ranking
-Tonight uses — so your diets, your tier list and your goal all still apply,
+Tonight uses — so your diets, your cooking level and your goal all still apply,
 just seven times over. Swap any meal you don't fancy. The shopping list is the
 union of every dish scaled to your servings, with anything already in your
 cupboard struck out at zero, and a per-day figure next to the total.
@@ -355,7 +358,7 @@ data. Wiring them up is a follow-on.
 
 ## What persists
 
-Language, country, tier lists, diets, budget, goal, nudge toggles and the cook history are kept in
+Language, country, cooking level, diets, budget, goal, nudge toggles and the cook history are kept in
 `localStorage` under `pantry.v1`, so the app does not forget your onboarding on reload. The streak
 is not stored anywhere — it is read off the cook history every render, which is why it cannot drift
 from the truth.

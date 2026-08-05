@@ -15,7 +15,7 @@ export function Locate({ v }: { v: Pantry }) {
     <div style={css('min-height:100%;display:flex;flex-direction:column;padding:14px 22px 22px')}>
       <div style={css('display:flex;align-items:center;justify-content:space-between;margin-bottom:12px')}>
         <BackBtn label={v.t.back} onClick={v.back} />
-        <Dots at={3} />
+        <Dots at={3} label={v.dotsLabel(3)} />
         <span style={css('width:38px')} />
       </div>
 

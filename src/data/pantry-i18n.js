@@ -1661,7 +1661,14 @@ export const pack = (code) => {
   const b = PACKS.en, o = PACKS[code] || {};
   const out = {};
   Object.keys(b).forEach((k) => {
-    out[k] = Array.isArray(b[k]) ? (o[k] || b[k]) : { ...b[k], ...(o[k] || {}) };
+    // Arrays were taken wholesale, which is English-backing per KEY rather than
+    // per ENTRY: a `levels` array that is short or has a hole in one language
+    // yielded undefined, and undefined is now the label on a button rather than
+    // a fragment in a 13.5px readout — and .charAt on it takes the app down
+    // inside App's own render, past the error boundary. Backed per entry now.
+    out[k] = Array.isArray(b[k])
+      ? b[k].map((v, i) => (o[k] && o[k][i]) || v)
+      : { ...b[k], ...(o[k] || {}) };
   });
   return out;
 };

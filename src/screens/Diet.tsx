@@ -11,7 +11,7 @@ export function Diet({ v }: { v: Pantry }) {
     <div style={css('min-height:100%;display:flex;flex-direction:column;padding:14px 22px 22px')}>
       <div style={css('display:flex;align-items:center;justify-content:space-between;margin-bottom:12px')}>
         <BackBtn label={v.t.back} onClick={v.back} />
-        <Dots at={2} of={4} width={26} />
+        <Dots at={2} label={v.dotsLabel(2)} />
         <span style={css('width:38px')} />
       </div>
 

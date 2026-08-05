@@ -27,7 +27,7 @@ export function Settings({ v }: { v: Pantry }) {
         ))}
       </div>
 
-      <Kicker style={{ marginTop: 24 }}>{v.t.setTier}</Kicker>
+      <Kicker style={{ marginTop: 24 }}>{v.t.tierSkill}</Kicker>
       <div style={css('margin-top:10px;padding:18px 20px;border-radius:28px;background:#f9f4ed')}>
         <div dir="auto" style={css('font-size:15px;font-weight:700;line-height:1.35')}>
           {v.skillSummary}
@@ -40,7 +40,7 @@ export function Settings({ v }: { v: Pantry }) {
           css="height:42px;padding:0 20px;border-radius:999px;background:#ebddc5;font-size:14px;font-weight:700;color:#474238;margin-top:13px"
           hover="background:#dcd3c4"
         >
-          {v.u.redoTier}
+          {v.t.setRedo}
         </Btn>
       </div>
 

@@ -9,13 +9,10 @@ import type {
   Source,
   Store,
   TechniqueCard,
-  TierRow,
 } from './types';
 
 export declare const SKILL_CARDS: TechniqueCard[];
-export declare const TIME_CARDS: TechniqueCard[];
-export declare const SKILL_TIERS: TierRow[];
-export declare const TIME_TIERS: TierRow[];
+export declare const SKILL_LEVELS: { lvl: 1 | 2 | 3 | 4; ids: string[] }[];
 export declare const DIETS: Diet[];
 export declare const COUNTRIES: Record<string, Country>;
 export declare const STORES_BY_COUNTRY: Record<string, Store[]>;

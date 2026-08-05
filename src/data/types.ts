@@ -85,13 +85,6 @@ export interface TechniqueCard {
   m?: number;
 }
 
-export interface TierRow {
-  key: string;
-  label: string;
-  badgeBg: string;
-  badgeFg: string;
-}
-
 export interface HistoryRow {
   ago: number;
   id: string;
