@@ -2,6 +2,17 @@ node_modules/
 dist/
 # A zipped dist/, for hosts you upload to by hand rather than build on.
 pantry-dist.zip
+
+# The commits, as a file, because this sandbox cannot reach the remote — every
+# push has come back 403. `git bundle` writes the history to a single file you
+# can clone or pull from on a machine that can.
+#
+# Never committed. It contains this repository's own history, so committing it
+# would put a copy of every commit inside the next one, and the copy is stale
+# the moment it is written. Regenerate it, do not track it:
+#
+#     git bundle create pantry-commits.bundle --all
+pantry-commits.bundle
 *.local
 .DS_Store
 
