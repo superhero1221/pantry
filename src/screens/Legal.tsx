@@ -10,10 +10,18 @@ import type { Pantry } from '../state/usePantry';
  *
  * Everything on them is derived in usePantry from the screen you are on, so
  * this file decides nothing about which document it is showing.
+ *
+ * 130px of padding at the foot rather than 30. The character stands in the
+ * trailing corner above the tab bar, absolutely positioned against the shell,
+ * so it does not scroll away — and the contact pill, which is the last thing
+ * on both of these documents and the only control on them, came to rest
+ * underneath it. It still took a tap, because .pg-mascot is
+ * pointer-events:none, but a button you cannot see is not one you press.
+ * Same reason and same amount as the notice at the foot of Settings.
  */
 export function Legal({ v }: { v: Pantry }) {
   return (
-    <div style={css('padding:6px 22px 30px')}>
+    <div style={css('padding:6px 22px 130px')}>
       <div style={css('margin-inline-start:-6px')}>
         <BackBtn label={v.t.back} onClick={v.back} />
       </div>

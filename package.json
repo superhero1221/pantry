@@ -2,7 +2,7 @@
   "name": "pantry",
   "version": "1.0.0",
   "private": true,
-  "license": "AGPL-3.0-only",
+  "license": "UNLICENSED",
   "type": "module",
   "description": "Pantry \u2014 an ADHD-first cooking app: one decision at a time, priced where you actually stand.",
   "scripts": {

@@ -1,34 +1,84 @@
 Pantry
-Copyright (C) 2026 the Pantry authors
-
-SPDX-License-Identifier: AGPL-3.0-only
+Copyright © 2026 the Pantry authors. All rights reserved.
 
 ------------------------------------------------------------------------------
-THIS FILE IS NOT YET COMPLETE. IT NEEDS THE LICENCE TEXT PASTED IN BELOW.
+PROPRIETARY. This is not open-source software.
 ------------------------------------------------------------------------------
 
-The licence chosen for this project is the GNU Affero General Public License,
-version 3, and no later version. That choice is deliberate and is explained in
-CREDITS.md: Pantry is a web app, so it is *served* rather than *distributed*,
-and the ordinary GPL's obligations would never trigger. The AGPL's section 13
-is the clause that does — it says that if you run a modified copy as a service
-other people use over a network, you have to offer them the source of what you
-are running. For an app whose whole value is that it can be honest about where
-its numbers come from, that is the right condition to attach.
+1. WHAT THIS COVERS
 
-The full text was deliberately not written from memory. Reproducing a licence
-approximately is worse than not shipping one at all, because a licence that
-differs from the canonical text in some small way is a licence nobody can rely
-on, including you. Fetch the real thing and replace everything above this line
-and this notice with it:
+   This licence covers the original work in this repository: the application
+   source code, the recipe text and method steps, the nutrition and food
+   composition tables, the design, the copy in all six languages, and the
+   mascot artwork as arranged, cut and posed for this app.
 
-    curl -o LICENSE https://www.gnu.org/licenses/agpl-3.0.txt
+   It does NOT cover the third-party material this app uses. That material is
+   listed in CREDITS.md and stays under its own terms — OpenStreetMap and
+   Open Food Facts data under the Open Database Licence, the dish photographs
+   under their individual Creative Commons licences, and the Caprasimo and
+   Figtree typefaces under the SIL Open Font License. Those terms are
+   obligations, not preferences: the attribution rendered on the Settings,
+   Locate and Shop screens is part of how this app is allowed to exist, and
+   removing it breaks the licence rather than tidying the interface.
 
-Then add the copyright line back at the top, and this file is done.
+2. WHAT YOU MAY DO
 
-Until that is finished, the position is: the code in this repository is offered
-under AGPL-3.0-only as identified by the SPDX line above, and the canonical
-terms are those published at https://www.gnu.org/licenses/agpl-3.0.html
+   Use the app at pantryglobe.com, or any copy of it supplied to you, for
+   cooking. Cook the recipes. Print one for your kitchen wall. Feed people,
+   including people who pay you for dinner.
 
-The data and the photographs are NOT covered by this licence, and are not the
-authors' to relicense. See CREDITS.md, which names each source and its terms.
+3. WHAT YOU MAY NOT DO
+
+   Without prior written permission you may not copy, modify, merge, publish,
+   distribute, sublicense, sell, host, or create derivative works from this
+   software or its content; you may not republish the recipe collection, the
+   composition tables or the translations as your own, in whole or in
+   substantial part; and you may not reverse-engineer, decompile or
+   disassemble any compiled form of it.
+
+   The app is delivered to your browser as readable JavaScript, because that
+   is how the web works. Being able to read it is not permission to take it.
+
+4. TRADE MARKS
+
+   "Pantry", the Pantry wordmark, the pantryglobe.com identity, and the
+   character — the cream canister with the brown lid, the brass plate and the
+   wooden spoon — are trade marks of the Pantry authors, whether or not
+   registered. Nothing in this licence grants any right to use them. In
+   particular, a permitted use of the code under section 2 is not permission
+   to use the name or the character.
+
+5. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+   AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+   Prices are estimates, allergen filters read ingredient lists rather than
+   packets, and cooking times are a guide. The Terms screen in the app says
+   this in the language the reader chose, which is where it matters.
+
+6. ASKING
+
+   Permission for anything section 3 withholds is available by asking. The
+   address is privacy@pantryglobe.com and a licensing request will reach a
+   person there.
+
+------------------------------------------------------------------------------
+
+A note on what changed, and why it is recorded rather than quietly dropped:
+
+Earlier revisions of this file named AGPL-3.0-only, and the reasoning was
+sound for a different project — an app whose whole value is being honest about
+where its numbers come from has a good argument for showing its working.
+The decision was reversed deliberately.
+
+Two consequences follow, and neither is undone by this file. Anything already
+received by anybody under those terms was received under them, and a licence
+already granted cannot be withdrawn from the copy it was granted on. And the
+45 generated dish tiles were offered under CC0; copies already published stay
+public domain. New work, and every copy from this revision forward, is under
+the terms above.

@@ -43,6 +43,29 @@
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=(), display-capture=(), browsing-topics=()
   X-Frame-Options: DENY
   Cross-Origin-Opener-Policy: same-origin
+  tdm-reservation: 1
+  X-Robots-Tag: noai, noimageai
+
+# The last two are the text-and-data-mining reservation, and they sit in this
+# block rather than a second `/*` one because a header file is easier to get
+# wrong twice than once.
+#
+# This is the one opt-out with legal weight rather than only conventional
+# weight. Article 4 of the EU copyright directive permits mining of lawfully
+# accessible works *unless the rightsholder has expressly reserved the right in
+# a machine-readable way*. So the reservation is what turns a permitted use
+# into an infringing one, and its absence is what turns silence into consent.
+#
+# W3C's TDM Reservation Protocol says how to express it: `tdm-reservation: 1`
+# on the response, and /.well-known/tdmrep.json for a crawler that reads files
+# rather than headers. Both ship, because either is a legitimate place to look
+# and neither is guaranteed to be the one that gets checked.
+#
+# robots.txt does a different job. That one asks named crawlers not to fetch;
+# this says what may be done with what was fetched, including by whoever
+# ignored the asking. X-Robots-Tag: noai is the weakest of the three — a
+# convention with no standards body behind it — and is here because it costs
+# eighteen bytes.
 
 # Geolocation stays allowed: it is the feature. Camera is denied and the plate
 # photo still works — PlateDrop is <input type="file" accept="image/*"> with no
@@ -55,6 +78,15 @@
 # cached copy is the one thing that can hold the app on an old build.
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
+
+# The licence is emitted into dist/ by a plugin in vite.config.ts so that the
+# <link rel="license"> in index.html resolves. It has no file extension, so
+# without this it goes out as application/octet-stream and downloads instead of
+# opening — and a licence that arrives as a mystery file in somebody's
+# Downloads folder is one nobody reads.
+/LICENSE
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
 
 # Without this the manifest goes out as application/octet-stream, and a
 # manifest served as a download is a manifest the installer ignores.

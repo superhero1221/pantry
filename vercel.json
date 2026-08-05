@@ -33,11 +33,21 @@
           "value": "geolocation=(self), camera=(), microphone=(), payment=(), usb=(), display-capture=(), browsing-topics=()"
         },
         { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" }
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
+        { "key": "tdm-reservation", "value": "1" },
+        { "key": "X-Robots-Tag", "value": "noai, noimageai" }
       ]
     },
     {
       "comment": "The worker decides when everything else updates, so it must never be the stale thing.",
+      "comment": "Emitted into dist/ by the pantry-licence-file plugin so <link rel=\"license\"> resolves. No file extension, so without an explicit type it goes out as application/octet-stream and downloads rather than opening.",
+      "source": "/LICENSE",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
       "source": "/sw.js",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
     },

@@ -2,9 +2,104 @@
 # is hash-based, so there is nothing here to crawl but this. The file exists so
 # that a crawler asking for it gets an answer rather than the app's own HTML.
 
+# Search engines: welcome. Being findable is the point of having a domain.
 User-agent: *
 Allow: /
 
 # One entry, for the one URL. It tells Search Console which spelling of the
 # domain is the real one; it does not make anything more findable.
 Sitemap: https://pantryglobe.com/sitemap.xml
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Training crawlers: no.
+#
+# What this is and is not. robots.txt is a request, not a fence — it is obeyed
+# by convention and nothing here enforces it. The rules below are still worth
+# having for two reasons. The operators listed do publish these tokens and do
+# broadly honour them, so most of this works. And where it does not, a dated
+# file in the repository and on the live site is a record that permission was
+# refused rather than never asked for, which is the difference between a use
+# that was unlicensed and one that was merely unobjected-to.
+#
+# What is actually being protected: 153 recipes with their method steps, a
+# hand-built food composition table, and the interface copy in six languages.
+# That is the work. The photographs are not ours to refuse on anyone's behalf —
+# they are CC BY and CC BY-SA on Wikimedia Commons and remain reusable there
+# under their own terms, whatever this file says.
+#
+# Separated by purpose, not lumped together. Several of these operators run one
+# crawler for search and another for training, and blanket-blocking the company
+# would take the app out of a search index to stop a scrape. Google-Extended
+# governs Gemini training and has no effect on Googlebot; Applebot-Extended is
+# the same arrangement for Apple. Both are listed; neither of their search
+# siblings is.
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Perplexity-User
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: AI2Bot
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
