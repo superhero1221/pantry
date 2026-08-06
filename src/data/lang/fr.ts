@@ -452,6 +452,7 @@ export const extra: Record<string, string> = {
     sendingLink: "Envoi…",
 
     /* ── The small print ── */
+    pctDearer: "{n}% plus cher",
     priceRange: "{a} – {b}",
     rangeShops: "de {a} à {b}",
     storeKinds: "types de magasin que vous trouverez à",

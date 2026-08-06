@@ -217,6 +217,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sendingLink: "Sending…",
 
     /* ── The small print ── */
+    pctDearer: "{n}% dearer",
     priceRange: "{a} – {b}",
     rangeShops: "{a} to {b}",
     storeKinds: "kinds of shop you will find in",

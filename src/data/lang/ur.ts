@@ -447,6 +447,7 @@ export const extra: Record<string, string> = {
     sendingLink: "بھیج رہا ہوں…",
 
     /* ── The small print ── */
+    pctDearer: "{n}% مہنگا",
     priceRange: "{a} – {b}",
     rangeShops: "{a} سے {b} تک",
     storeKinds: "قسم کی دکانیں جو یہاں ملتی ہیں، مقام:",

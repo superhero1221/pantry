@@ -1638,6 +1638,42 @@ export function usePantry() {
    *  wherever it lands. It is needed because these strings render inside
    *  <div>s as well as <span>s, and styles.css only sets unicode-bidi:plaintext
    *  on the latter. */
+  /** A round amount of money about this big — 0.20, 0.50, 5, 250 — from a
+   *  1-2-5 ladder, which is the one every price sticker and axis label in the
+   *  world already uses. Picked in DISPLAY currency, because a step that is
+   *  round in pounds is 1,247 naira and rounds nothing. */
+  const niceStep = (local: number) => {
+    const want = Math.abs(local) * 0.08;
+    for (let p = -2; p <= 8; p++) {
+      for (const m of [1, 2, 5]) {
+        const step = m * Math.pow(10, p);
+        if (step >= want) return step;
+      }
+    }
+    return 1;
+  };
+
+  /** One shop's basket as a band rather than a figure to the penny.
+   *
+   *  "≈£1.87" and "£1.80 – £2.00" make different claims, and only the second
+   *  one is true. That basket is a sum of modelled per-ingredient baselines
+   *  multiplied by a modelled tier factor; the pennies on the end of it are
+   *  arithmetic, not knowledge, and printing them invites a reader to check
+   *  their receipt against a number nothing measured.
+   *
+   *  The step is chosen ONCE for the whole screen, from the cheapest shop, and
+   *  every card is banded against the same ladder. Choosing per card would put
+   *  0.20-wide bands next to 0.50-wide ones and the comparison — which is the
+   *  entire reason this screen has three cards — would stop being readable.
+   *
+   *  Always a full step wide and always containing the figure, so a card can
+   *  never print a band that excludes its own price. */
+  const bandOf = (gbp: number, step: number) => {
+    const v = toLocal(gbp, c, fx);
+    const lo = Math.floor(v / step + 1e-9) * step;
+    return { lo: fromLocal(lo, c, fx), hi: fromLocal(lo + step, c, fx) };
+  };
+
   const fmtSpan = (loGbp: number, hiGbp: number) => {
     const a = fmt(Math.min(loGbp, hiGbp));
     const b = fmt(Math.max(loGbp, hiGbp));
@@ -2375,24 +2411,27 @@ export function usePantry() {
     stores: stores.map((s) => {
       const t = toBuy(recipe, s.mult);
       const base = Math.min.apply(null, stores.map((x) => toBuy(recipe, x.mult)));
+      /* One ladder for the whole screen, sized off the cheapest card. Sizing
+         per card would set a 20p band beside a 50p one and the comparison —
+         the only reason this screen has three cards — would stop reading. */
+      const step = niceStep(toLocal(base, c, fx));
       const on = S.store === s.id;
       return {
         key: s.id,
         name: s.name,
         tier: P.shops[s.tier] || s.tier,
-        /* An approximately-equals sign, because this row is the most
-           convincing lie in the app.
-           Everything else on it is real and measured: Overpass gave us a
-           genuine Aldi, its genuine distance, its genuine closing time. The
-           price is not. It is this basket multiplied by 0.82 because the name
-           matched the discount tier — a modelled figure wearing a real shop's
-           badge, and the more real the rest of the card looks the more it
-           reads as Aldi's own number. No UK, US or EU supermarket publishes a
-           price API; the Shop screen says so further down, and said it while
-           this line printed an unqualified £5.10.
-           One character, chosen because it needs no translation and no
-           layout: ≈ means "about" in all six languages and in none of them. */
-        price: '≈' + fmt(t),
+        /* A band, not a figure to the penny.
+           This row is the most convincing thing in the app that nothing
+           measured. Everything else on it is real: Overpass gave us a genuine
+           Aldi, its genuine distance, its genuine closing time. The price is a
+           sum of modelled per-ingredient baselines times a modelled tier
+           factor, and the pennies on the end of it are arithmetic rather than
+           knowledge. "≈£1.87" still invited somebody to hold a receipt up
+           against it. "£1.80 – £2.00" does not, and is the same claim stated
+           at the precision the app can actually support.
+           No UK, US or EU supermarket publishes a price API. The sentence
+           under these cards says so; the cards themselves now agree. */
+        price: (({ lo, hi }) => fmtSpan(lo, hi))(bandOf(t, step)),
         /* A shop Overpass found carries its measured distance and hours. A
            fallback card used to invent both — "0.6 km · open till 22:00" for
            a shop nobody looked up — and now says what it actually is: a
@@ -2400,7 +2439,18 @@ export function usePantry() {
         meta: s.real
           ? s.km + ' km · ' + (s.closes || SH.hoursUnknown)
           : xt(lg, 'storeModelled'),
-        delta: t <= base + 0.001 ? T.shopCheapest : '+' + fmt(t - base),
+        /* A percentage, where this used to be "+£0.41".
+           The absolute gap between two cards inherits every bit of the
+           baseline's error — both ends are the same modelled sum — so the
+           pennies in it are worth no more than the pennies above. The RATIO
+           does not: it is exactly 1.15 over 0.82, the tier factors, which are
+           the one part of this screen that is not a per-ingredient estimate.
+           So the comparison is stated in the units the app is most sure of,
+           and it survives the banding above rather than contradicting it. */
+        delta:
+          t <= base + 0.001
+            ? T.shopCheapest
+            : fill(xt(lg, 'pctDearer'), { n: Math.round((t / base - 1) * 100) }),
         tagBg: on ? '#c67139' : '#eee7db',
         tagFg: on ? '#fff' : '#82796a',
         priceFg: on ? '#8c491a' : '#645c50',

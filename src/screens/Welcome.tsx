@@ -68,6 +68,18 @@ export function Welcome({ v }: { v: Pantry }) {
         >
           {v.t.welcomeSkip}
         </Btn>
+
+        {/* The claim, on the front door.
+            It was only at the foot of Settings, four taps in and behind
+            onboarding — so the one visitor who never saw it was the one
+            arriving at pantryglobe.com to look at how this was built. This is
+            the first screen the site serves anybody, and the only one a person
+            evaluating whether to copy it is guaranteed to reach.
+            Small and last: it is a notice, not an argument, and nobody came
+            here to read it. */}
+        <div dir="auto" style={css('text-align:center;font-size:11.5px;color:#645c50;margin-top:2px')}>
+          {v.xt('ownCopy')}
+        </div>
       </div>
     </div>
   );

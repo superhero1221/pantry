@@ -32,10 +32,16 @@ export function Shop({ v }: { v: Pantry }) {
         {v.stores.map((s) => (
           <Btn key={s.key} onClick={s.pick} css={s.style}>
             <span style={css('flex:1;min-width:0;text-align:start')}>
-              <span style={css('display:flex;align-items:center;gap:7px')}>
-                <span style={css('font-size:15.5px;font-weight:700')}>{s.name}</span>
+              {/* flex-wrap, and the pill does not shrink.
+                  "Sainsbury's Local" plus a CONVENIENCE pill has a min-content
+                  width wider than half this card, and with neither a wrap nor
+                  a shrink guard the row simply overflowed its column and
+                  painted the pill underneath the price. It only showed up once
+                  the price became a band and took the width back. */}
+              <span style={css('display:flex;flex-wrap:wrap;align-items:center;gap:5px 7px')}>
+                <span style={css('font-size:15.5px;font-weight:700;min-width:0')}>{s.name}</span>
                 <span
-                  style={css(`padding:3px 8px;border-radius:999px;background:${s.tagBg};color:${s.tagFg};font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase`)}
+                  style={css(`flex:none;padding:3px 8px;border-radius:999px;background:${s.tagBg};color:${s.tagFg};font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase`)}
                 >
                   {s.tier}
                 </span>
@@ -43,7 +49,9 @@ export function Shop({ v }: { v: Pantry }) {
               <span style={css('display:block;font-size:12.5px;color:#645c50;margin-top:5px')}>{s.meta}</span>
             </span>
             <span style={css('flex:none;text-align:end')}>
-              <span style={css(`display:block;font-family:'Caprasimo',serif;font-size:22px;color:${s.priceFg}`)}>
+              {/* 17px, down from 22. A band is twice the characters of a price
+                  and this column shares a 360px card with a shop name. */}
+              <span style={css(`display:block;font-family:'Caprasimo',serif;font-size:17px;line-height:1.15;color:${s.priceFg}`)}>
                 {s.price}
               </span>
               <span style={css('display:block;font-size:11px;color:#645c50;margin-top:2px')}>{s.delta}</span>
