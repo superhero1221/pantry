@@ -52,6 +52,20 @@ export function Shop({ v }: { v: Pantry }) {
         ))}
       </div>
 
+      {/* Directly under the shop cards, because that is where the misreading
+          happens rather than at the foot of the screen where the sources
+          section already explains all this.
+          A card can say "Aldi · 0.6 km · open till 22:00" and then a price,
+          and every part of that except the price came from OpenStreetMap. The
+          ≈ on each figure carries the point; this says it in words once, and
+          names the two chains people assume the number came from. */}
+      <p
+        dir="auto"
+        style={css('font-size:12px;line-height:1.55;color:#645c50;margin:11px 2px 0;text-wrap:pretty')}
+      >
+        {v.xt('storeEstimate')}
+      </p>
+
       <div style={css('display:flex;align-items:baseline;justify-content:space-between;margin-top:26px')}>
         <Kicker>{v.t.shopList}</Kicker>
         {/* Real prices arrive a beat after the modelled ones and move every

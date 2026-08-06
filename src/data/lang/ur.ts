@@ -447,6 +447,8 @@ export const extra: Record<string, string> = {
     sendingLink: "بھیج رہا ہوں…",
 
     /* ── The small print ── */
+    storeKinds: "قسم کی دکانیں جو یہاں ملتی ہیں، مقام:",
+    storeEstimate: "یہ تخمینے ہیں، Aldi یا Tesco کی اپنی قیمتیں نہیں — کوئی سپر مارکیٹ اُنہیں شائع نہیں کرتی۔ ہر عدد وہ ہے جو آپ کے قریب اِس قسم کی دکان عام طور پر لیتی ہے۔",
     legalKicker: "باریک تحریر",
     privacyRow: "پرائیویسی",
     privacyRowSub: "کیا محفوظ ہوتا ہے، کہاں، اور کیا اس ڈیوائس سے باہر جاتا ہے",

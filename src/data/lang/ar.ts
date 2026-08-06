@@ -447,6 +447,8 @@ export const extra: Record<string, string> = {
     sendingLink: "أرسل…",
 
     /* ── The small print ── */
+    storeKinds: "أنواع من المتاجر تجدها في",
+    storeEstimate: "تقديرات، لا أسعار Aldi أو Tesco نفسها — فلا سوق كبير ينشرها. كل رقم هو ما يتقاضاه عادةً هذا النوع من المتاجر قربك.",
     legalKicker: "التفاصيل الصغيرة",
     privacyRow: "الخصوصية",
     privacyRowSub: "ما الذي يُحفظ، وأين، وما الذي يغادر هذا الجهاز",

@@ -452,6 +452,8 @@ export const extra: Record<string, string> = {
     sendingLink: "Envoi…",
 
     /* ── The small print ── */
+    storeKinds: "types de magasin que vous trouverez à",
+    storeEstimate: "Des estimations, pas les prix d’Aldi ou de Tesco — aucun supermarché ne les publie. Chaque chiffre est ce que ce type de magasin facture habituellement près de chez vous.",
     legalKicker: "Les petits caractères",
     privacyRow: "Confidentialité",
     privacyRowSub: "Ce qui est gardé, où, et ce qui quitte cet appareil",

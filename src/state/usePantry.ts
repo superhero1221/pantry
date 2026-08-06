@@ -2267,7 +2267,19 @@ export function usePantry() {
         key: s.id,
         name: s.name,
         tier: P.shops[s.tier] || s.tier,
-        price: fmt(t),
+        /* An approximately-equals sign, because this row is the most
+           convincing lie in the app.
+           Everything else on it is real and measured: Overpass gave us a
+           genuine Aldi, its genuine distance, its genuine closing time. The
+           price is not. It is this basket multiplied by 0.82 because the name
+           matched the discount tier — a modelled figure wearing a real shop's
+           badge, and the more real the rest of the card looks the more it
+           reads as Aldi's own number. No UK, US or EU supermarket publishes a
+           price API; the Shop screen says so further down, and said it while
+           this line printed an unqualified £5.10.
+           One character, chosen because it needs no translation and no
+           layout: ≈ means "about" in all six languages and in none of them. */
+        price: '≈' + fmt(t),
         /* A shop Overpass found carries its measured distance and hours. A
            fallback card used to invent both — "0.6 km · open till 22:00" for
            a shop nobody looked up — and now says what it actually is: a
@@ -2345,7 +2357,22 @@ export function usePantry() {
         priceFg: off ? '#a19786' : '#201e1d',
       };
     }),
-    shopSubLine: stores.length + ' ' + SH.shopSub + ' ' + cityNow + '. ' + SH.sameBasket,
+    /* "3 shops within walking distance of Birmingham" — true only when
+       Overpass actually answered. Without location the list falls back to
+       STORES_BY_COUNTRY, three cards nobody looked up, and this line put them
+       within walking distance of a city on the strength of nothing.
+       The same invention was already caught one line down, where a fallback
+       card used to print "0.6 km · open till 22:00"; the meta was fixed and
+       the heading above it was not, which is how it kept claiming a locality
+       while every card under it admitted to being a type. */
+    shopSubLine:
+      stores.length +
+      ' ' +
+      (stores.some((s) => s.real) ? SH.shopSub : xt(lg, 'storeKinds')) +
+      ' ' +
+      cityNow +
+      '. ' +
+      SH.sameBasket,
     listSummary: (() => {
       const have = recipe.items.filter((i) => isOwned(recipe, i.n)).length;
       const buying = recipe.items.filter((i) => onList(recipe, i)).length;

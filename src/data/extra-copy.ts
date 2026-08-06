@@ -217,6 +217,8 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sendingLink: "Sending…",
 
     /* ── The small print ── */
+    storeKinds: "kinds of shop you will find in",
+    storeEstimate: "Estimates, not Aldi's or Tesco's own prices — no supermarket publishes those. Each figure is what that kind of shop typically charges near you.",
     legalKicker: "The small print",
     privacyRow: "Privacy",
     privacyRowSub: "What is kept, where, and what leaves this device",
