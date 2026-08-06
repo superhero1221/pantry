@@ -47,7 +47,12 @@ export function Browse({ v }: { v: Pantry }) {
               </span>
             </span>
             <span style={css('flex:none;text-align:end')}>
-              <span style={css("display:block;font-family:'Caprasimo',serif;font-size:20px;color:#8c491a")}>
+              {/* 14px, not 20. A span is twice the characters of a price, and
+                  this column sits beside the dish name on a 360px phone —
+                  at 20px "Cheese and Herb Omelette" wrapped to four lines and
+                  the card became a price with a title squeezed against it.
+                  The name is what somebody is scanning for here. */}
+              <span style={css("display:block;font-family:'Caprasimo',serif;font-size:14px;line-height:1.15;color:#8c491a")}>
                 {x.per}
               </span>
               <span style={css('display:block;font-size:10.5px;color:#645c50;margin-top:2px')}>

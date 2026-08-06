@@ -1089,6 +1089,49 @@ export function usePantry() {
     r.items.filter((i) => !i.opt || wantsExtra(i.n)).reduce((a, i) => a + i.s * mult, 0);
   void allIn;
 
+  /** The cheapest and dearest this basket comes to across the shops the Shop
+   *  screen is showing — and the names of those two shops, because a range
+   *  with nothing attached to its ends is the wrong kind of number.
+   *
+   *  Endpoints come from the live `stores` array and never from the tier
+   *  constants. 0.74 and 1.28 exist only in pantry-live's TIERS, matched by
+   *  regex against OpenStreetMap names; no country in STORES_BY_COUNTRY ships
+   *  either end. Great Britain offline is 0.82/1.0/1.15, Turkey is
+   *  0.78/0.84/1.0 — nothing above baseline at all. Sweeping a fixed
+   *  0.74–1.28 would quote a Costco-to-Waitrose spread to somebody in Istanbul
+   *  whose screen shows three shops inside a narrower band, which is the same
+   *  fault as the heading that claimed walking distance for shops nobody
+   *  looked up.
+   *
+   *  Wholesale is excluded unless it is the shop you picked. 0.74 is Costco,
+   *  Makro, Booker — a membership, a trade card and a two-kilo pack. A low end
+   *  most readers cannot actually pay is not a price range, it is a boast, and
+   *  bulk packs break the premise `totalMeans` states out loud: what this
+   *  meal's SHARE of each ingredient costs. The exception earns its keep —
+   *  Pakistan's first card is Metro Cash & Carry and it is the default
+   *  selection, so there the clamp keeps it in.
+   *
+   *  `here` is concatenated so the span always contains the selected-store
+   *  figure. That figure is the one `verdict`, `keep`, `ranked()` and the cook
+   *  log all use, and a printed range that does not contain the number the
+   *  rest of the screen reasons about is a contradiction the reader can see.
+   *
+   *  Both ends come back as the GBP baseline the cookbook is written in, so
+   *  each goes through fmt() exactly once on the way out. */
+  const spanOf = useCallback(
+    (r: Recipe) => {
+      const usable = stores.filter((s) => s.tier !== 'wholesale' || s.id === S.store);
+      const pool = usable.length ? usable : stores;
+      const here = toBuy(r, mult);
+      const costs = pool.map((s) => toBuy(r, s.mult)).concat(here);
+      const lo = Math.min.apply(null, costs);
+      const hi = Math.max.apply(null, costs);
+      const at = (v: number) => pool.find((s) => Math.abs(toBuy(r, s.mult) - v) < 1e-9);
+      return { lo, hi, loShop: at(lo)?.name || '', hiShop: at(hi)?.name || '' };
+    },
+    [stores, S.store, mult, toBuy],
+  );
+
   /* ── How much cooking you have done ───────────────────────────────────── */
   /** One number, 1..4, and the only thing about you that ranking reads.
    *
@@ -1492,6 +1535,17 @@ export function usePantry() {
   const pool = ranked();
   const offer: Recipe = pool.length ? pool[S.reroll % pool.length] : recipe;
 
+  /* Computed once each rather than at every key that needs them: spanOf walks
+     the store list and calls toBuy per shop, and the two of them were being
+     recomputed six times inside one object literal. */
+  const rSpan = spanOf(recipe);
+  const oSpan = spanOf(offer);
+  /** Whether the two ends print differently — which decides both whether the
+   *  attribution line appears and how big the number is set. A range is twice
+   *  the characters, and 44px Caprasimo has room for one price, not two. */
+  const rIsSpan = fmt(rSpan.lo) !== fmt(rSpan.hi);
+  const oIsSpan = fmt(oSpan.lo) !== fmt(oSpan.hi);
+
   const buy = toBuy(recipe);
   const whole = allIn(recipe);
   const saved = whole - buy;
@@ -1559,6 +1613,41 @@ export function usePantry() {
     return s;
   };
   const hs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(HH[k] || fb, vals);
+
+  /** Two prices as one string, each converted exactly once.
+   *
+   *  fmt() takes pounds. Handing it a figure that has already been through
+   *  fmt's arithmetic multiplies it a second time — invisible in Britain,
+   *  where idx and fx are both 1, and 925x out in Lagos. So the ENDS are
+   *  divided and compared in the baseline and only formatted at the last step;
+   *  never format one end and do arithmetic on the other.
+   *
+   *  It collapses to a single figure when the two ends print alike. Whole-unit
+   *  currencies round hard — fmt takes the Math.round branch wherever a pound
+   *  buys forty of something — and a per-serving span in naira would otherwise
+   *  print "₦480 – ₦480", which reads as a bug rather than as a narrow range.
+   *  Turkey's three multipliers are 0.78/0.84/1.0 and will collapse often.
+   *
+   *  U+2066 and U+2069 are a left-to-right isolate around the whole thing, and
+   *  they are load-bearing rather than decorative. "£3.00 – £4.50" contains no
+   *  strongly-directional character at all: the symbol is ET, the digits are
+   *  EN, the dash and the spaces are neutral. Inside an Arabic or Urdu
+   *  paragraph the bidi algorithm resolves the dash between two European
+   *  numbers to the paragraph's own direction, and the two ends swap — the
+   *  screen says four-fifty to three pounds. The isolate pins the run LTR
+   *  wherever it lands. It is needed because these strings render inside
+   *  <div>s as well as <span>s, and styles.css only sets unicode-bidi:plaintext
+   *  on the latter. */
+  const fmtSpan = (loGbp: number, hiGbp: number) => {
+    const a = fmt(Math.min(loGbp, hiGbp));
+    const b = fmt(Math.max(loGbp, hiGbp));
+    /* The collapsed case keeps the ≈ the Shop cards carry, and the spanned
+       case does not. A range is self-evidently not a precise claim and says so
+       by its shape; a lone figure is not, and that is the whole reason the
+       Shop screen grew a ≈ in the first place. Turkey's 0.78/0.84/1.0 and any
+       whole-unit currency will land here often. */
+    return a === b ? '≈' + a : '⁦' + fill(xt(lg, 'priceRange'), { a, b }) + '⁩';
+  };
   const vs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(V[k] || fb, vals);
   const countryName = P.cn[cc] || c.name;
   /** "over your 30" — what a time past the budget is called, wherever it shows. */
@@ -2120,9 +2209,22 @@ export function usePantry() {
     tonightDish: dish(offer),
     tonightCuisine: cuisineWord(offer.cuisine),
     tonightPic: offer.pic,
-    tonightTotal: fmt(toBuy(offer)),
-    tonightPer: fmt(toBuy(offer) / offer.servings),
+    /* A span rather than a figure, because this dish has not been chosen yet
+       and the shop has not been either. Both ends of the baseline are divided
+       before either is formatted — dividing a formatted string is how the "×4"
+       bug printed £40.70 beside £10.18. */
+    tonightTotal: fmtSpan(oSpan.lo, oSpan.hi),
+    tonightPer: fmtSpan(oSpan.lo / offer.servings, oSpan.hi / offer.servings),
     tonightPerSub: T.resServing,
+    tonightTotalFs: oIsSpan ? '25px' : '38px',
+    tonightPerFs: oIsSpan ? '17px' : '24px',
+    /* What the two ends ARE. Without this the range is a confidence interval,
+       which is a claim the app cannot support: both ends come off the same
+       modelled baseline, so a baseline that is 40% wrong slides the range
+       rather than widening it. Named shops make it a statement about where you
+       shop, which is true. Null when the ends collapsed, so nothing explains a
+       range that is not on screen. */
+    tonightRangeWhy: oIsSpan ? fill(xt(lg, 'rangeShops'), { a: oSpan.loShop, b: oSpan.hiShop }) : null,
     tonightSub:
       word('toBuyFor', 'to buy, for') + ' ' + offer.servings + ' ' + word('servings', 'servings'),
     tonightMins: offer.total + ' ' + word('minutes', 'min'),
@@ -2166,8 +2268,19 @@ export function usePantry() {
     dishLocal: P.lo[recipe.id] || recipe.local,
     dishCuisine: cuisineWord(recipe.cuisine),
     dishPic: recipe.pic,
-    priceTotal: fmt(buy),
+    priceTotal: fmtSpan(rSpan.lo, rSpan.hi),
     priceSub: word('toBuyFor', 'to buy, for') + ' ' + recipe.servings + ' ' + word('servings', 'servings'),
+    priceTotalFs: rIsSpan ? '27px' : '44px',
+    pricePerFs: rIsSpan ? '17px' : '26px',
+    priceRangeWhy: rIsSpan ? fill(xt(lg, 'rangeShops'), { a: rSpan.loShop, b: rSpan.hiShop }) : null,
+    /* Two per-serving keys, deliberately.
+       `pricePerSpan` is the headline beside priceTotal. `pricePer` stays a
+       single figure because it is the right-hand operand of the takeaway
+       comparison further down the screen — the struck-through restaurant price
+       with an arrow to yours — and `keep` and `savingLine` are computed from
+       the same `per`. Range that one and the screen shows a span, then claims
+       you keep an exact amount derived from a number never printed. */
+    pricePerSpan: fmtSpan(rSpan.lo / recipe.servings, rSpan.hi / recipe.servings),
     pricePer: fmt(per),
     budgetLabel: fmt(S.budget),
     // Over a 55-minute dish this chip used to read "under 30 min". Now it reads
@@ -2253,7 +2366,7 @@ export function usePantry() {
           Math.round(a.per.protein) +
           'g ' +
           word('protein', 'protein'),
-        price: fmt(toBuy(a) / a.servings),
+        price: fmtSpan(spanOf(a).lo / a.servings, spanOf(a).hi / a.servings),
         pick: () => go('results', { pickId: a.id, showMicro: false }),
       })),
     toShop: () => go('shop'),
@@ -2802,7 +2915,13 @@ export function usePantry() {
       name: dish(x),
       cuisine: cuisineWord(x.cuisine) + ' · ' + x.total + ' ' + word('minutes', 'min'),
       pic: x.pic,
-      per: fmt(toBuy(x, 0.82) / x.servings),
+      /* Was fmt(toBuy(x, 0.82) / servings) — a hardcoded discount tier, so a
+         browse card quoted the Aldi price and tapping it showed the price at
+         the shop you had actually chosen. The number moved on the way in and
+         nothing on either screen said why. A span drawn from the same `stores`
+         array cannot do that: the card's range contains the figure the next
+         screen prints, by construction. */
+      per: fmtSpan(spanOf(x).lo / x.servings, spanOf(x).hi / x.servings),
       diffLabel: diffWord(x.diff),
       diffBg: x.diff <= 1 ? '#e1eecc' : x.diff <= 2 ? '#f7eeda' : x.diff <= 3 ? '#ffe1d0' : '#ffc6a5',
       diffFg: x.diff <= 2 ? '#3d472b' : '#8c491a',
@@ -2877,6 +2996,16 @@ export function usePantry() {
           (fitsTime(r) ? '' : ' · ' + overBy) +
           ' · ' +
           diffWord(r.diff),
+        /* A single figure, unlike Tonight, Results and Browse.
+           This was a span for one build and it was wrong twice over. The
+           screen already prints "the whole week" and "a day" as exact totals
+           and a shopping list of exact rows underneath, all at the selected
+           shop — a column of ranges between them reads as arithmetic that does
+           not add up, and the reader is right. And a week is one trip: the
+           spread between Aldi and a corner shop is a choice you make once for
+           the whole list, not five separate uncertainties.
+           The spans belong where a dish is still being chosen. By the time you
+           are laying out a week you have chosen the shop. */
         price: fmt((toBuy(r, mult) / r.servings) * S.planServings),
         open: () => go('results', { pickId: id, showMicro: false }),
         swap: (e: ReactMouseEvent) => {

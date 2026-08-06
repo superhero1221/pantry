@@ -57,19 +57,26 @@ export function Home({ v }: { v: Pantry }) {
       </div>
 
       <div style={css('display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:13px')}>
-        <div>
-          <div style={css("font-family:'Caprasimo',serif;font-size:38px;line-height:1;letter-spacing:-1px")}>
+        <div style={css('min-width:0')}>
+          {/* Sized from the bag: a range is twice the characters, and these
+              two numbers sit in one row on a 360px phone. */}
+          <div style={css(`font-family:'Caprasimo',serif;font-size:${v.tonightTotalFs};line-height:1;letter-spacing:-1px`)}>
             {v.tonightTotal}
           </div>
           <div style={css('font-size:13px;color:#645c50;margin-top:5px')}>{v.tonightSub}</div>
         </div>
-        <div style={css('text-align:end')}>
-          <div style={css("font-family:'Caprasimo',serif;font-size:25px;line-height:1;color:#8c491a")}>
+        <div style={css('text-align:end;min-width:0')}>
+          <div style={css(`font-family:'Caprasimo',serif;font-size:${v.tonightPerFs};line-height:1;color:#8c491a`)}>
             {v.tonightPer}
           </div>
           <div style={css('font-size:13px;color:#645c50;margin-top:5px')}>{v.tonightPerSub}</div>
         </div>
       </div>
+      {v.tonightRangeWhy && (
+        <div dir="auto" style={css('font-size:12px;color:#645c50;margin-top:8px')}>
+          {v.tonightRangeWhy}
+        </div>
+      )}
 
       {/* The dish name changes in place when you ask for another, so a screen
           reader is told what arrived. Politely — it is not an interruption. */}

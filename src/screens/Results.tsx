@@ -43,19 +43,33 @@ export function Results({ v }: { v: Pantry }) {
 
       <div style={css('margin:16px 22px 0;padding:20px;border-radius:28px;background:#ebddc5')}>
         <div style={css('display:flex;align-items:flex-end;justify-content:space-between')}>
-          <div>
-            <div style={css("font-family:'Caprasimo',serif;font-size:44px;line-height:1;letter-spacing:-1px")}>
+          <div style={css('min-width:0')}>
+            {/* Set from the bag rather than fixed, because a span is twice the
+                characters and 44px Caprasimo fits one price, not two. Falls
+                back to the original 44 whenever the ends collapse — a shop
+                list with one tier, or a currency that rounds to whole units. */}
+            <div style={css(`font-family:'Caprasimo',serif;font-size:${v.priceTotalFs};line-height:1;letter-spacing:-1px`)}>
               {v.priceTotal}
             </div>
             <div style={css('font-size:13.5px;color:#645c50;margin-top:5px')}>{v.priceSub}</div>
           </div>
-          <div style={css('text-align:end')}>
-            <div style={css("font-family:'Caprasimo',serif;font-size:26px;line-height:1;color:#8c491a")}>
-              {v.pricePer}
+          <div style={css('text-align:end;min-width:0')}>
+            <div style={css(`font-family:'Caprasimo',serif;font-size:${v.pricePerFs};line-height:1;color:#8c491a`)}>
+              {v.pricePerSpan}
             </div>
             <div style={css('font-size:12.5px;color:#645c50;margin-top:4px')}>{v.t.resServing}</div>
           </div>
         </div>
+        {/* What the two ends are, and it is never optional when a range shows.
+            Both endpoints come off the same modelled baseline, so a baseline
+            that is wrong slides the range rather than widening it — the width
+            is shop spread and not confidence, and a reader will assume the
+            opposite unless the shops are named. */}
+        {v.priceRangeWhy && (
+          <div dir="auto" style={css('font-size:12px;color:#645c50;margin-top:9px')}>
+            {v.priceRangeWhy}
+          </div>
+        )}
         <div
           dir="auto"
           style={css(`margin-top:14px;padding:11px 14px;border-radius:18px;background:${v.verdictBg};color:${v.verdictFg};font-size:13.5px;font-weight:700;line-height:1.4`)}
