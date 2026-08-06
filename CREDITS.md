@@ -67,6 +67,45 @@ fourteen original recipes understated energy — by between 7 and 61 per cent,
 never once overstating it — because totting a recipe up by eye loses the oil,
 the butter and the tin of coconut milk and never invents them.
 
+## One price per ingredient
+
+Every ingredient costs the same in every recipe, and until recently it did not.
+
+Fresh coriander was £16.67/kg in one dish and £81.67/kg in another. Parsley ran
+£12 to £45, rice vinegar £2.67 to £11.67, garam masala £12.50 to £26.67. Across
+the 153 recipes, **484 lines covering 100 ingredients disagreed with
+themselves** by more than a penny of rounding.
+
+That is wrong without anybody having to know what coriander really costs. A
+shopping list cannot charge four times as much for a herb because of what it is
+going into. The drift arrived one plausible-looking line at a time — each recipe
+priced on its own, nothing comparing them — which is exactly the failure a
+hundred and fifty hand-written recipes invite and exactly what a test is for.
+
+`scripts/reprice-cookbook.mjs` settles each ingredient on the **quantity-weighted
+median** of what the file already said. Both halves earn their place. The median,
+because a mean is dragged by the outliers that are the problem. The weighting,
+because `s` is money to two decimals — so a 2 g pinch of salt costs a penny
+whatever salt costs, which reads as £5/kg against the £1.25/kg the same table
+charges for 8 g, and an unweighted median over dozens of pinches would elect the
+rounding error.
+
+Taking the largest-quantity line instead was measured and rejected: it moves
+recipe totals by −4.4% on average, because the biggest quantity of a herb is a
+bunch bought loose while most people buy the packet. The weighted median moves
+the mean recipe by **−0.43%**, so this is a consistency fix and not a silent
+repricing of the cookbook. 625 lines changed; six recipes did not move at all;
+fourteen moved by more than 10%, and those fourteen are the point — Cumin Lamb
+fell 20.6% and Ghormeh Sabzi rose 23.0% because they were the dishes carrying
+the worst of the contradiction.
+
+`price.test.ts` holds it there, and fails naming the ingredient, the dish and
+both figures. It asserts no particular price: what coriander *should* cost
+depends on shelf data that only Open Prices and community reports can supply,
+and both override these figures per line when they land. It asserts only that
+the fallback agrees with itself — which is what has to be true before anyone can
+tell that it is wrong.
+
 ## No pork, no alcohol
 
 The cookbook keeps neither, anywhere. `nopork.test.ts` fails the build if either
