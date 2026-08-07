@@ -1026,7 +1026,13 @@ export function usePantry() {
   }, [cc]);
 
   const stores = storeList();
-  const mult = (stores.find((s) => s.id === S.store) || stores[0]).mult;
+  /** The shop actually in effect, which is not always the one in `S.store`.
+   *  `store` is deliberately not in KEEP, so a reload resets it to the initial
+   *  'gb1' — an id that exists in one country of eight. Everywhere else the
+   *  find misses and the first shop stands in. Anything reasoning about "the
+   *  selected shop" has to reason about THIS, not about the state key. */
+  const store = stores.find((s) => s.id === S.store) || stores[0];
+  const mult = store.mult;
 
   const recipe: Recipe = RECIPES.find((r) => r.id === S.pickId) || RECIPES[0];
 
@@ -1120,16 +1126,26 @@ export function usePantry() {
    *  each goes through fmt() exactly once on the way out. */
   const spanOf = useCallback(
     (r: Recipe) => {
-      const usable = stores.filter((s) => s.tier !== 'wholesale' || s.id === S.store);
-      const pool = usable.length ? usable : stores;
-      const here = toBuy(r, mult);
-      const costs = pool.map((s) => toBuy(r, s.mult)).concat(here);
+      /* Keyed on `store.id` rather than `S.store`. Those differ far more often
+         than they look like they should: `store` is not in KEEP, so a reload
+         resets it to 'gb1', an id that exists in Britain and nowhere else. In
+         the other seven countries the find misses, `mult` falls back to the
+         first shop, and this filter was then asking whether a shop was the one
+         with an id nothing has.
+         Pakistan made it visible. Its first shop is Metro Cash & Carry,
+         `tier: 'wholesale'`, so the filter dropped it while `mult` was already
+         using it — the cheapest cost in `costs` came from a shop that was not
+         in `pool`, `at()` could not find it, and Results printed a range that
+         began " to Karyana next door" with nothing in front of the "to". */
+      const usable = stores.filter((s) => s.tier !== 'wholesale' || s.id === store.id);
+      const pool = usable.some((s) => s.id === store.id) ? usable : stores;
+      const costs = pool.map((s) => toBuy(r, s.mult));
       const lo = Math.min.apply(null, costs);
       const hi = Math.max.apply(null, costs);
       const at = (v: number) => pool.find((s) => Math.abs(toBuy(r, s.mult) - v) < 1e-9);
       return { lo, hi, loShop: at(lo)?.name || '', hiShop: at(hi)?.name || '' };
     },
-    [stores, S.store, mult, toBuy],
+    [stores, store, toBuy],
   );
 
   /* ── How much cooking you have done ───────────────────────────────────── */
@@ -2594,17 +2610,25 @@ export function usePantry() {
         return;
       }
       setState({ reportBusy: true });
-      const store = stores.find((x) => x.id === S.store);
-      // Prices are entered in the local currency, and stored in it — the
-      // median function never mixes currencies because it groups by country.
+      /* Prices are entered in the local currency, and stored in it — the
+         median function never mixes currencies because it groups by country.
+         `c.iso`, not `c.cur`. `cur` is the English word for the money —
+         'pounds', 'naira' — and price_reports has
+         `check (currency ~ '^[A-Z]{3}$')`, so every report ever submitted was
+         rejected by the database, in every country. The failure mapper below
+         only names 23505 and 54000, so 23514 fell through to "no signal, try
+         again" and the whole thing looked like a flaky connection.
+         The shop is the one in effect rather than `S.store`, which is 'gb1'
+         after any reload and matches nothing outside Britain — so the two
+         fields most useful for grouping a report arrived null. */
       const res = await reportPrice({
         userId: auth.userId,
         ref: S.reportFor,
         price,
-        currency: c.cur,
+        currency: c.iso,
         packGrams: pack,
-        storeName: store?.name,
-        storeTier: store?.tier,
+        storeName: store.name,
+        storeTier: store.tier,
         country: cc,
       });
       setState({ reportBusy: false, reportFor: null, reportPrice: '', reportPack: '' });
