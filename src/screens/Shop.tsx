@@ -161,12 +161,14 @@ export function Shop({ v }: { v: Pantry }) {
         {v.xt('totalMeansBody')}
       </p>
 
-      <div style={css('margin-top:12px;padding:16px 18px;border-radius:26px;background:#e1eecc;display:flex;gap:12px;align-items:flex-start')}>
-        <Check size={20} stroke="#56633f" style={{ flex: 'none', marginTop: 2 }} />
-        <p dir="auto" style={css('margin:0;font-size:13.5px;line-height:1.5;color:#3d472b;text-wrap:pretty')}>
-          {v.savedLine}
-        </p>
-      </div>
+      {v.savedLine && (
+        <div style={css('margin-top:12px;padding:16px 18px;border-radius:26px;background:#e1eecc;display:flex;gap:12px;align-items:flex-start')}>
+          <Check size={20} stroke="#56633f" style={{ flex: 'none', marginTop: 2 }} />
+          <p dir="auto" style={css('margin:0;font-size:13.5px;line-height:1.5;color:#3d472b;text-wrap:pretty')}>
+            {v.savedLine}
+          </p>
+        </div>
+      )}
 
       <div style={css('margin-top:12px;padding:15px 18px;border-radius:26px;background:#f9f4ed')}>
         <Kicker>{v.t.shopWhere}</Kicker>

@@ -2441,7 +2441,20 @@ export function usePantry() {
     verdict:
       under >= 0
         ? fmt(under) + ' ' + R.underYour + ' ' + fmt(S.budget) + ' ' + R.andIncludes
-        : fmt(-under) + ' ' + R.overYour + ' ' + fmt(S.budget) + '. ' + R.switchCheapest,
+        : fmt(-under) +
+          ' ' +
+          R.overYour +
+          ' ' +
+          fmt(S.budget) +
+          '.' +
+          /* Only when it actually does. This sentence was appended to every
+             over-budget verdict without checking, so a £15.75 rendang against
+             a £3.00 budget said "switch to the cheapest shop below and it
+             fits" — and the cheapest shop was £10.00. The app sent somebody to
+             a screen to watch it not fit.
+             `rSpan.lo` is the cheapest shop in the same list that screen
+             shows, so the promise and the page it points at cannot disagree. */
+          (rSpan.lo <= S.budget ? ' ' + R.switchCheapest : ''),
     verdictBg: under >= 0 ? '#e1eecc' : '#ffe1d0',
     verdictFg: under >= 0 ? '#3d472b' : '#8c491a',
     macros: [
@@ -2659,7 +2672,12 @@ export function usePantry() {
       ' ' +
       cityNow +
       '. ' +
-      SH.sameBasket,
+      /* The count, not the word "three". Overpass returns up to four shops and
+         the heading counted them correctly while the sentence after it said
+         "three prices" regardless — "4 shops within walking distance of
+         Birmingham. Same basket, three prices." A templated slot also lets a
+         translator put the number where their language wants it. */
+      fill(SH.sameBasket, { n: stores.length }),
     listSummary: (() => {
       const have = recipe.items.filter((i) => isOwned(recipe, i.n)).length;
       const buying = recipe.items.filter((i) => onList(recipe, i)).length;
@@ -2678,10 +2696,15 @@ export function usePantry() {
     /* The "{b} you did not spend twice" figure is this saving times nine
        shops — an assumption, so the sentence now names it instead of passing
        the product off as a measurement. */
+    /* Null when nothing was saved, rather than a green tick congratulating you
+       on £0.00. Beef Rendang has eighteen ingredients and assumes none of
+       them, so the panel read "Remembering your cupboard took £0.00 off this
+       shop. Over a month of cooking that is roughly £0.00 you did not spend
+       twice" — a celebration of nothing, in the reassuring colour. */
     savedLine:
-      fill(SL.saved, { a: fmt(saved), b: fmt(asShown(saved) * 9) }) +
-      ' ' +
-      xt(lg, 'savedAssumes'),
+      saved > 0.005
+        ? fill(SL.saved, { a: fmt(saved), b: fmt(asShown(saved) * 9) }) + ' ' + xt(lg, 'savedAssumes')
+        : null,
 
     /* ── Reporting a real price ─────────────────────────────────────────── */
     reportOpen: !!S.reportFor,
