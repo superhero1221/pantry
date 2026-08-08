@@ -5643,7 +5643,7 @@ export const SOURCES = [
   { name: 'OpenStreetMap \u00b7 Overpass', use: 'the actual shops around you, with opening hours', licence: 'ODbL', url: 'https://wiki.openstreetmap.org/wiki/Overpass_API' },
   { name: 'Open Prices', use: 'real prices people have photographed on the shelf', licence: 'ODbL', url: 'https://prices.openfoodfacts.org' },
   { name: 'Open Food Facts', use: 'product weights and nutrition', licence: 'ODbL', url: 'https://world.openfoodfacts.org' },
-  { name: 'WFP food price monitor', use: 'the measured baseline in 62 countries', licence: 'CC BY', url: 'https://data.humdata.org' },
+  { name: 'WFP food price monitor', use: 'the published figures the country cost index was set from', licence: 'CC BY', url: 'https://data.humdata.org' },
 ];
 export const BROWSE_CATS = [
   { k: 'all', w: 'everything', label: 'Everything' }, { k: 'quick', w: 'under30', label: 'Under 30 min' },

@@ -2787,7 +2787,34 @@ export function usePantry() {
         );
       }
     },
-    honestyLine: fill(c.tier === 'local' ? SL.measured : SL.modelled, { c: countryName }),
+    /* What this basket is made of, counted — not what country you are in.
+     *
+     * This used to branch on `c.tier === 'local'` and tell readers in India,
+     * Nigeria, Pakistan and Turkey: "Most of this basket is measured —
+     * enumerators visit markets in {c} monthly. That is unusually good
+     * coverage." None of that was true. `grep "c\.tier"` finds that one line
+     * and nowhere else: the tier drove no arithmetic, there is no survey data
+     * in this repo, and every price in all eight countries is the same GBP
+     * scalar times an index times a rate. It was a false factual claim, in the
+     * app's own honesty voice, on the screen that exists to say where numbers
+     * come from, aimed at the four audiences least able to check it.
+     *
+     * The app does hold real measured prices — a community report, or an Open
+     * Prices figure someone photographed on a shelf — but per LINE, not per
+     * country. So the sentence now counts them. Nothing measured and it says
+     * so plainly; some measured and it says how many out of how many, which is
+     * a claim the basket itself proves line by line, with the dots beside each
+     * price already showing which is which. */
+    honestyLine: (() => {
+      const lines = recipe.items.filter((i) => onList(recipe, i));
+      const real = lines.filter((i) => {
+        const k = refOf(i.n);
+        return !!S.medians[k] || !!S.openPrices[k];
+      }).length;
+      return real
+        ? fill(xt(lg, 'someMeasured'), { n: real, of: lines.length })
+        : fill(SL.modelled, { c: countryName });
+    })(),
     toCook: () => go('cook', { step: 0, timerRun: false, timerLeft: 0, cookLogId: null }),
 
     /* ── Cook ───────────────────────────────────────────────────────────── */
