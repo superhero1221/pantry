@@ -447,6 +447,12 @@ export const extra: Record<string, string> = {
     sendingLink: "أرسل…",
 
     /* ── The small print ── */
+    whyTitle: "لماذا هذا الطبق",
+    whyBudget: "ضمن {b} التي حدّدتها",
+    whyTime: "{t} دقيقة، أقل من {m} التي طلبتها",
+    whyDiet: "{d} — مُتحقَّق منه مكوّنًا مكوّنًا",
+    whyOwned: "{n} منها موجود عندك",
+    whyLevel: "{l} — قريب من مستواك",
     pctDearer: "أغلى بنسبة {n}%",
     priceRange: "{a} – {b}",
     rangeShops: "من {a} إلى {b}",

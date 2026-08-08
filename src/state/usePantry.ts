@@ -2325,6 +2325,55 @@ export function usePantry() {
     priceTotalFs: rIsSpan ? '27px' : '44px',
     pricePerFs: rIsSpan ? '17px' : '26px',
     priceRangeWhy: rIsSpan ? fill(xt(lg, 'rangeShops'), { a: rSpan.loShop, b: rSpan.hiShop }) : null,
+
+    /* Why this one, and not the other hundred and fifty-two.
+     *
+     * A single recommendation with no reasoning reads as a guess. The app
+     * already ranks on budget, clock, diet, skill and what is in the cupboard
+     * — it simply never said so, so the one dish it chose arrived looking
+     * arbitrary next to a grid that at least lets you see it was you who
+     * picked.
+     *
+     * Every line is a CONDITION THE READER SET, confirmed. Not a feature of
+     * the dish: "high in protein" is a fact about food, "inside the £6 you
+     * asked for" is an answer to a question they asked. That distinction is
+     * the whole difference between this and a marketing bullet.
+     *
+     * Only true reasons appear, and nothing is padded to reach a count. A
+     * dish over budget gets no budget line — the red verdict above is already
+     * saying so, and a justification that quietly omits the one thing you
+     * failed is worse than none. Capped at four so it stays a glance.
+     *
+     * It says nothing at all when nothing was asked for: a reader who set no
+     * budget, no time limit and no diets has no constraints to confirm, and
+     * inventing some would be the "AI decided" theatre this app exists
+     * without. */
+    pickedWhy: (() => {
+      const out: { key: string; text: string }[] = [];
+      const add = (key: string, text: string) => out.push({ key, text });
+
+      if (under >= 0 && S.budget < 900) add('budget', fill(xt(lg, 'whyBudget'), { b: fmt(S.budget) }));
+      if (!overTime && S.maxTime !== 999)
+        add('time', fill(xt(lg, 'whyTime'), { t: recipe.total, m: S.maxTime }));
+
+      /* The diets this dish keeps, out of the ones they actually set. Named
+         rather than counted, because "halal" is the word somebody is looking
+         for and "3 diets" is not. `meetsDiet` is the same function ranking
+         uses, so this cannot drift from what was chosen. */
+      const kept = S.diets.filter((d) => meetsDiet(recipe, d)).map((d) => dietWords[d] || d);
+      if (kept.length) add('diet', fill(xt(lg, 'whyDiet'), { d: kept.join(', ') }));
+
+      const have = recipe.items.filter((i) => isOwned(recipe, i.n)).length;
+      if (have >= 2) add('owned', fill(xt(lg, 'whyOwned'), { n: have }));
+
+      /* Last, and only when the first four did not fill it: a dish at or below
+         where they are is a reason, but a weaker one than money or a clock. */
+      if (out.length < 4 && recipe.diff <= skillLevel())
+        add('level', fill(xt(lg, 'whyLevel'), { l: diffWord(recipe.diff) }));
+
+      return out.slice(0, 4);
+    })(),
+    pickedWhyTitle: xt(lg, 'whyTitle'),
     /* Two per-serving keys, deliberately.
        `pricePerSpan` is the headline beside priceTotal. `pricePer` stays a
        single figure because it is the right-hand operand of the takeaway

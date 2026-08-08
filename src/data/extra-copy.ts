@@ -217,6 +217,12 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sendingLink: "Sending…",
 
     /* ── The small print ── */
+    whyTitle: "Why this one",
+    whyBudget: "Inside the {b} you set",
+    whyTime: "{t} minutes, under the {m} you asked for",
+    whyDiet: "{d} — checked against every ingredient",
+    whyOwned: "{n} of these are already in your kitchen",
+    whyLevel: "{l} — about where you are",
     pctDearer: "{n}% dearer",
     priceRange: "{a} – {b}",
     rangeShops: "{a} to {b}",

@@ -78,6 +78,41 @@ export function Results({ v }: { v: Pantry }) {
         </div>
       </div>
 
+      {/* Why this one, and not the other hundred and fifty-two.
+          Directly under the price card and above the verb, because it is the
+          answer to the question a single recommendation provokes — a grid at
+          least lets you see it was you who chose. Every line is a condition
+          the reader set, confirmed; nothing is padded to reach a count, and
+          the block does not render at all for somebody who asked for nothing.
+          The ticks are text rather than an icon component: a check is the
+          whole meaning here, and at 13px an SVG stroke would be lighter than
+          the words beside it. */}
+      {v.pickedWhy.length > 0 && (
+        <div style={css('margin:12px 22px 0;padding:15px 18px;border-radius:26px;background:#f9f4ed')}>
+          <div
+            dir="auto"
+            style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#645c50')}
+          >
+            {v.pickedWhyTitle}
+          </div>
+          <ul style={css('list-style:none;margin:9px 0 0;padding:0;display:flex;flex-direction:column;gap:7px')}>
+            {v.pickedWhy.map((r) => (
+              <li key={r.key} style={css('display:flex;gap:9px;align-items:flex-start')}>
+                <span
+                  aria-hidden="true"
+                  style={css('flex:none;width:17px;height:17px;border-radius:50%;background:#e1eecc;color:#3d472b;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px')}
+                >
+                  ✓
+                </span>
+                <span dir="auto" style={css('font-size:13.5px;line-height:1.4;color:#474238;text-wrap:pretty')}>
+                  {r.text}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* The verb, in the first viewport, directly under the price.
           It used to sit below four nutrition tiles, a black savings panel and
           two alternates — so somebody who had already decided had to scroll
