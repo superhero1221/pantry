@@ -120,6 +120,13 @@ export interface PantryState {
   located: boolean;
   query: string;
   budget: number;
+  /** Whether the reader chose this, or it is only the default they were
+   *  given. `budget` and `maxTime` both ship with a value, so their presence
+   *  says nothing — and `skipOnboarding` sets neither. Anything that claims
+   *  back to somebody what they asked for has to consult these, not the
+   *  numbers, which is why they exist. */
+  budgetSet: boolean;
+  timeSet: boolean;
   /** How many times you have asked for a different dinner this visit. */
   reroll: number;
   refineOpen: boolean;
@@ -206,6 +213,8 @@ const INITIAL: PantryState = {
   located: false,
   query: '',
   budget: 6,
+  budgetSet: false,
+  timeSet: false,
   reroll: 0,
   refineOpen: false,
   budgetOtherOpen: false,
@@ -275,7 +284,9 @@ export const KEEP = [
   'diets',
   'country',
   'budget',
+  'budgetSet',
   'maxTime',
+  'timeSet',
   'lang',
   'toggles',
   'history',
@@ -291,6 +302,7 @@ export const KEEP = [
 
 const isObj = (x: unknown) => !!x && typeof x === 'object' && !Array.isArray(x);
 const isNum = (x: unknown) => typeof x === 'number' && Number.isFinite(x);
+const isBool = (x: unknown) => typeof x === 'boolean';
 
 /** The most one dinner is allowed to cost, in the pounds-and-pence baseline.
  *  Not a judgement about your money: past this, every "under budget" figure on
@@ -315,6 +327,8 @@ export const SHAPE: Record<string, (x: unknown) => boolean> = {
   country: (x) => x === null || typeof x === 'string',
   budget: (x) => isNum(x) && (x as number) > 0 && (x as number) <= MAX_BASE,
   maxTime: isNum,
+  budgetSet: isBool,
+  timeSet: isBool,
   lang: (x) => typeof x === 'string',
   toggles: isObj,
   history: Array.isArray,
@@ -1003,6 +1017,7 @@ export function usePantry() {
     // typed in local money is stored as a different amount than it read.
     setState({
       budget: v / (c.idx * fx),
+      budgetSet: true,
       // A new budget is a new question, so the offer starts again from the top.
       reroll: 0,
       budgetOtherOpen: false,
@@ -1654,19 +1669,27 @@ export function usePantry() {
    *  wherever it lands. It is needed because these strings render inside
    *  <div>s as well as <span>s, and styles.css only sets unicode-bidi:plaintext
    *  on the latter. */
-  /** A round amount of money about this big — 0.20, 0.50, 5, 250 — from a
-   *  1-2-5 ladder, which is the one every price sticker and axis label in the
-   *  world already uses. Picked in DISPLAY currency, because a step that is
-   *  round in pounds is 1,247 naira and rounds nothing. */
-  const niceStep = (local: number) => {
-    const want = Math.abs(local) * 0.08;
+  /** A round amount of money no bigger than `want` — 0.20, 0.50, 5, 250 —
+   *  from a 1-2-5 ladder, which is the one every price sticker and axis label
+   *  in the world already uses. Picked in DISPLAY currency, because a step
+   *  that is round in pounds is 1,247 naira and rounds nothing.
+   *
+   *  No BIGGER than, which is the whole correction. It used to take the first
+   *  rung at or above 8% of the basket, and a rung can be 2.5x the number that
+   *  reached for it — so in the Emirates, where the three tiers span 13.6%, all
+   *  three shop cards printed AED25.00 – AED30.00 and were captioned
+   *  "cheapest", "14% dearer" and "19% dearer". 155 live cases across six
+   *  countries did that. A band that cannot separate the things it is banding
+   *  is not a band, it is a shrug. */
+  const niceStep = (want: number) => {
+    let best = 0.01;
     for (let p = -2; p <= 8; p++) {
       for (const m of [1, 2, 5]) {
         const step = m * Math.pow(10, p);
-        if (step >= want) return step;
+        if (step <= Math.abs(want)) best = step;
       }
     }
-    return 1;
+    return best;
   };
 
   /** One shop's basket as a band rather than a figure to the penny.
@@ -2173,7 +2196,7 @@ export function usePantry() {
       style:
         (sameMoney(S.budget, b) && !S.budgetOtherOpen ? PILL_ON : PILL_OFF) +
         'flex:none;min-width:64px;text-align:center;justify-content:center;',
-      pick: () => setState({ budget: b, budgetOtherOpen: false }),
+      pick: () => setState({ budget: b, budgetSet: true, budgetOtherOpen: false }),
     }))
       // Your own number sits in the row as a sixth chip, lit like any other, so
       // setting it is visibly a choice and not a shot into the dark. It is
@@ -2240,7 +2263,7 @@ export function usePantry() {
       label: t.w ? word(t.w, t.l!) : t.m + ' ' + word('minutes', 'min'),
       on: S.maxTime === t.m,
       style: (S.maxTime === t.m ? PILL_ON : PILL_OFF) + 'flex:none;',
-      pick: () => setState({ maxTime: t.m }),
+      pick: () => setState({ maxTime: t.m, timeSet: true }),
     })),
     searchCta: S.query ? hs('findMe', 'Find me {q}', { q: S.query.toLowerCase() }) : T.homeGo,
     search: () => go('results', { pickId: ranked()[0].id, showMicro: false, reroll: 0 }),
@@ -2352,8 +2375,22 @@ export function usePantry() {
       const out: { key: string; text: string }[] = [];
       const add = (key: string, text: string) => out.push({ key, text });
 
-      if (under >= 0 && S.budget < 900) add('budget', fill(xt(lg, 'whyBudget'), { b: fmt(S.budget) }));
-      if (!overTime && S.maxTime !== 999)
+      /* `S.budgetSet`, not `S.budget`. Both of these ship with a value —
+         £6 and 60 minutes — and `skipOnboarding` sets neither, so their
+         presence says nothing about whether anybody chose them. The first
+         version of this block tested the numbers and told every reader who
+         skipped setup "inside the £6.00 you set", which is the exact thing
+         the comment above says it will never do. */
+      /* The whole span, not the cheapest end. `under` is measured at the shop
+         being priced, which is the cheapest one by default — so a dish
+         printing "£4.76 – £6.68" against a £6 budget passed this test and put
+         a tick under a headline whose upper figure was over. 28 of the 153
+         British dishes did exactly that.
+         A tick is a guarantee. It fires when the dish is inside the budget
+         wherever you shop, and stays silent otherwise; the verdict panel above
+         still gives the exact headroom at the shop you are actually on. */
+      if (S.budgetSet && rSpan.hi <= S.budget) add('budget', fill(xt(lg, 'whyBudget'), { b: fmt(S.budget) }));
+      if (!overTime && S.timeSet && S.maxTime !== 999)
         add('time', fill(xt(lg, 'whyTime'), { t: recipe.total, m: S.maxTime }));
 
       /* The diets this dish keeps, out of the ones they actually set. Named
@@ -2363,7 +2400,14 @@ export function usePantry() {
       const kept = S.diets.filter((d) => meetsDiet(recipe, d)).map((d) => dietWords[d] || d);
       if (kept.length) add('diet', fill(xt(lg, 'whyDiet'), { d: kept.join(', ') }));
 
-      const have = recipe.items.filter((i) => isOwned(recipe, i.n)).length;
+      /* Only what the reader ticked. `isOwned` falls back to `r.have` — the
+         staples a recipe ASSUMES a kitchen has — and counting those made this
+         line fire on all 153 dishes for somebody who has never opened the
+         cupboard. The app already draws exactly this distinction one screen
+         over, where `assumedHave` says the crossed-off lines are "what this
+         recipe assumes most kitchens have, not something you have told me".
+         A justification cannot contradict a disclaimer in the same app. */
+      const have = recipe.items.filter((i) => S.owned[keyOf(i.n)] === true).length;
       if (have >= 2) add('owned', fill(xt(lg, 'whyOwned'), { n: have }));
 
       /* Last, and only when the first four did not fill it: a dish at or below
@@ -2476,11 +2520,26 @@ export function usePantry() {
     stores: stores.map((s) => {
       const t = toBuy(recipe, s.mult);
       const base = Math.min.apply(null, stores.map((x) => toBuy(recipe, x.mult)));
-      /* One ladder for the whole screen, sized off the cheapest card. Sizing
-         per card would set a 20p band beside a 50p one and the comparison —
-         the only reason this screen has three cards — would stop reading. */
-      const step = niceStep(toLocal(base, c, fx));
-      const on = S.store === s.id;
+      /* One ladder for the whole screen, sized off the SMALLEST GAP between
+         two cards rather than off the basket. Sizing per card would set a 20p
+         band beside a 50p one; sizing off the total made the band wider than
+         the difference it was supposed to show. The step is now the largest
+         round amount that still lands adjacent shops in different bands.
+         Shops on the same tier — Turkey ships BİM and ŞOK both at 0.78 — have
+         no gap at all, and are meant to read alike, so only positive gaps
+         count. If every shop costs the same, nothing needs separating and 8%
+         of the basket is a sensible width. */
+      const sorted = stores.map((x) => toLocal(toBuy(recipe, x.mult), c, fx)).sort((a, b) => a - b);
+      const gaps = sorted.slice(1).map((v, i) => v - sorted[i]).filter((g) => g > 1e-9);
+      const step = niceStep(gaps.length ? Math.min.apply(null, gaps) : toLocal(base, c, fx) * 0.08);
+      /* `store.id`, not `S.store`. The effective shop and the state key differ
+         in seven countries of eight — `store` is not in KEEP, so a reload puts
+         'gb1' back, and it also differs in Britain the moment Overpass answers
+         and the ids become live0..live3. Everything else moved to the binding
+         at :1034 and this did not, so the app priced at a shop it then failed
+         to highlight, and told you to switch to the cheapest one below while
+         you were already on it. */
+      const on = store.id === s.id;
       return {
         key: s.id,
         name: s.name,
