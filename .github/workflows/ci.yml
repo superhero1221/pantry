@@ -1,0 +1,73 @@
+# The tests, run by something other than the author's laptop.
+#
+# There was no CI in this repository until now — only a deploy job and a
+# photo-fetcher, both keyed to `main`, while every commit of actual work sits
+# on a feature branch. Fifty of them, including a rewrite of the price engine
+# and a repricing of all 1,869 cookbook lines, had been type-checked exactly
+# once each, by hand, on one machine. The first automated run of the suite
+# would otherwise also have been the first deploy.
+#
+# So this triggers on **every branch** and on pull requests. A workflow that
+# only watches the branch nothing lands on is decoration, which is precisely
+# the failure it exists to end.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # One run per branch. A push that lands while an older run is still going
+  # cancels it — the older result describes code nobody has any more.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the Netlify build environment in netlify.toml, so a green
+          # tick here means the same Node that will actually build the site.
+          node-version: '22'
+          cache: npm
+
+      # `ci`, not `install`: it installs exactly what package-lock.json says
+      # and fails if the lockfile and package.json disagree, which is the one
+      # class of breakage a developer never sees locally.
+      - run: npm ci
+
+      # Deliberately separate steps rather than `npm run build`, which chains
+      # all three. When this goes red the step name is the diagnosis, and a
+      # type error and a failing test read very differently.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        run: npx vitest run
+
+      - name: Build
+        run: npx vite build
+
+      # The standalone single-file build inlines the bundle, the stylesheet,
+      # 108 photographs and six font faces into one document. It breaks in
+      # ways the normal build does not, and it is the artefact handed over by
+      # hand when somebody wants the app without a server.
+      - name: Standalone build
+        run: npm run standalone
+
+      # NOT RUN HERE: scripts/csp-check.mjs. It is a Playwright smoke test, not
+      # the config comparison its name suggests, and it has been broken since
+      # the Home screen was rebuilt to open on a dish — it waits for a textbox
+      # matching /fancy/i, and the craving box now lives behind a <details> so
+      # the selector times out after thirty seconds. Wiring a known-red step
+      # into a new CI is how people learn to ignore CI. It needs fixing or
+      # deleting on its own, not smuggling in here.
