@@ -157,6 +157,26 @@ select {
   }
 }
 
+/* A card of the opening carousel arriving. React is keyed on the card, so the
+   whole subtree is replaced and this plays from the top every time — there is
+   no transition to interrupt and nothing to reverse when you swipe back.
+   Short and mostly opacity: the point is that the frame around it did not
+   move, and a card sliding a long way would argue the opposite. Reduced
+   motion kills it below and leaves the text exactly where it lands. */
+.pg-slide {
+  animation: pgSlideIn 0.28s ease-out both;
+}
+@keyframes pgSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(7px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ── Pantry, the mascot ───────────────────────────────────────────────────
    Two keyframes rather than one composite, because the hop plays once when a
    screen arrives and the bob never stops — and both of them want `transform`,

@@ -127,6 +127,9 @@ export interface PantryState {
    *  numbers, which is why they exist. */
   budgetSet: boolean;
   timeSet: boolean;
+  /** Which card of the opening carousel is showing. Never persisted: coming
+   *  back to the front door should start it at the front. */
+  slide: number;
   /** How many times you have asked for a different dinner this visit. */
   reroll: number;
   refineOpen: boolean;
@@ -215,6 +218,7 @@ const INITIAL: PantryState = {
   budget: 6,
   budgetSet: false,
   timeSet: false,
+  slide: 0,
   reroll: 0,
   refineOpen: false,
   budgetOtherOpen: false,
@@ -2000,8 +2004,10 @@ export function usePantry() {
          competes with the one thing the screen exists to make legible.
 
          After already shows the big one, and two of the same character on one
-         screen is one too many — as does Goal, once you have answered it. */
-      ['cook', 'shop', 'after'].indexOf(screen) < 0 &&
+         screen is one too many — as does Goal, once you have answered it, and
+         as does Welcome, where the big one is the slide. The corner is also
+         where Welcome's copyright line and Next button now are. */
+      ['cook', 'shop', 'after', 'welcome'].indexOf(screen) < 0 &&
       !(screen === 'goal' && !!S.profile.goal),
 
     /* Which pose. Not decoration for its own sake: the character is the only
@@ -2034,6 +2040,41 @@ export function usePantry() {
       cheap: 'cheap',
       energy: 'energy',
     }[S.profile.goal] ?? null) as BigPose | null,
+
+    /* ── The front door ─────────────────────────────────────────────────── */
+    /* Five cards instead of one screen. The old welcome said everything at
+       once — a wordmark, a tagline and three bullets with coloured dots —
+       which is the layout of a landing page, not the opening of an app you
+       are about to be asked four questions by.
+       One claim per card, with the character acting it out, is the same total
+       amount of reading arriving at a pace somebody can actually take. It
+       also means each claim gets a headline instead of a bullet, and the
+       character gets five poses instead of no appearance at all.
+       The order is deliberate: what it does, how it feels, the money, the
+       price, then the invitation. "Free" sits fourth because it lands as
+       reassurance after the pitch and as a gimmick before it. */
+    slides: [
+      { key: 'a', h: xt(lg, 'slideH1'), s: xt(lg, 'slideS1'), pose: 'point' as BigPose },
+      { key: 'b', h: xt(lg, 'slideH2'), s: xt(lg, 'slideS2'), pose: 'energy' as BigPose },
+      { key: 'c', h: xt(lg, 'slideH3'), s: xt(lg, 'slideS3'), pose: 'cheap' as BigPose },
+      { key: 'd', h: xt(lg, 'slideH4'), s: xt(lg, 'slideS4'), pose: 'gain' as BigPose },
+      { key: 'e', h: xt(lg, 'slideH5'), s: xt(lg, 'slideS5'), pose: 'celebrate' as BigPose },
+    ],
+    slide: S.slide,
+    slideLast: S.slide >= 4,
+    /* Clamped rather than wrapped. A carousel that loops has no end, and this
+       one has an end on purpose — the last card is the one with the button
+       that starts setup. */
+    slideNext: () => (S.slide >= 4 ? go('goal') : setState({ slide: S.slide + 1 })),
+    slidePrev: () => setState({ slide: Math.max(0, S.slide - 1) }),
+    slideTo: (i: number) => setState({ slide: Math.min(4, Math.max(0, i)) }),
+    /* Not U.setMe. That reads "Set me up — 4 quick screens", which earned its
+       length as the only button on a static page; on the fifth card of five,
+       after a headline that has just said the same thing, it is the sentence
+       twice. */
+    slideCta: S.slide >= 4 ? xt(lg, 'slideGo') : T.tierNext,
+    /** "Step 3 of 5" — the dot row is a picture, and this is what it says. */
+    slideLabel: fill(xt(lg, 'stepOf'), { n: S.slide + 1, of: 5 }),
 
     /* ── Onboarding ─────────────────────────────────────────────────────── */
     start: () => go('goal'),
