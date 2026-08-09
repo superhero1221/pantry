@@ -218,6 +218,9 @@ export const EXTRA: Record<string, Record<string, string>> = {
 
     /* ── The small print ── */
     someMeasured: "{n} of the {of} lines here are real prices somebody paid and reported — the dots beside them say which. The rest are modelled, and are a good estimate rather than a receipt.",
+    noneOfThat: "No {q} in the book — not yet. The closest I have is {d}.",
+    lastOfThat: "That is the last of the {q} I have. There are {n}, and you have seen them all.",
+    goWider: "Show me anything",
     whyTitle: "Why this one",
     whyBudget: "Inside the {b} you set",
     whyTime: "{t} minutes, under the {m} you asked for",

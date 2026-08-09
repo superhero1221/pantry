@@ -103,6 +103,30 @@ export function Home({ v }: { v: Pantry }) {
         {v.tonightAgainCta}
       </Btn>
 
+      {/* The edge of what the app has, said out loud.
+          Before this the reroll walked all 153 dishes forever: ask for pasta,
+          tap "show me another" seven times, and arrive at Mango Habanero Wings
+          having been given no sign that the app stopped answering the question
+          four taps ago. An app with no edges reads as arbitrary, and arbitrary
+          is what "rigid" turns out to mean — not too few options, no give.
+          Renders almost never. It is here for the two moments the app
+          genuinely has nothing more, which are exactly the moments silence
+          costs it the reader's trust. */}
+      {(v.tonightMissed || v.tonightWrapped) && (
+        <div style={css('margin-top:10px;padding:14px 17px;border-radius:26px;background:#fff2eb')}>
+          <p dir="auto" style={css('margin:0;font-size:13.5px;line-height:1.5;color:#8c491a;text-wrap:pretty')}>
+            {v.tonightMissed || v.tonightWrapped}
+          </p>
+          <Btn
+            onClick={v.tonightWiden}
+            css="width:100%;height:42px;border-radius:999px;font-size:14px;font-weight:700;color:#fff;background:#c67139;margin-top:10px"
+            hover="background:#b2622d"
+          >
+            {v.tonightWidenCta}
+          </Btn>
+        </div>
+      )}
+
       {/* The one question the app ever asks unprompted, and only after six
           cooks. It used to live on Stats, which is no longer a tab — and it is
           not a readout anyway: the answer changes what gets offered here. It

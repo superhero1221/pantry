@@ -452,6 +452,9 @@ export const extra: Record<string, string> = {
 
     /* ── The small print ── */
     someMeasured: "{n} de las {of} líneas de aquí son precios reales que alguien pagó y comunicó — los puntos al lado indican cuáles. El resto están modelados: una buena estimación, no un ticket.",
+    noneOfThat: "No hay {q} en el libro — todavía. Lo más cercano que tengo es {d}.",
+    lastOfThat: "Eso es todo lo que tengo de {q}. Son {n}, y ya los has visto todos.",
+    goWider: "Enséñame lo que sea",
     whyTitle: "Por qué esta",
     whyBudget: "Dentro de los {b} que fijaste",
     whyTime: "{t} minutos, por debajo de los {m} que pediste",

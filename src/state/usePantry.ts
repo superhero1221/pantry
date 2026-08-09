@@ -1261,6 +1261,38 @@ export function usePantry() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [S.query, S.budget, S.maxTime, S.diets, S.profile, S.level, toBuy]);
 
+  /** The dishes that actually answer what was typed, in the same order.
+   *
+   *  `named` was already computed per recipe and then used for one thing: an
+   *  exemption from the time budget. It never answered the question it looks
+   *  like it answers — did anything MATCH? — so the app could not tell you it
+   *  had none of what you asked for.
+   *
+   *  It could not tell you because it could not know. `ranked()` sorts and
+   *  never filters, deliberately: the comment above says partitioning "keeps
+   *  the list fourteen long, so nothing that reads it can be handed an empty
+   *  pool". That was the right call for every screen that must always render
+   *  something. It also made "I have no carbonara" UNREPRESENTABLE, and an app
+   *  that cannot say no has no edges — every reroll wraps back into unrelated
+   *  food and the reader learns the answers are arbitrary.
+   *
+   *  So the emptiness lives here, next to the full list rather than instead of
+   *  it. `ranked()` keeps its promise to every existing caller; this is the one
+   *  that is allowed to come back with nothing. */
+  const matches = useCallback((): Recipe[] => {
+    const q = S.query.toLowerCase().trim();
+    if (!q) return [];
+    return ranked().filter((r) => {
+      const hay = (r.name + ' ' + r.cuisine + ' ' + (r.copycat || '') + ' ' + r.local).toLowerCase();
+      return (
+        hay.indexOf(q) >= 0 ||
+        (!!r.copycat && COPYCAT_HINTS.some((h) => q.indexOf(h) >= 0)) ||
+        q.split(/\s+/).some((w) => w.length > 2 && hay.indexOf(w) >= 0)
+      );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [S.query, ranked]);
+
   /* ── Real location, real shops ────────────────────────────────────────── */
   const live = () => import('../data/pantry-live');
 
@@ -1562,9 +1594,23 @@ export function usePantry() {
    *  The top of the ranked list, walked down one place each time you ask for
    *  something else. Computed here rather than on navigation because the Home
    *  screen now opens on it: there is no "submit" any more, so the answer has
-   *  to exist before anybody presses anything. Wraps, so it cannot dead-end. */
-  const pool = ranked();
+   *  to exist before anybody presses anything. */
+  const hits = matches();
+  /** Ask for pasta and you walk down the pasta, not down all 153.
+   *  It used to be the whole ranked list either way, so tapping "show me
+   *  another" seven times after typing "pasta" arrived at Mango Habanero
+   *  Wings — the app having silently stopped answering the question several
+   *  taps earlier without ever saying so. */
+  const pool = S.query.trim() && hits.length ? hits : ranked();
   const offer: Recipe = pool.length ? pool[S.reroll % pool.length] : recipe;
+  /** Whether the walk has been all the way round. It still wraps — a dead end
+   *  is worse than a repeat — but now the screen can SAY it is repeating, and
+   *  offer the one thing that would help: dropping the word. */
+  const offerWrapped = pool.length > 0 && S.reroll >= pool.length;
+  /** Asked for something the cookbook does not have. Not an error and not an
+   *  empty screen: the dish above is still real, it is simply not the one that
+   *  was asked for, and the app has to be the one to say so. */
+  const offerMissed = !!S.query.trim() && hits.length === 0;
 
   /* Computed once each rather than at every key that needs them: spanOf walks
      the store list and calls toBuy per shop, and the two of them were being
@@ -2266,7 +2312,14 @@ export function usePantry() {
       pick: () => setState({ maxTime: t.m, timeSet: true }),
     })),
     searchCta: S.query ? hs('findMe', 'Find me {q}', { q: S.query.toLowerCase() }) : T.homeGo,
-    search: () => go('results', { pickId: ranked()[0].id, showMicro: false, reroll: 0 }),
+    /* The button says "Find me pasta". It used to open `ranked()[0]` — the
+       best-scoring dish overall, pasta or not — so the app echoed the word
+       back and then ignored it. That is the shape of every complaint about
+       this app feeling rigid: it is not that there are too few options, it is
+       that a reaction was acknowledged and then thrown away.
+       It opens the best MATCH now, and only falls back to the ranked top when
+       there is no match at all — in which case the screen says so. */
+    search: () => go('results', { pickId: (matches()[0] || ranked()[0]).id, showMicro: false, reroll: 0 }),
 
     /* ── Tonight, answered ──────────────────────────────────────────────────
        The screen used to open as a form: what do you fancy, how much, how long,
@@ -2308,6 +2361,28 @@ export function usePantry() {
        times shows four different dinners instead of the same one twice. It
        wraps, so it can never dead-end. */
     tonightAgain: () => setState({ reroll: S.reroll + 1 }),
+
+    /* The two things the app could not previously say, and the one tap that
+       answers both.
+       `tonightEdge` is null almost all the time — it appears only when the
+       app has genuinely reached the end of what it has, which is exactly when
+       staying silent reads as the answers being arbitrary. An app with no
+       edges feels like a slot machine; an app that says "that is the last of
+       the pasta" is one you are having a conversation with. */
+    /* Lowercased, like searchCta one screen up — the reader typed a word, not
+       a proper noun, and echoing "the last of the Pasta" reads as the app
+       naming a brand rather than repeating what was asked. */
+    tonightMissed: offerMissed
+      ? fill(xt(lg, 'noneOfThat'), { q: S.query.trim().toLowerCase(), d: dish(offer) })
+      : null,
+    tonightWrapped: !offerMissed && offerWrapped && S.query.trim()
+      ? fill(xt(lg, 'lastOfThat'), { q: S.query.trim().toLowerCase(), n: pool.length })
+      : null,
+    /* Dropping the word is the only thing that helps in either case, so it is
+       one tap rather than a trip back into the refiner to clear a text field.
+       `reroll: 0` because a new question starts at the top. */
+    tonightWiden: () => setState({ query: '', reroll: 0 }),
+    tonightWidenCta: xt(lg, 'goWider'),
     /* Announced rather than shown: the dish name changes in place, and a screen
        reader would otherwise be told nothing at all. */
     tonightSaid: fill(xt(lg, 'nowShowing'), { d: dish(offer) }),
