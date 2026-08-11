@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { css } from '../lib/css';
 import { Btn } from './Btn';
 import { ChevronLeft } from './Icon';
 
@@ -42,6 +43,150 @@ export const Dots = ({
         }}
       />
     ))}
+  </div>
+);
+
+/** The name, as a lockup rather than as text.
+ *
+ *  Pinned left-to-right in every language. Everything around it mirrors in
+ *  Arabic and Urdu and should; a wordmark is a drawing of a name, and
+ *  "Pantry P" is not the mark. */
+export const Wordmark = ({ size = 22 }: { size?: number }) => (
+  <div dir="ltr" style={css('display:flex;align-items:center;gap:9px')}>
+    <div
+      style={css(
+        `width:${Math.round(size * 1.45)}px;height:${Math.round(size * 1.45)}px;border-radius:${Math.round(size / 2.9)}px;background:#c67139;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:${Math.round(size * 0.86)}px`,
+      )}
+    >
+      P
+    </div>
+    <span style={css(`font-family:'Caprasimo',serif;font-size:${size}px;letter-spacing:-.3px`)}>Pantry</span>
+  </div>
+);
+
+/** How far through setup you are, as a bar rather than as four dots.
+ *
+ *  The dots it replaces were the same width whether you had answered one
+ *  question or three — four separate marks that you had to count, on screens
+ *  whose entire argument is that you should not have to hold anything in your
+ *  head. A bar that is a quarter full is read without being counted.
+ *
+ *  Still labelled "Step 2 of 4", because that is the sentence, and a screen
+ *  reader cannot see how full anything is. */
+export const Progress = ({ at, of = 4, label }: { at: number; of?: number; label: string }) => (
+  <div
+    role="img"
+    aria-label={label}
+    style={css('height:6px;border-radius:999px;background:#e2d8c6;overflow:hidden')}
+  >
+    <div
+      style={css(
+        `height:100%;width:${Math.round(((at + 1) / of) * 100)}%;border-radius:999px;background:#c67139;transition:width .3s ease-out`,
+      )}
+    />
+  </div>
+);
+
+/** The frame every setup question is asked inside.
+ *
+ *  All four of these used to be their own arrangement of the same parts, which
+ *  is how they came to disagree: three had a Skip and one did not, the dots
+ *  moved, and none of them carried the name that the carousel right before
+ *  them puts at the top of all five cards. Setup now looks like one thing
+ *  because it is one component.
+ *
+ *  `art` fills the space between the last answer and the button. That space
+ *  existed before and was empty — four hundred pixels of nothing on a phone,
+ *  which is the single biggest reason these screens felt like a form. Putting
+ *  the character in it costs no layout, because the gap was already there.
+ *
+ *  `note` is deliberately not a card. Both of the notes it carries used to sit
+ *  in a coloured panel behind a circled ⓘ — the house style of every generated
+ *  app there has ever been, applied to a sentence that is just the app talking.
+ *  It says the same thing quietly now, in the character's own voice. */
+export const Ask = ({
+  title,
+  sub,
+  step,
+  stepLabel,
+  back,
+  onBack,
+  skip,
+  onSkip,
+  note,
+  art,
+  foot,
+  children,
+}: {
+  title: string;
+  sub: string;
+  /** Null on a screen reached from Settings rather than from setup — there is
+   *  no "step 2 of 4" when there is no 1, 3 or 4 coming. */
+  step: number | null;
+  stepLabel: string;
+  back: string;
+  onBack: () => void;
+  skip?: string;
+  onSkip?: () => void;
+  note?: string;
+  art?: ReactNode;
+  foot: ReactNode;
+  children: ReactNode;
+}) => (
+  <div style={css('min-height:100%;display:flex;flex-direction:column;padding:14px 22px 22px')}>
+    <div style={css('display:flex;align-items:center;justify-content:space-between;height:38px')}>
+      <BackBtn label={back} onClick={onBack} />
+      <Wordmark size={19} />
+      {/* The spacer is the same width as the control it stands in for, so the
+          name stays on the centre line whether or not there is a Skip. */}
+      {skip && onSkip ? (
+        <Btn
+          onClick={onSkip}
+          css="height:38px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:600;color:#645c50"
+          hover="background:#eee7db"
+        >
+          {skip}
+        </Btn>
+      ) : (
+        <span style={css('width:38px')} />
+      )}
+    </div>
+
+    <div className="pg-ask-bar" style={css(step === null ? 'visibility:hidden' : '')}>
+      <Progress at={step ?? 0} label={stepLabel} />
+    </div>
+
+    {/* The type scale is in the stylesheet rather than in a declaration string
+        for one reason: on a short screen it has to come down, and a media
+        query cannot select a style attribute. See .pg-ask-h / .pg-ask-p. */}
+    <h2 dir="auto" className="pg-ask-h">
+      {title}
+    </h2>
+    <p dir="auto" className="pg-ask-p">
+      {sub}
+    </p>
+
+    {children}
+
+    {note && (
+      <p
+        dir="auto"
+        style={css(
+          'font-size:13px;line-height:1.5;color:#7a7263;text-align:center;margin:16px auto 0;max-width:320px;text-wrap:pretty',
+        )}
+      >
+        {note}
+      </p>
+    )}
+
+    {/* Everything about this block lives in the stylesheet rather than in a
+        declaration string, because the one rule that matters is a height media
+        query and a media query cannot select a style attribute. See .pg-art:
+        below a certain screen the character stands down, so that it can never
+        be the reason the button is off the bottom of it. */}
+    {art && <div className="pg-art">{art}</div>}
+
+    <div style={css((art ? '' : 'margin-top:auto;') + 'padding-top:16px')}>{foot}</div>
   </div>
 );
 

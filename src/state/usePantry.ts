@@ -2003,12 +2003,14 @@ export function usePantry() {
          Shop is a column of money. A cartoon standing next to the numbers
          competes with the one thing the screen exists to make legible.
 
-         After already shows the big one, and two of the same character on one
-         screen is one too many — as does Goal, once you have answered it, and
-         as does Welcome, where the big one is the slide. The corner is also
-         where Welcome's copyright line and Next button now are. */
-      ['cook', 'shop', 'after', 'welcome'].indexOf(screen) < 0 &&
-      !(screen === 'goal' && !!S.profile.goal),
+         Every setup screen already shows the big one — Welcome as the slide,
+         Goal, Level and Diet in the space above the button — and two of the
+         same character on one screen is one too many. On all four the corner
+         is also exactly where the button is. Locate shows no big character and
+         still stands the corner one down, because its own button reaches the
+         same place — and because setup either has a character in the corner
+         throughout or it does not, and one screen out of five is a glitch. */
+      ['cook', 'shop', 'after', 'welcome', 'goal', 'tier', 'diet', 'locate'].indexOf(screen) < 0,
 
     /* Which pose. Not decoration for its own sake: the character is the only
        thing on screen that reacts to where you are, and a cook who has just
@@ -2116,6 +2118,7 @@ export function usePantry() {
     /* Hidden for anyone who already finished setup and arrived from Settings:
        "step 2 of 4" means nothing to somebody who set up last March. */
     levelDots: !S.seen,
+    levelChosen: S.level !== null,
     levelOptions: SKILL_LEVELS.map((row, i) => ({
       key: String(row.lvl),
       /* The roving-tabindex group has to be able to move focus, and a screen
@@ -2212,6 +2215,7 @@ export function usePantry() {
     dietNote:
       (S.diets.some((d) => DERIVED.indexOf(d) >= 0) ? xt(lg, 'dietDerived') + ' ' : '') +
       (S.diets.length ? vs('dietSome', '') : vs('dietNone', '')),
+    dietChosen: S.diets.length > 0,
     /* Straight to the question. This used to stage a 1.9-second radar sweep
        with a setTimeout and then announce "Found you" — no lookup ever ran.
        The radar still exists, for the real one: tap "use my location" and
@@ -2220,11 +2224,20 @@ export function usePantry() {
 
     /* ── Location ───────────────────────────────────────────────────────── */
     locating: S.locating,
-    located: S.located,
+    /* "Not looking" rather than "has finished looking". Neither of these two is
+       persisted, so a reload on #/locate — a bookmark, a share, or a browser
+       restoring the tab — used to arrive with both false and render a screen
+       that was genuinely blank: a back arrow, four dots and nothing else. The
+       only state that should hide the country card is a lookup in flight. */
+    located: !S.locating,
     countryCode: cc,
     cityName: c.city,
     countryLine: c.name + ' · ' + c.cur.charAt(0).toUpperCase() + c.cur.slice(1) + ' ' + c.sym,
     currencyName: c.cur,
+    /* The one line the design's translation sweep never reached: it was written
+       into the screen as English with a value interpolated, so it had no key to
+       translate and rendered in English in all six languages. */
+    priceHomeLine: fill(xt(lg, 'priceHome'), { cur: c.cur }),
     countryChips: Object.keys(COUNTRIES).map((k) => ({
       key: k,
       label: COUNTRIES[k].city,

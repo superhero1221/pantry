@@ -157,6 +157,76 @@ select {
   }
 }
 
+/* The character standing between the last answer of a setup question and the
+   button that leaves it.
+
+   It fills a gap that was already there — four hundred pixels of nothing on a
+   phone, which is most of why those screens read as a form. It is emphatically
+   not allowed to create one. A flex child cannot shrink inside a box whose own
+   height is only a minimum, and the screen's is (`min-height:100%`, so a long
+   answer list can still scroll), so `flex:1` here distributes spare room and
+   does nothing at all when there is none. On a 640px phone that put the Next
+   button 139px below the fold.
+   Hence the query: below about a small phone in landscape-ish height, the
+   character stands down and the button returns to the floor of the screen. A
+   drawing that has to be scrolled to is not company, and the thing it was
+   covering for — the emptiness — is not there on a screen this short anyway.
+   The size clamps as well, so the range in between shrinks rather than jumps. */
+.pg-art {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  overflow: hidden;
+}
+/* The question itself. Centred, because the answers underneath it are centred
+   and a left-aligned heading over a centred chip row is two designs. */
+.pg-ask-bar {
+  margin: 14px 0 18px;
+}
+.pg-ask-h {
+  font-family: 'Caprasimo', serif;
+  font-weight: 400;
+  font-size: 33px;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.3px;
+  text-align: center;
+  text-wrap: balance;
+}
+.pg-ask-p {
+  font-size: 14.5px;
+  line-height: 1.5;
+  margin: 10px auto 20px;
+  color: #645c50;
+  text-align: center;
+  max-width: 330px;
+  text-wrap: pretty;
+}
+
+/* One threshold, three effects, and they are the same decision: on a screen
+   this short the frame has to give the answers and the button the room, so the
+   character stands down and the type comes back to something nearer the body
+   size. Measured rather than picked — below this, a wrapped three-line heading
+   plus the drawing put the button off the bottom of an iPhone SE. */
+@media (max-height: 745px) {
+  .pg-art {
+    display: none;
+  }
+  .pg-ask-bar {
+    margin: 10px 0 12px;
+  }
+  .pg-ask-h {
+    font-size: 27px;
+  }
+  .pg-ask-p {
+    font-size: 13.5px;
+    margin: 8px auto 14px;
+  }
+}
+
 /* A card of the opening carousel arriving. React is keyed on the card, so the
    whole subtree is replaced and this plays from the top every time — there is
    no transition to interrupt and nothing to reverse when you swipe back.

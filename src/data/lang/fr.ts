@@ -486,6 +486,7 @@ export const extra: Record<string, string> = {
     slideH5: "C'est parti",
     slideS5: "Quatre questions rapides pour savoir quoi vous proposer. Passez-en autant que vous voulez, je fonctionnerai quand même.",
     slideGo: "Allons-y",
+    priceHome: "À partir d'ici, chaque prix est en {cur}, dans des magasins qui existent vraiment près de chez vous. Pas le bon endroit ?",
     ownMark: "Pantry™ et le personnage sont des marques déposées. Les recettes, les textes, les illustrations et le code appartiennent aux auteurs de Pantry. Les données, les photographies et les polices appartiennent aux sources citées ci-dessus et conservent leurs propres licences.",
     privTitle: "Confidentialité",
     privIntro: "Pantry tourne sur votre téléphone. Presque tout ce que vous y faites n’en sort jamais. Cette page dit exactement ce qui en sort, quand, et qui le voit — ni plus, ni moins.",

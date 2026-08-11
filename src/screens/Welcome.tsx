@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
-import { BackBtn } from '../ui/bits';
+import { BackBtn, Wordmark } from '../ui/bits';
 import { MascotBig } from '../ui/Mascot';
 import type { Pantry } from '../state/usePantry';
 
@@ -60,19 +60,10 @@ export function Welcome({ v }: { v: Pantry }) {
             its width the rest of the time so the logo does not jump left on
             the first card and right on the second. */}
         {v.slide > 0 ? <BackBtn label={v.t.back} onClick={v.slidePrev} /> : <span style={css('width:38px')} />}
-        {/* Pinned left-to-right in every language. Everything else on this
-            screen mirrors in Arabic and Urdu and should; a wordmark is a
-            drawing of a name, and "Pantry P" is not the mark. */}
-        <div dir="ltr" style={css('display:flex;align-items:center;gap:9px')}>
-          <div
-            style={css(
-              "width:32px;height:32px;border-radius:11px;background:#c67139;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:19px",
-            )}
-          >
-            P
-          </div>
-          <span style={css("font-family:'Caprasimo',serif;font-size:22px;letter-spacing:-.3px")}>Pantry</span>
-        </div>
+        {/* The same lockup, at the same place, as the four question screens
+            after this one — that continuity is most of why the carousel reads
+            as the app opening rather than as an advert in front of it. */}
+        <Wordmark size={22} />
         <Btn
           onClick={v.skipOnboarding}
           css="height:38px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:600;color:#645c50"
@@ -120,7 +111,7 @@ export function Welcome({ v }: { v: Pantry }) {
           >
             {card.h}
           </h1>
-          <MascotBig key={card.pose} pose={card.pose} jar={104} />
+          <MascotBig key={card.pose} pose={card.pose} jar="clamp(70px, 15vh, 104px)" />
           <p
             dir="auto"
             style={css('font-size:16px;line-height:1.5;margin:0;max-width:330px;color:#474238;text-wrap:pretty')}

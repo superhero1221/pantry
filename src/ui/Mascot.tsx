@@ -32,13 +32,24 @@ const SET = {
 /** How wide the jar itself is inside each canvas, from mascot-poses.py. */
 const JAR = 150;
 
-export function Mascot({ pose = 'walk', jar = 41 }: { pose?: Pose; jar?: number }) {
+export function Mascot({ pose = 'walk', jar = 41 }: { pose?: Pose; jar?: number | string }) {
   return <Figure set="small" pose={pose} jar={jar} className="pg-mascot" hop bob />;
 }
 
 /** The same character, big, standing in a screen rather than over one. */
-export function MascotBig({ pose, jar = 96 }: { pose: BigPose; jar?: number }) {
+export function MascotBig({ pose, jar = 96 }: { pose: BigPose; jar?: number | string }) {
   return <Figure set="big" pose={pose} jar={jar} className="pg-mascot-big" hop bob />;
+}
+
+/** The empty-handed set, standing in a screen instead of over one.
+ *
+ *  The onboarding questions want a reaction, not a prop: "heard you" and
+ *  "still waiting" are the only two things being said, and the four poses that
+ *  hold nothing say them without a barbell or a purse turning up to be
+ *  explained. It is the corner character at four times the size, which is
+ *  fine — these are drawings, not sprites, and `jar` normalises them anyway. */
+export function MascotMid({ pose, jar = 76 }: { pose: Pose; jar?: number | string }) {
+  return <Figure set="small" pose={pose} jar={jar} hop bob />;
 }
 
 function Figure({
@@ -51,20 +62,29 @@ function Figure({
 }: {
   set: keyof typeof SET;
   pose: string;
-  jar: number;
-  className: string;
+  /** A number of pixels, or any CSS length — `clamp(46px, 11vh, 88px)` on the
+   *  setup screens, where the room the character has is whatever is left after
+   *  the question, and that is a different amount on every phone. Both come out
+   *  of the same arithmetic; a length goes through calc() instead of through
+   *  Math.round, and the ratio is a plain number either way. */
+  jar: number | string;
+  className?: string;
   hop?: boolean;
   bob?: boolean;
 }) {
   const { dir, w, h } = SET[set];
-  const width = Math.round((jar * w) / JAR);
-  const height = Math.round((jar * h) / JAR);
+  const span = (side: number) =>
+    typeof jar === 'number'
+      ? Math.round((jar * side) / JAR) + 'px'
+      : `calc(${jar} * ${(side / JAR).toFixed(4)})`;
+  const width = span(w);
+  const height = span(h);
   return (
     <div
       className={className}
       aria-hidden="true"
       style={css(
-        `width:${width}px;height:${height}px` +
+        `width:${width};height:${height}` +
           (hop ? ';animation:pgHop .52s cubic-bezier(.2,.9,.3,1.4) both' : ''),
       )}
     >
@@ -80,8 +100,11 @@ function Figure({
           src={asset(`${dir}/${pose}.webp`)}
           alt=""
           decoding="async"
-          width={width}
-          height={height}
+          /* The attributes are a hint about the aspect ratio, so they are the
+             drawing's own numbers rather than the rendered size — a calc() is
+             not a number and setting one here would be dropped as invalid. */
+          width={w}
+          height={h}
           style={css('width:100%;height:100%;display:block;object-fit:contain')}
         />
       </div>
