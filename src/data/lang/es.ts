@@ -338,7 +338,7 @@ export const extra: Record<string, string> = {
       'No es tu tique. Compras los paquetes enteros, no la cantidad exacta que pide el plato, así que la primera compra sale más cara y el resto pasa a la comida siguiente.',
     extraAdd: 'opcional: tócalo para añadirlo',
     copycatKeep:
-      '{who} cobra {a} por una ración. La tuya sale por {b}: te ahorras {c} cada vez que la cocinas en lugar de pedirla.',
+      "{who} cobra {a} por ración. La tuya sale a {b}: te quedas {c} por ración, o {d} en las {n} que salen.",
 
     /* ── The time budget ── */
     timeOver: 'por encima de tus {m}',
@@ -458,7 +458,14 @@ export const extra: Record<string, string> = {
     whyTitle: "Por qué esta",
     whyBudget: "Dentro de los {b} que fijaste",
     whyTime: "{t} minutos, por debajo de los {m} que pediste",
-    whyDiet: "{d} — comprobado ingrediente por ingrediente",
+    basketShare: 'La parte de esta comida',
+    basketPer: 'Por ración',
+    basketPerSub: 'este plato da {n}',
+    basketNotTill: 'Ninguna de las dos cifras es tu tique. Compras paquetes enteros, así que la primera compra cuesta más y el resto pasa a la siguiente comida.',
+    whyDiet: "{d} — nada en la lista de ingredientes lo incumple",
+    dietClash: "Este incumple tu ajuste de {d}",
+    dietClashWhy: "Por el {i}.",
+    dietClashNote: "Me pediste no enseñarte estos, y aun así lo puse por debajo de los que sí encajan. Puedes cocinarlo igualmente, pero comprueba tú la etiqueta: yo leo una lista de ingredientes, no el paquete que tienes en la mano.",
     whyOwned: "{n} ya lo tienes en casa",
     whyLevel: "{l} — más o menos donde estás",
     pctDearer: "{n}% más caro",

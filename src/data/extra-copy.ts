@@ -91,11 +91,15 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapToToggle: 'Tap anything you already have — it comes off the total and stays off.',
     tapPrice: 'Tap a price to correct it.',
     totalMeans: 'What this meal’s share of each ingredient costs',
+    basketShare: 'This meal’s share',
+    basketPer: 'Per serving',
+    basketPerSub: 'this dish makes {n}',
+    basketNotTill: 'Neither of these is your till receipt. You buy whole packets, so the first shop costs more than this and the rest carries into your next meal.',
     totalMeansBody:
       'Not your till receipt. You buy whole packets, not the exact amount a dish needs — so the first shop is dearer and the rest carries into the next meal.',
     extraAdd: 'optional — tap to add it',
     copycatKeep:
-      '{who} charge {a} for a portion. Yours comes to {b} — you keep {c} every time you cook it instead of ordering it.',
+      '{who} charge {a} for a portion. Yours comes to {b} — you keep {c} a portion, or {d} across the {n} this makes.',
 
     /* ── The time budget ── */
     timeOver: 'over your {m}',
@@ -224,7 +228,10 @@ export const EXTRA: Record<string, Record<string, string>> = {
     whyTitle: "Why this one",
     whyBudget: "Inside the {b} you set",
     whyTime: "{t} minutes, under the {m} you asked for",
-    whyDiet: "{d} — checked against every ingredient",
+    whyDiet: "{d} — nothing in the ingredient list breaks it",
+    dietClash: "This one breaks your {d} setting",
+    dietClashWhy: "Because of the {i}.",
+    dietClashNote: "You asked me not to show you these, and I still ranked it below the ones that fit. You can cook it anyway — but check the label yourself, because I am reading a list of ingredients, not the packet in your hand.",
     whyOwned: "{n} of these are already in your kitchen",
     whyLevel: "{l} — about where you are",
     pctDearer: "{n}% dearer",

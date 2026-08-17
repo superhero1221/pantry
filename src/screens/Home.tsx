@@ -78,6 +78,26 @@ export function Home({ v }: { v: Pantry }) {
         </div>
       )}
 
+      {/* The same warning the results screen carries, on the card that offers
+          the dish in the first place. Ranking pushes a clashing dish down but
+          cannot remove it — the offer list is a fixed length — so on the day
+          it surfaces anyway, it says so here rather than one tap later. */}
+      {v.dietClash && (
+        <div
+          role="alert"
+          style={css('margin-top:10px;padding:13px 15px;border-radius:22px;background:#ffe1d0;border:2px solid #8c491a')}
+        >
+          <div dir="auto" style={css('font-size:14.5px;font-weight:700;color:#402310;line-height:1.35')}>
+            {v.dietClash}
+          </div>
+          {v.dietClashWhy && (
+            <p dir="auto" style={css('margin:5px 0 0;font-size:13px;line-height:1.45;color:#643312')}>
+              {v.dietClashWhy}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* The dish name changes in place when you ask for another, so a screen
           reader is told what arrived. Politely — it is not an interruption. */}
       <p

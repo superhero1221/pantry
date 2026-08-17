@@ -37,6 +37,31 @@ export function Results({ v }: { v: Pantry }) {
         </div>
       </div>
 
+      {/* Above the photograph and above the price, because it changes whether
+          you want either. A dish that breaks a restriction you set can still
+          reach this screen — search, Browse, a planner slot, a shared link —
+          and until now the screen met it with the reasons it was a good idea
+          and said nothing about the reason it was not. role=alert so it is
+          announced rather than merely drawn. */}
+      {v.dietClash && (
+        <div
+          role="alert"
+          style={css('margin:16px 22px 0;padding:15px 17px;border-radius:26px;background:#ffe1d0;border:2px solid #8c491a')}
+        >
+          <div dir="auto" style={css('font-size:15.5px;font-weight:700;color:#402310;line-height:1.35')}>
+            {v.dietClash}
+          </div>
+          {v.dietClashWhy && (
+            <p dir="auto" style={css('margin:6px 0 0;font-size:14px;line-height:1.45;color:#643312')}>
+              {v.dietClashWhy}
+            </p>
+          )}
+          <p dir="auto" style={css('margin:8px 0 0;font-size:12.5px;line-height:1.5;color:#643312;text-wrap:pretty')}>
+            {v.dietClashNote}
+          </p>
+        </div>
+      )}
+
       <div style={css('margin:16px 22px 0;border-radius:28px;overflow:hidden;height:196px;background:#eee7db;box-shadow:0 3px 10px rgba(46,43,37,.16)')}>
         <DishPic src={v.dishPic} radius={0} style={{ display: 'block', filter: 'saturate(.82) contrast(.94) brightness(1.03)' }} />
       </div>

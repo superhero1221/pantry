@@ -338,7 +338,7 @@ export const extra: Record<string, string> = {
       'Ce n’est pas votre ticket de caisse. Vous achetez des paquets entiers, pas la quantité exacte qu’il faut au plat : les premières courses coûtent donc plus cher et le reste sert au repas suivant.',
     extraAdd: 'facultatif — touchez pour l’ajouter',
     copycatKeep:
-      '{who} facture {a} la portion. La vôtre revient à {b} — vous gardez {c} à chaque fois que vous la cuisinez au lieu de la commander.',
+      "{who} facture {a} la portion. La vôtre revient à {b} — vous gardez {c} par portion, soit {d} sur les {n} que cela fait.",
 
     /* ── The time budget ── */
     timeOver: 'au-dessus de vos {m}',
@@ -459,7 +459,14 @@ export const extra: Record<string, string> = {
     whyTitle: "Pourquoi celui-ci",
     whyBudget: "Dans les {b} que vous avez fixés",
     whyTime: "{t} minutes, sous les {m} demandées",
-    whyDiet: "{d} — vérifié ingrédient par ingrédient",
+    basketShare: 'La part de ce repas',
+    basketPer: 'Par portion',
+    basketPerSub: 'ce plat en fait {n}',
+    basketNotTill: 'Aucun de ces deux chiffres n\'est votre ticket de caisse. Vous achetez des paquets entiers : les premières courses coûtent plus, et le reste sert au repas suivant.',
+    whyDiet: "{d} — rien dans la liste d'ingrédients ne l'enfreint",
+    dietClash: "Celui-ci enfreint votre réglage {d}",
+    dietClashWhy: "À cause de : {i}.",
+    dietClashNote: "Vous m'avez demandé de ne pas vous montrer ceux-là, et je l'ai quand même classé après ceux qui conviennent. Vous pouvez le cuisiner malgré tout — mais vérifiez l'étiquette vous-même : je lis une liste d'ingrédients, pas le paquet que vous tenez.",
     whyOwned: "{n} que vous avez déjà",
     whyLevel: "{l} — à peu près votre niveau",
     pctDearer: "{n}% plus cher",

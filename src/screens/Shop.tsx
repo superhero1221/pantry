@@ -147,17 +147,36 @@ export function Shop({ v }: { v: Pantry }) {
             )}
           </div>
         ))}
-        <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:15px 0 13px')}>
+        {/* Two named figures rather than one ambiguous one. The headline used
+            to say "Total to buy" over a number that is the share of each
+            packet this dish uses — the sub-line said so and the headline
+            contradicted it, and the big number is the one people read. */}
+        <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:15px 0 4px')}>
           <span style={css('flex:1;min-width:0')}>
-            <span style={css('display:block;font-size:16px;font-weight:700')}>{v.t.shopTotal}</span>
-            <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
+            <span dir="auto" style={css('display:block;font-size:16px;font-weight:700')}>{v.basketShareTitle}</span>
+            <span dir="auto" style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
               {v.xt('totalMeans')}
             </span>
           </span>
           <span style={css("font-family:'Caprasimo',serif;font-size:28px")}>{v.basketTotal}</span>
         </div>
+        <div style={css('display:flex;justify-content:space-between;align-items:baseline;padding:9px 0 13px')}>
+          <span style={css('flex:1;min-width:0')}>
+            <span dir="auto" style={css('display:block;font-size:14.5px;font-weight:700;color:#474238')}>{v.basketPerTitle}</span>
+            <span dir="auto" style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
+              {v.basketPerSub}
+            </span>
+          </span>
+          <span style={css("font-family:'Caprasimo',serif;font-size:21px;color:#474238")}>{v.basketPer}</span>
+        </div>
       </div>
-      <p dir="auto" style={css('margin:8px 2px 0;font-size:12px;line-height:1.5;color:#a19786;text-wrap:pretty')}>
+      {/* Named explicitly, because the figure a shopper most wants is the one
+          this app cannot honestly produce: a till total needs a pack size on
+          every line and the cookbook carries one for only a few. */}
+      <p dir="auto" style={css('margin:8px 2px 0;font-size:12px;line-height:1.5;color:#645c50;text-wrap:pretty;font-weight:600')}>
+        {v.basketNotTill}
+      </p>
+      <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#a19786;text-wrap:pretty')}>
         {v.xt('totalMeansBody')}
       </p>
 

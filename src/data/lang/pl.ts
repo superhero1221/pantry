@@ -338,7 +338,7 @@ export const extra: Record<string, string> = {
       'To nie paragon. Kupujesz całe opakowania, a nie dokładnie tyle, ile potrzeba do dania — więc pierwsze zakupy są droższe, a reszta przechodzi na następny posiłek.',
     extraAdd: 'opcjonalne — dotknij, żeby dodać',
     copycatKeep:
-      '{who} liczy sobie {a} za porcję. Twoja wychodzi {b} — zostaje ci {c} za każdym razem, gdy gotujesz to zamiast zamawiać.',
+      "{who} liczy {a} za porcję. Twoja wychodzi {b} — zostaje ci {c} na porcji, czyli {d} na {n}, które z tego wychodzą.",
 
     /* ── The time budget ── */
     timeOver: 'ponad twoje {m}',
@@ -458,7 +458,14 @@ export const extra: Record<string, string> = {
     whyTitle: "Dlaczego to",
     whyBudget: "Mieści się w {b}, które ustawiłeś",
     whyTime: "{t} minut, poniżej {m}, o które prosiłeś",
-    whyDiet: "{d} — sprawdzone składnik po składniku",
+    basketShare: 'Udział tego posiłku',
+    basketPer: 'Na porcję',
+    basketPerSub: 'to danie daje {n}',
+    basketNotTill: 'Żadna z tych kwot to nie paragon. Kupujesz całe opakowania, więc pierwsze zakupy kosztują więcej, a reszta przechodzi na następny posiłek.',
+    whyDiet: "{d} — nic na liście składników tego nie łamie",
+    dietClash: "To danie łamie twoje ustawienie: {d}",
+    dietClashWhy: "Z powodu: {i}.",
+    dietClashNote: "Prosiłeś, żebym ich nie pokazywał, i mimo to ustawiłem je niżej niż te pasujące. Możesz to ugotować — ale sprawdź etykietę sam, bo ja czytam listę składników, a nie opakowanie, które trzymasz.",
     whyOwned: "{n} już masz w domu",
     whyLevel: "{l} — mniej więcej twój poziom",
     pctDearer: "{n}% drożej",

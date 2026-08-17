@@ -33,7 +33,7 @@ import type { Fx, Shop } from '../data/pantry-live';
 import { cloudEnabled, getDb } from '../lib/supabase';
 import { asset } from '../lib/asset';
 import { techniqueOf } from '../lib/technique';
-import { DERIVED, meetsDiet } from '../lib/diets';
+import { DERIVED, breaksDietBecause, meetsDiet } from '../lib/diets';
 import { fromLocal, toLocal } from '../lib/money';
 import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
@@ -1400,7 +1400,16 @@ export function usePantry() {
   /** Every question is skippable, and every answer is a fact the user can
    *  delete again on the Stats screen. Nothing is inferred and acted on quietly. */
   const openQuestions = () => {
-    const h = S.history;
+    /* Real cooks only. `S.history` ships with 26 seeded sample rows so the
+       Stats and Passport screens have something to draw before you have
+       cooked anything — and every one of these questions quotes a count back
+       at you as a fact about yourself. Reading the seeded rows meant a person
+       who had just finished onboarding was told "you have gone high-protein
+       13 times out of 26" before they had cooked once. Sample data may fill a
+       chart; it may never be evidence in a sentence about you.
+       The n < 6 gate below now means six real cooks, which is the point at
+       which there is a pattern worth asking about. */
+    const h = S.history.filter((c) => !c.seeded);
     const n = h.length;
     if (n < 6) return [];
     const QP = P.q || {};
@@ -1643,6 +1652,32 @@ export function usePantry() {
    *  "under {m} min" chip it has not earned and states the real number. */
   const overTime = recipe.total > S.maxTime;
 
+  /* ── When the dish on screen breaks a restriction you set ────────────────
+     `ranked()` sorts by diet rather than excluding by it, deliberately: the
+     offer list is a fixed length and an empty one is worse than a ranked one.
+     The consequence nobody drew out is that a dish which breaks a restriction
+     is still reachable — by search, by Browse, by a planner slot, by a link —
+     and every screen it lands on used to greet it with the reasons it was a
+     good idea, silently listing the restrictions it KEPT and never the one it
+     broke. Somebody who ticked "gluten free" could be shown a bowl of pasta
+     under a tick that said "halal".
+     This is the missing half. It names what is broken and why, in the same
+     words the Diet screen used to ask, and the screens put it above the price
+     rather than below the fold. It is not an allergen guarantee — it reads an
+     ingredient list, and the copy says so — but it can never again say
+     something reassuring about a dish that breaks the thing you asked for. */
+  /* Defined here rather than beside dietOn below, because the clash lines
+     under it are the first thing that needs the translated diet names. */
+  const dietWords = i18n.diets(lg);
+  const dietBroken = S.diets.filter((d) => !meetsDiet(recipe, d));
+  const dietClashDiets = dietBroken.map((d) => dietWords[d] || d);
+  /** The ingredients responsible, where the answer is derived from the list
+   *  rather than from a tag — a tagged diet knows it is broken but not by
+   *  what, so it names the diet alone. */
+  const dietClashItems = Array.from(
+    new Set(dietBroken.flatMap((d) => breaksDietBecause(recipe, d)).map((n) => foodName(n))),
+  );
+
   /** What one line costs, in the pounds-and-pence base the cookbook is written
    *  in, taking the best source available for it:
    *
@@ -1795,7 +1830,6 @@ export function usePantry() {
   const w = S.waste ? wasteMap[S.waste] : null;
 
   const dietOn = (id: string) => S.diets.indexOf(id) >= 0;
-  const dietWords = i18n.diets(lg);
 
   const weekly = [7, 6, 5, 4, 3, 2, 1, 0].map((wk) =>
     S.history
@@ -1855,7 +1889,10 @@ export function usePantry() {
       }))
     : PASSPORT;
 
-  const savedVsTakeaway = S.history.reduce(
+  /* Real cooks only, like passportRows above it. Counting the seeded sample
+     rows told somebody who had never cooked that they had already saved money,
+     which is the same fabrication the pattern questions were making. */
+  const savedVsTakeaway = realCooks.reduce(
     (a, x) => a + Math.max(0, (RECIPES.find((y) => y.id === x.id)?.restaurant || 9) * x.servings - x.spend),
     0,
   );
@@ -2288,7 +2325,16 @@ export function usePantry() {
         'font-size:13.5px;padding:10px 15px;',
       pick: () => setState({ query: label }),
     })),
-    servingsLabel: hs('forServings', 'for {n} servings', { n: 2 }),
+    /* The dish on offer, not a fixed 2. This label sits directly above the
+       budget chips and qualifies them — it is the sentence that says what the
+       money buys — and it was hardcoded to "for 2 servings" while every price
+       under it was the cost of the whole recipe, which yields 2 to 6. So a
+       £6 budget was being compared against a four-serving Butter Chicken and
+       reported as over, when two servings of it were well under.
+       Nothing about the arithmetic changes here: the budget has always covered
+       the whole dish, and `pricePer` beside it has always been per serving.
+       What changes is that the screen now says which dish it means. */
+    servingsLabel: hs('forServings', 'for {n} servings', { n: recipe.servings }),
     budgetChips: BUDGETS.map((b) => ({
       key: String(b),
       label: fmt(b),
@@ -2547,6 +2593,21 @@ export function usePantry() {
       return out.slice(0, 4);
     })(),
     pickedWhyTitle: xt(lg, 'whyTitle'),
+
+    /* ── The restriction this dish breaks ────────────────────────────────
+       Empty on every dish that keeps them all, which is the ordinary case, so
+       the screens render nothing at all rather than an all-clear. An all-clear
+       is a claim, and this app cannot make it: it reads an ingredient list, it
+       cannot see inside a jar, and `dietClashNote` says exactly that. */
+    dietClash: dietClashDiets.length
+      ? fill(xt(lg, 'dietClash'), { d: dietClashDiets.join(', ') })
+      : '',
+    /** "…because of the mature cheddar." Only where the ingredient list is what
+     *  decided it; a tagged diet knows it is broken but not by what. */
+    dietClashWhy: dietClashItems.length
+      ? fill(xt(lg, 'dietClashWhy'), { i: dietClashItems.join(', ') })
+      : '',
+    dietClashNote: xt(lg, 'dietClashNote'),
     /* Two per-serving keys, deliberately.
        `pricePerSpan` is the headline beside priceTotal. `pricePer` stays a
        single figure because it is the right-hand operand of the takeaway
@@ -2615,12 +2676,19 @@ export function usePantry() {
        line is a single templated string rather than six concatenated
        fragments, so word order — and right-to-left — belongs to whoever wrote
        the translation instead of to the order the pieces are glued in. */
+    /* `keep` is per portion, because `restaurant` is a per-portion price. The
+       old wording said "you keep {c} every time you cook it", which reads as
+       the whole cook — so this screen appeared to contradict the Passport,
+       which totals whole cooks (portions x servings). Both units are now
+       named in the sentence and neither screen can be read as the other. */
     savingLine: recipe.copycat
       ? fill(xt(lg, 'copycatKeep'), {
           who: recipe.copycat,
           a: fmt(recipe.restaurant),
           b: fmt(per),
           c: fmt(keep),
+          d: fmt(asShown(keep) * recipe.servings),
+          n: recipe.servings,
         })
       : X.youKeep +
         ' ' +
@@ -2816,6 +2884,21 @@ export function usePantry() {
       );
     })(),
     basketTotal: fmt(buyReal),
+    /* ── Saying which number this is ─────────────────────────────────────
+       The headline read "Total to buy", which is the one thing it is not: it
+       is the share of each packet this dish uses, and the sub-line underneath
+       said so while the headline above contradicted it. Somebody reading the
+       big number reasonably expected the till.
+       Three named figures instead of one ambiguous one. The checkout total is
+       deliberately NOT among them — it needs a pack size for every line and
+       the cookbook carries one for only a few, so inventing it would be the
+       same mistake in the other direction. `basketNotTill` says that out loud
+       rather than leaving a gap for somebody to fill with an assumption. */
+    basketShareTitle: xt(lg, 'basketShare'),
+    basketPerTitle: xt(lg, 'basketPer'),
+    basketPer: fmt(buyReal / recipe.servings),
+    basketPerSub: fill(xt(lg, 'basketPerSub'), { n: recipe.servings }),
+    basketNotTill: xt(lg, 'basketNotTill'),
     /** True while a line is struck through because the recipe assumes it, not
      *  because you said so — five of Mango Habanero Wings' eleven. The note
      *  under the list says as much, once, for exactly as long as it is true. */
