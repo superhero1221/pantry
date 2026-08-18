@@ -92,6 +92,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     tapPrice: 'Tap a price to correct it.',
     totalMeans: 'What this meal’s share of each ingredient costs',
     basketShare: 'This meal’s share',
+    timeLeft: '{m} min of timers left, one thing at a time',
     basketPer: 'Per serving',
     basketPerSub: 'this dish makes {n}',
     basketNotTill: 'Neither of these is your till receipt. You buy whole packets, so the first shop costs more than this and the rest carries into your next meal.',

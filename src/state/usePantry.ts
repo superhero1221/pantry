@@ -3079,7 +3079,34 @@ export function usePantry() {
       }
       setState({ step: S.step + 1, timerRun: false, timerLeft: 0, lostOpen: false });
     },
-    prevStep: () => setState({ step: Math.max(0, S.step - 1), timerRun: false, lostOpen: false }),
+    /** False on the first step, so the control is disabled rather than merely
+     *  ineffective. It used to be pressable there and did the one thing you
+     *  would not want: `step` clamped to 0 and stayed put while `timerRun`
+     *  went false, so tapping Back on step one silently stopped the timer you
+     *  had running and gave no sign it had done anything. */
+    canPrev: S.step > 0,
+    prevStep: () =>
+      S.step > 0 && setState({ step: S.step - 1, timerRun: false, lostOpen: false }),
+
+    /* What is genuinely left, end to end. This screen runs steps strictly one
+       at a time — a timer starts when you arrive and the next step is not shown
+       until you finish — so what a cook experiences is the sum of the timers,
+       whatever the card outside advertised. An audit found a dish offering 55
+       minutes against six timers adding to 83, and it is not an outlier: 134 of
+       the 153 recipes advertise less than their own steps, median gap 11
+       minutes, and only 56 of those contain an overlapping "meanwhile" step to
+       explain any of it.
+       `total` is left alone deliberately. It is the author's estimate for a
+       cook who overlaps work, and a regex cannot re-author 145 recipes'
+       judgement: Chicken Yassa's rice step genuinely runs alongside the simmer
+       without saying so, and mechanically summing it would replace an
+       optimistic number with a pessimistic one. What changes is that the person
+       at the hob can see the real remainder instead of meeting it a timer at a
+       time. */
+    timeLeft: recipe.method.slice(S.step).reduce((a, m) => a + (m.m ?? 0), 0),
+    timeLeftLine: fill(xt(lg, 'timeLeft'), {
+      m: recipe.method.slice(S.step).reduce((a, m) => a + (m.m ?? 0), 0),
+    }),
     methodUntranslated: lg !== 'en',
     stepsEnglishTitle: word('stepsEnglish', 'Steps are in English'),
     stepsEnglishWhy: word('stepsWhy', 'I have not translated the method.'),

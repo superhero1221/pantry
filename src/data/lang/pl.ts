@@ -459,6 +459,7 @@ export const extra: Record<string, string> = {
     whyBudget: "Mieści się w {b}, które ustawiłeś",
     whyTime: "{t} minut, poniżej {m}, o które prosiłeś",
     basketShare: 'Udział tego posiłku',
+    timeLeft: 'Zostało {m} min minutników, po kolei',
     basketPer: 'Na porcję',
     basketPerSub: 'to danie daje {n}',
     basketNotTill: 'Żadna z tych kwot to nie paragon. Kupujesz całe opakowania, więc pierwsze zakupy kosztują więcej, a reszta przechodzi na następny posiłek.',

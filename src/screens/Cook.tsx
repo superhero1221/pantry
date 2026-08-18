@@ -71,6 +71,16 @@ export function Cook({ v }: { v: Pantry }) {
           {v.stepText}
         </p>
 
+        {/* The honest remainder. This screen runs one step at a time, so the
+            time still owed is the sum of the timers ahead of you — which for
+            most recipes is more than the figure on the card that sold you the
+            dish. Better to see it here than to meet it a timer at a time. */}
+        {v.timeLeft > 0 && (
+          <div dir="auto" style={css('font-size:12.5px;color:#645c50;margin-top:10px')}>
+            {v.timeLeftLine}
+          </div>
+        )}
+
         {v.stepTip && (
           <div style={css('margin-top:20px;padding:17px 18px;border-radius:26px;background:#fff2eb;display:flex;gap:12px;align-items:flex-start')}>
             <Bulb size={20} stroke="#b2622d" style={{ flex: 'none', marginTop: 2 }} />
@@ -131,11 +141,18 @@ export function Cook({ v }: { v: Pantry }) {
           {v.lostCta}
         </Btn>
         <div style={css('display:flex;gap:9px')}>
+          {/* Disabled on the first step rather than merely ineffective there:
+              it used to clamp to step 0 and stop your running timer on the way,
+              which is the one outcome nobody wants from a Back button. */}
           <Btn
             aria-label={v.xt('stepBack')}
             onClick={v.prevStep}
-            css="flex:none;width:60px;height:60px;border-radius:999px;background:#ebddc5;display:flex;align-items:center;justify-content:center"
-            hover="background:#dcd3c4"
+            disabled={!v.canPrev}
+            css={
+              'flex:none;width:60px;height:60px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#ebddc5' +
+              (v.canPrev ? '' : ';opacity:.4;cursor:default')
+            }
+            hover={v.canPrev ? 'background:#dcd3c4' : ''}
           >
             <ChevronLeft size={22} stroke="#474238" />
           </Btn>
