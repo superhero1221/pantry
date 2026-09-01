@@ -242,3 +242,7 @@ than nonsense.
 
 Caprasimo and Figtree, both under the SIL Open Font License, self-hosted in
 `public/fonts` so that no visitor's IP goes to a font CDN to read a recipe.
+The OFL asks that its text travel with the fonts, so the full licence for each
+sits beside the `.woff2` it covers: `public/fonts/Caprasimo-OFL.txt`
+(Copyright 2023 The Caprasimo Project Authors) and
+`public/fonts/Figtree-OFL.txt` (Copyright 2022 The Figtree Project Authors).

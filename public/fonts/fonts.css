@@ -8,7 +8,11 @@
    weights, so it is stored once and declared five times.
 
    Arabic and Urdu fall back to the system face either way: neither family
-   carries those scripts. */
+   carries those scripts.
+
+   Both families are under the SIL Open Font License 1.1, and the OFL asks that
+   its text travel with the fonts: the full licence for each sits beside the
+   file it covers, in Caprasimo-OFL.txt and Figtree-OFL.txt in this folder. */
 @font-face {
   font-family: 'Caprasimo';
   font-style: normal;
