@@ -12,7 +12,7 @@ export function Browse({ v }: { v: Pantry }) {
       >
         {v.wholeMenuTitle}
       </h1>
-      <p dir="auto" style={css('font-size:14px;line-height:1.5;margin:8px 0 0;color:#645c50;text-wrap:pretty')}>
+      <p dir="auto" style={css('font-size:14px;line-height:1.5;margin:8px 0 0;color:#6a5c4c;text-wrap:pretty')}>
         {v.browseSub}
       </p>
 
@@ -31,13 +31,13 @@ export function Browse({ v }: { v: Pantry }) {
           <Btn
             key={x.key}
             onClick={x.pick}
-            css="display:flex;gap:13px;align-items:center;padding:12px;border-radius:28px;background:#f9f4ed;text-align:start;width:100%"
-            hover="background:#eee7db"
+            css="display:flex;gap:13px;align-items:center;padding:12px;border-radius:28px;background:#ffffff;text-align:start;width:100%"
+            hover="background:#fdf0e3"
           >
             <DishPic src={x.pic} size={74} radius={22} />
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:15.5px;font-weight:700;line-height:1.25')}>{x.name}</span>
-              <span style={css('display:block;font-size:12.5px;color:#645c50;margin-top:3px')}>{x.cuisine}</span>
+              <span style={css('display:block;font-size:12.5px;color:#6a5c4c;margin-top:3px')}>{x.cuisine}</span>
               <span
                 style={css(
                   `display:inline-block;margin-top:8px;padding:4px 11px;border-radius:999px;background:${x.diffBg};color:${x.diffFg};font-size:11px;font-weight:700`,
@@ -52,10 +52,10 @@ export function Browse({ v }: { v: Pantry }) {
                   at 20px "Cheese and Herb Omelette" wrapped to four lines and
                   the card became a price with a title squeezed against it.
                   The name is what somebody is scanning for here. */}
-              <span style={css("display:block;font-family:'Caprasimo',serif;font-size:14px;line-height:1.15;color:#8c491a")}>
+              <span style={css("display:block;font-family:'Caprasimo',serif;font-size:14px;line-height:1.15;color:#a83f06")}>
                 {x.per}
               </span>
-              <span style={css('display:block;font-size:10.5px;color:#645c50;margin-top:2px')}>
+              <span style={css('display:block;font-size:10.5px;color:#6a5c4c;margin-top:2px')}>
                 {v.t.resServing}
               </span>
             </span>

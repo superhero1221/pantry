@@ -47,8 +47,8 @@ export function Level({ v }: { v: Pantry }) {
           </div>
           <Btn
             onClick={v.levelNext}
-            css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16);margin-top:12px"
-            hover="background:#b2622d"
+            css="width:100%;height:56px;border-radius:999px;background:#e85d04;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16);margin-top:12px"
+            hover="background:#c04a03"
           >
             {v.levelCta}
           </Btn>
@@ -81,11 +81,11 @@ export function Level({ v }: { v: Pantry }) {
                 fallback inside an Arabic row would otherwise flip the whole
                 line left-to-right. */}
             <span style={css('display:flex;flex-wrap:wrap;align-items:center;gap:7px;font-size:16px;font-weight:700;line-height:1.25')}>
-              {o.on && <Check size={17} stroke="#b2622d" />}
+              {o.on && <Check size={17} stroke="#c04a03" />}
               {o.acts.map((a, i) => (
                 <Fragment key={a}>
                   {i > 0 && (
-                    <span aria-hidden="true" style={css('color:#a19786;font-weight:600')}>
+                    <span aria-hidden="true" style={css('color:#96866f;font-weight:600')}>
                       ·
                     </span>
                   )}
@@ -93,7 +93,7 @@ export function Level({ v }: { v: Pantry }) {
                 </Fragment>
               ))}
             </span>
-            <span dir="auto" style={css('font-size:13px;font-weight:500;color:#645c50;line-height:1.35')}>
+            <span dir="auto" style={css('font-size:13px;font-weight:500;color:#6a5c4c;line-height:1.35')}>
               {o.name}
             </span>
           </Btn>

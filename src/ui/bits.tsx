@@ -11,7 +11,7 @@ export const BackBtn = ({ label, onClick }: { label: string; onClick: () => void
     aria-label={label}
     onClick={onClick}
     css="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center"
-    hover="background:#eee7db"
+    hover="background:#fdf0e3"
   >
     <ChevronLeft size={20} />
   </Btn>
@@ -39,7 +39,7 @@ export const Dots = ({
           width,
           height: 5,
           borderRadius: 999,
-          background: i === at ? '#c67139' : '#dcd3c4',
+          background: i === at ? '#e85d04' : '#efdcc8',
         }}
       />
     ))}
@@ -55,7 +55,7 @@ export const Wordmark = ({ size = 22 }: { size?: number }) => (
   <div dir="ltr" style={css('display:flex;align-items:center;gap:9px')}>
     <div
       style={css(
-        `width:${Math.round(size * 1.45)}px;height:${Math.round(size * 1.45)}px;border-radius:${Math.round(size / 2.9)}px;background:#c67139;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:${Math.round(size * 0.86)}px`,
+        `width:${Math.round(size * 1.45)}px;height:${Math.round(size * 1.45)}px;border-radius:${Math.round(size / 2.9)}px;background:#e85d04;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:${Math.round(size * 0.86)}px`,
       )}
     >
       P
@@ -77,11 +77,11 @@ export const Progress = ({ at, of = 4, label }: { at: number; of?: number; label
   <div
     role="img"
     aria-label={label}
-    style={css('height:6px;border-radius:999px;background:#e2d8c6;overflow:hidden')}
+    style={css('height:6px;border-radius:999px;background:#f4e4d2;overflow:hidden')}
   >
     <div
       style={css(
-        `height:100%;width:${Math.round(((at + 1) / of) * 100)}%;border-radius:999px;background:#c67139;transition:width .3s ease-out`,
+        `height:100%;width:${Math.round(((at + 1) / of) * 100)}%;border-radius:999px;background:#e85d04;transition:width .3s ease-out`,
       )}
     />
   </div>
@@ -142,8 +142,8 @@ export const Ask = ({
       {skip && onSkip ? (
         <Btn
           onClick={onSkip}
-          css="height:38px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:600;color:#645c50"
-          hover="background:#eee7db"
+          css="height:38px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:600;color:#6a5c4c"
+          hover="background:#fdf0e3"
         >
           {skip}
         </Btn>
@@ -172,7 +172,7 @@ export const Ask = ({
       <p
         dir="auto"
         style={css(
-          'font-size:13px;line-height:1.5;color:#7a7263;text-align:center;margin:16px auto 0;max-width:320px;text-wrap:pretty',
+          'font-size:13px;line-height:1.5;color:#7d6d5b;text-align:center;margin:16px auto 0;max-width:320px;text-wrap:pretty',
         )}
       >
         {note}
@@ -193,7 +193,7 @@ export const Ask = ({
 /** The small uppercase section label used across every screen. */
 export const Kicker = ({
   children,
-  color = '#645c50',
+  color = '#6a5c4c',
   style,
   id,
 }: {
@@ -218,7 +218,7 @@ export const Kicker = ({
   </div>
 );
 
-/** A dish photograph, washed back into the warm ground the way the system asks.
+/** A dish photograph, shown like food rather than washed back into the ground.
  *
  *  A real `<img>` rather than the background-image this used to be, purely so
  *  that `loading="lazy"` exists to write. Browse lists all hundred and fifty-
@@ -249,9 +249,13 @@ export const DishPic = ({
       width: size ?? '100%',
       height: size ?? '100%',
       borderRadius: radius,
-      background: '#eee7db',
+      background: '#fdf0e3',
       overflow: 'hidden',
-      filter: 'saturate(.82) contrast(.94)',
+      /* Was saturate(.82) contrast(.94): the photographs were being washed back
+         to sit inside a muted beige palette. On a food app that is working
+         against the one thing on screen that makes anybody hungry. The ground
+         is bright now, so the pictures no longer need dimming to fit it. */
+      filter: 'saturate(1.08) contrast(1.03)',
       ...style,
     }}
   >

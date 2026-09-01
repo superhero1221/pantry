@@ -16,7 +16,7 @@ export function Plan({ v }: { v: Pantry }) {
       >
         {x('planTitle')}
       </h1>
-      <p dir="auto" style={css('font-size:14px;line-height:1.5;margin:8px 0 0;color:#645c50;text-wrap:pretty')}>
+      <p dir="auto" style={css('font-size:14px;line-height:1.5;margin:8px 0 0;color:#6a5c4c;text-wrap:pretty')}>
         {x('planSub')}
       </p>
 
@@ -54,8 +54,8 @@ export function Plan({ v }: { v: Pantry }) {
 
       <Btn
         onClick={v.buildPlan}
-        css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:20px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
-        hover="background:#b2622d"
+        css="width:100%;height:56px;border-radius:999px;background:#e85d04;color:#fff;font-size:19px;font-weight:700;margin-top:20px;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+        hover="background:#c04a03"
       >
         {v.planEmpty ? x('planBuild') : x('planRebuild')}
       </Btn>
@@ -63,24 +63,24 @@ export function Plan({ v }: { v: Pantry }) {
       {v.planEmpty ? (
         <div
           dir="auto"
-          style={css('margin-top:16px;padding:19px 20px;border-radius:28px;background:#f9f4ed;font-size:13.5px;line-height:1.5;color:#645c50;text-wrap:pretty')}
+          style={css('margin-top:16px;padding:19px 20px;border-radius:28px;background:#ffffff;font-size:13.5px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}
         >
           {x('planEmpty')}
         </div>
       ) : (
         <>
           <div style={css('display:flex;gap:9px;margin-top:16px')}>
-            <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#ebddc5')}>
+            <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#ffe9d2')}>
               <div style={css("font-family:'Caprasimo',serif;font-size:26px;line-height:1")}>
                 {v.planTotal}
               </div>
-              <div style={css('font-size:11.5px;color:#645c50;margin-top:6px')}>{x('planTotal')}</div>
+              <div style={css('font-size:11.5px;color:#6a5c4c;margin-top:6px')}>{x('planTotal')}</div>
             </div>
-            <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#e1eecc')}>
-              <div style={css("font-family:'Caprasimo',serif;font-size:26px;line-height:1;color:#56633f")}>
+            <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#e2f8c6')}>
+              <div style={css("font-family:'Caprasimo',serif;font-size:26px;line-height:1;color:#3d7213")}>
                 {v.planPerDay}
               </div>
-              <div style={css('font-size:11.5px;color:#56633f;margin-top:6px;opacity:.85')}>
+              <div style={css('font-size:11.5px;color:#3d7213;margin-top:6px;opacity:.85')}>
                 {x('planPerDay')}
               </div>
             </div>
@@ -95,26 +95,26 @@ export function Plan({ v }: { v: Pantry }) {
                 <div style={css('display:flex;gap:9px;align-items:stretch')}>
                   <Btn
                     onClick={cell.open}
-                    css="flex:1;min-width:0;display:flex;gap:12px;align-items:center;padding:11px;border-radius:24px;background:#f9f4ed;text-align:start"
-                    hover="background:#eee7db"
+                    css="flex:1;min-width:0;display:flex;gap:12px;align-items:center;padding:11px;border-radius:24px;background:#ffffff;text-align:start"
+                    hover="background:#fdf0e3"
                   >
                     <DishPic src={cell.pic} size={54} radius={17} />
                     <span style={css('flex:1;min-width:0')}>
                       <span style={css('display:block;font-size:14.5px;font-weight:700;line-height:1.25')}>
                         {cell.name}
                       </span>
-                      <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
+                      <span style={css('display:block;font-size:11.5px;color:#6a5c4c;margin-top:3px')}>
                         {cell.meta}
                       </span>
                     </span>
-                    <span style={css("flex:none;font-family:'Caprasimo',serif;font-size:17px;color:#8c491a")}>
+                    <span style={css("flex:none;font-family:'Caprasimo',serif;font-size:17px;color:#a83f06")}>
                       {cell.price}
                     </span>
                   </Btn>
                   <Btn
                     onClick={cell.swap}
-                    css="flex:none;width:56px;border-radius:20px;background:#ebddc5;font-size:12px;font-weight:700;color:#474238"
-                    hover="background:#dcd3c4"
+                    css="flex:none;width:56px;border-radius:20px;background:#ffe9d2;font-size:12px;font-weight:700;color:#3b3229"
+                    hover="background:#efdcc8"
                   >
                     {x('planSwap')}
                   </Btn>
@@ -124,7 +124,7 @@ export function Plan({ v }: { v: Pantry }) {
           </div>
 
           <Kicker style={{ marginTop: 24 }}>{x('planList')}</Kicker>
-          <div style={css('margin-top:11px;border-radius:28px;background:#f9f4ed;padding:6px 16px')}>
+          <div style={css('margin-top:11px;border-radius:28px;background:#ffffff;padding:6px 16px')}>
             {v.planList.map((l) => (
               <div
                 key={l.key}
@@ -141,7 +141,7 @@ export function Plan({ v }: { v: Pantry }) {
                   >
                     {l.name}
                   </span>
-                  <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>
+                  <span style={css('display:block;font-size:11.5px;color:#6a5c4c;margin-top:3px')}>
                     {l.sub}
                   </span>
                 </span>
@@ -161,17 +161,17 @@ export function Plan({ v }: { v: Pantry }) {
               onClick={v.savePlan}
               disabled={v.planBusy}
               css={
-                'width:100%;height:52px;border-radius:999px;background:#ebddc5;font-size:15px;font-weight:700;color:#474238;margin-top:16px' +
+                'width:100%;height:52px;border-radius:999px;background:#ffe9d2;font-size:15px;font-weight:700;color:#3b3229;margin-top:16px' +
                 (v.planBusy ? ';opacity:.62' : '')
               }
-              hover="background:#dcd3c4"
+              hover="background:#efdcc8"
             >
               {v.planBusy ? x('planSaving') : v.planSavedNote ? x('planSaved') : x('planSave')}
             </Btn>
           ) : (
             <p
               dir="auto"
-              style={css('margin:16px 2px 0;font-size:12.5px;line-height:1.55;color:#645c50;text-wrap:pretty')}
+              style={css('margin:16px 2px 0;font-size:12.5px;line-height:1.55;color:#6a5c4c;text-wrap:pretty')}
             >
               {x('planNeedsAccount')}
             </p>

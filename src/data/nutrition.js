@@ -504,10 +504,10 @@ export const COL = { kcal: 0, protein: 1, carb: 2, fat: 3, fibre: 4, iron: 5, ca
 
 /** Fixed per nutrient, not per value — the design never ramps these by amount. */
 export const MICRO_COLOUR = {
-  Fibre: '#8fa073',
-  Iron: '#d67f48',
-  Calcium: '#8fa073',
-  'Vitamin B12': '#d67f48',
-  'Vitamin C': '#8fa073',
-  Salt: '#c0b6a5',
+  Fibre: '#7cc24a',
+  Iron: '#fb7c2b',
+  Calcium: '#7cc24a',
+  'Vitamin B12': '#fb7c2b',
+  'Vitamin C': '#7cc24a',
+  Salt: '#cbb79f',
 };

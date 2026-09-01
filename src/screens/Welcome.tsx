@@ -66,8 +66,8 @@ export function Welcome({ v }: { v: Pantry }) {
         <Wordmark size={22} />
         <Btn
           onClick={v.skipOnboarding}
-          css="height:38px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:600;color:#645c50"
-          hover="background:#eee7db"
+          css="height:38px;padding:0 10px;border-radius:999px;font-size:14px;font-weight:600;color:#6a5c4c"
+          hover="background:#fdf0e3"
         >
           {v.t.tierSkip}
         </Btn>
@@ -92,15 +92,17 @@ export function Welcome({ v }: { v: Pantry }) {
           'flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 0;touch-action:pan-y',
         )}
       >
-        <div style={css(BLOB + ';top:2%;inset-inline-end:-58px;width:190px;height:190px;background:#e1eecc;opacity:.7')} />
-        <div style={css(BLOB + ';bottom:8%;inset-inline-start:-52px;width:120px;height:120px;background:#ffc6a5;opacity:.7')} />
+        <div style={css(BLOB + ';top:2%;inset-inline-end:-58px;width:190px;height:190px;background:#e2f8c6;opacity:.7')} />
+        <div style={css(BLOB + ';bottom:8%;inset-inline-start:-52px;width:120px;height:120px;background:#ffc79b;opacity:.7')} />
 
         {/* Keyed on the card, so React replaces the subtree instead of
-            editing it, and the fade and the mascot's hop both restart. That
-            keying is the animation — there is no transition anywhere. */}
+            editing it, and the slide and the mascot's hop both restart. That
+            keying is the animation — there is no transition anywhere. The
+            class picks the side it enters from: forward slides in from ahead,
+            back from behind, so the motion agrees with the swipe. */}
         <div
           key={card.key}
-          className="pg-slide"
+          className={v.slideDir === -1 ? 'pg-slide pg-slide-back' : 'pg-slide'}
           style={css('position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:100%')}
         >
           <h1
@@ -114,7 +116,7 @@ export function Welcome({ v }: { v: Pantry }) {
           <MascotBig key={card.pose} pose={card.pose} jar="clamp(70px, 15vh, 104px)" />
           <p
             dir="auto"
-            style={css('font-size:16px;line-height:1.5;margin:0;max-width:330px;color:#474238;text-wrap:pretty')}
+            style={css('font-size:16px;line-height:1.5;margin:0;max-width:330px;color:#3b3229;text-wrap:pretty')}
           >
             {card.s}
           </p>
@@ -133,11 +135,11 @@ export function Welcome({ v }: { v: Pantry }) {
             aria-label={s.h}
             onClick={() => v.slideTo(i)}
             css="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center"
-            hover="background:#eee7db"
+            hover="background:#fdf0e3"
           >
             <span
               style={css(
-                `width:${i === v.slide ? 26 : 8}px;height:8px;border-radius:999px;background:${i === v.slide ? '#c67139' : '#dcd3c4'}`,
+                `width:${i === v.slide ? 26 : 8}px;height:8px;border-radius:999px;background:${i === v.slide ? '#e85d04' : '#efdcc8'}`,
               )}
             />
           </Btn>
@@ -146,8 +148,8 @@ export function Welcome({ v }: { v: Pantry }) {
 
       <Btn
         onClick={v.slideNext}
-        css="width:100%;height:58px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16)"
-        hover="background:#b2622d"
+        css="width:100%;height:58px;border-radius:999px;background:#e85d04;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+        hover="background:#c04a03"
       >
         {v.slideCta}
       </Btn>
@@ -160,7 +162,7 @@ export function Welcome({ v }: { v: Pantry }) {
           evaluating whether to copy it is guaranteed to reach.
           Small and last: it is a notice, not an argument, and nobody came
           here to read it. */}
-      <div dir="auto" style={css('text-align:center;font-size:11.5px;color:#645c50;margin-top:12px')}>
+      <div dir="auto" style={css('text-align:center;font-size:11.5px;color:#6a5c4c;margin-top:12px')}>
         {v.xt('ownCopy')}
       </div>
     </div>

@@ -130,6 +130,9 @@ export interface PantryState {
   /** Which card of the opening carousel is showing. Never persisted: coming
    *  back to the front door should start it at the front. */
   slide: number;
+  /** Which way the last card change went, so the new card can slide in from
+   *  the side you pushed it from. 1 forward, -1 back. */
+  slideDir: 1 | -1;
   /** How many times you have asked for a different dinner this visit. */
   reroll: number;
   refineOpen: boolean;
@@ -219,6 +222,7 @@ const INITIAL: PantryState = {
   budgetSet: false,
   timeSet: false,
   slide: 0,
+  slideDir: 1,
   reroll: 0,
   refineOpen: false,
   budgetOtherOpen: false,
@@ -508,16 +512,16 @@ const BUDGETS = [3, 5, 6, 8, 12];
 
 /** One of the four answers to "What can you already do?".
  *
- *  Not PILL_ON: white on #c67139 is 3.61:1, under AA at this size, and colour
+ *  Not PILL_ON: white on #e85d04 is 3.61:1, under AA at this size, and colour
  *  on its own is not a state anyway. This is the highlight the tier rows
  *  already used — a peach fill inside an orange ring — plus a tick, so the
  *  chosen row survives both a contrast check and a greyscale screenshot. */
 const LEVEL_ROW =
   'display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-height:64px;' +
-  'padding:13px 16px;border-radius:22px;text-align:start;color:#201e1d;' +
+  'padding:13px 16px;border-radius:22px;text-align:start;color:#1b1714;' +
   'transition:background .15s,box-shadow .15s;';
-const LEVEL_ON = 'background:#ffe1d0;box-shadow:inset 0 0 0 2px #c67139;';
-const LEVEL_OFF = 'background:#f9f4ed;box-shadow:inset 0 0 0 1px rgba(32,30,29,.06);';
+const LEVEL_ON = 'background:#ffe4cd;box-shadow:inset 0 0 0 2px #e85d04;';
+const LEVEL_OFF = 'background:#ffffff;box-shadow:inset 0 0 0 1px rgba(32,30,29,.06);';
 
 /** Days since a cook. Real rows age with the calendar; seeded sample rows keep
  *  the age they shipped with, because a stage set should not rot — the sample
@@ -2104,9 +2108,11 @@ export function usePantry() {
     /* Clamped rather than wrapped. A carousel that loops has no end, and this
        one has an end on purpose — the last card is the one with the button
        that starts setup. */
-    slideNext: () => (S.slide >= 4 ? go('goal') : setState({ slide: S.slide + 1 })),
-    slidePrev: () => setState({ slide: Math.max(0, S.slide - 1) }),
-    slideTo: (i: number) => setState({ slide: Math.min(4, Math.max(0, i)) }),
+    slideNext: () => (S.slide >= 4 ? go('goal') : setState({ slide: S.slide + 1, slideDir: 1 })),
+    slidePrev: () => setState({ slide: Math.max(0, S.slide - 1), slideDir: -1 }),
+    slideTo: (i: number) =>
+      setState({ slide: Math.min(4, Math.max(0, i)), slideDir: i >= S.slide ? 1 : -1 }),
+    slideDir: S.slideDir,
     /* Not U.setMe. That reads "Set me up — 4 quick screens", which earned its
        length as the only button on a static page; on the fifth card of five,
        after a headline that has just said the same thing, it is the sentence
@@ -2168,7 +2174,7 @@ export function usePantry() {
          first, so one Tab reaches the group and the arrows do the rest. */
       tabIndex: (S.level == null ? i === 0 : S.level === row.lvl) ? 0 : -1,
       style: LEVEL_ROW + (S.level === row.lvl ? LEVEL_ON : LEVEL_OFF),
-      hover: S.level === row.lvl ? '' : 'background:#f2ece1',
+      hover: S.level === row.lvl ? '' : 'background:#fdf5ec',
       pick: () => setState({ level: row.lvl as Level }),
       /* In a radio group the arrows move AND choose, which is what makes four
          alternatives reachable without sight or a mouse. Up and Down only:
@@ -2203,8 +2209,8 @@ export function usePantry() {
     levelReadoutStyle:
       S.level == null
         ? 'margin:0;padding:0'
-        : 'margin-top:14px;padding:13px 15px;border-radius:20px;background:#e1eecc;' +
-          'font-size:13.5px;line-height:1.5;color:#3d472b;text-wrap:pretty',
+        : 'margin-top:14px;padding:13px 15px;border-radius:20px;background:#e2f8c6;' +
+          'font-size:13.5px;line-height:1.5;color:#2c5410;text-wrap:pretty',
     levelCta: T.tierNext,
     /* Skip and Next are the same door with two labels, deliberately: the answer
        is optional and skillLevel() defaults to 2 either way. A returning cook
@@ -2645,19 +2651,19 @@ export function usePantry() {
              `rSpan.lo` is the cheapest shop in the same list that screen
              shows, so the promise and the page it points at cannot disagree. */
           (rSpan.lo <= S.budget ? ' ' + R.switchCheapest : ''),
-    verdictBg: under >= 0 ? '#e1eecc' : '#ffe1d0',
-    verdictFg: under >= 0 ? '#3d472b' : '#8c491a',
+    verdictBg: under >= 0 ? '#e2f8c6' : '#ffe4cd',
+    verdictFg: under >= 0 ? '#2c5410' : '#a83f06',
     macros: [
-      { key: 'kcal', value: String(Math.round(recipe.per.kcal)), label: word('kcal', 'kcal'), bg: '#fff2eb', fg: '#8c491a' },
+      { key: 'kcal', value: String(Math.round(recipe.per.kcal)), label: word('kcal', 'kcal'), bg: '#fff4ea', fg: '#a83f06' },
       {
         key: 'protein',
         value: Math.round(recipe.per.protein) + 'g',
         label: word('protein', 'protein'),
-        bg: '#e1eecc',
-        fg: '#3d472b',
+        bg: '#e2f8c6',
+        fg: '#2c5410',
       },
-      { key: 'carb', value: Math.round(recipe.per.carb) + 'g', label: X.carbs, bg: '#eee7db', fg: '#474238' },
-      { key: 'fat', value: Math.round(recipe.per.fat) + 'g', label: X.fat, bg: '#eee7db', fg: '#474238' },
+      { key: 'carb', value: Math.round(recipe.per.carb) + 'g', label: X.carbs, bg: '#fdf0e3', fg: '#3b3229' },
+      { key: 'fat', value: Math.round(recipe.per.fat) + 'g', label: X.fat, bg: '#fdf0e3', fg: '#3b3229' },
     ],
     microCta: S.showMicro ? X.microHide : X.microShow,
     showMicro: S.showMicro,
@@ -2785,13 +2791,13 @@ export function usePantry() {
           t <= base + 0.001
             ? T.shopCheapest
             : fill(xt(lg, 'pctDearer'), { n: Math.round((t / base - 1) * 100) }),
-        tagBg: on ? '#c67139' : '#eee7db',
-        tagFg: on ? '#fff' : '#82796a',
-        priceFg: on ? '#8c491a' : '#645c50',
+        tagBg: on ? '#e85d04' : '#fdf0e3',
+        tagFg: on ? '#fff' : '#847462',
+        priceFg: on ? '#a83f06' : '#6a5c4c',
         style:
           'display:flex;gap:12px;align-items:center;padding:15px 17px;border-radius:26px;width:100%;transition:background .15s,box-shadow .15s;background:' +
-          (on ? '#fff2eb' : '#f9f4ed') +
-          (on ? ';box-shadow:inset 0 0 0 2px #c67139' : ';box-shadow:inset 0 0 0 1px rgba(32,30,29,.07)'),
+          (on ? '#fff4ea' : '#ffffff') +
+          (on ? ';box-shadow:inset 0 0 0 2px #e85d04' : ';box-shadow:inset 0 0 0 1px rgba(32,30,29,.07)'),
         pick: () => setState({ store: s.id }),
       };
     }),
@@ -2834,24 +2840,24 @@ export function usePantry() {
             reportPack: grams ? String(grams) : '',
           }),
         tick: owned ? '✓' : '',
-        boxBg: owned ? '#8fa073' : '#eee7db',
-        nameFg: off ? '#82796a' : '#201e1d',
+        boxBg: owned ? '#7cc24a' : '#fdf0e3',
+        nameFg: off ? '#847462' : '#1b1714',
         strike: owned ? 'line-through' : 'none',
         sub: owned
           ? word('already', 'already in your kitchen')
           : i.g +
             (i.opt ? ' · ' + (skipped ? xt(lg, 'extraAdd') : word('optional', 'optional')) : ''),
         srcColor: seen
-          ? '#56633f'
+          ? '#3d7213'
           : open
-            ? '#8fa073'
+            ? '#7cc24a'
             : i.src === 'local'
-              ? '#728157'
+              ? '#4f9021'
               : i.src === 'euro'
-                ? '#f6a06b'
-                : '#c0b6a5',
+                ? '#ff9d4f'
+                : '#cbb79f',
         price: off ? fmt(0) : measured != null ? fmt(measured) : fmt(i.s * mult),
-        priceFg: off ? '#a19786' : '#201e1d',
+        priceFg: off ? '#96866f' : '#1b1714',
       };
     }),
     /* "3 shops within walking distance of Birmingham" — true only when
@@ -3036,7 +3042,16 @@ export function usePantry() {
     stepText: recipe.method[S.step]?.text || '',
     /** A photograph if the recipe carries one for this step, otherwise the
      *  drawing of whatever the step is asking you to do. */
-    stepPic: recipe.method[S.step]?.pic ? asset(recipe.method[S.step].pic!) : null,
+    /* A real photograph on every step. No recipe sets a per-step `pic` — 0 of
+       1,127 steps carry one — so this used to be null on every screen and the
+       cook was shown a small flat drawing of a knife while the dish's own
+       photograph sat one tap back on Home. The dish photo is the honest
+       picture of what you are making; it goes here full-bleed, and the
+       technique drawing becomes a badge on it that still says what this step
+       is doing with your hands. A per-step photo, if a recipe ever gains one,
+       still wins. */
+    stepPic: recipe.method[S.step]?.pic ? asset(recipe.method[S.step].pic!) : recipe.pic || null,
+    stepPicIsDish: !recipe.method[S.step]?.pic && !!recipe.pic,
     stepTechnique: techniqueOf(recipe.method[S.step]?.text || ''),
     stepTip: recipe.method[S.step]?.tip || null,
     stepMins: recipe.method[S.step]?.m ? recipe.method[S.step].m + ' ' + word('minutes', 'min') : null,
@@ -3132,7 +3147,7 @@ export function usePantry() {
       pct: x.pct,
       label: x.label,
       style:
-        'flex:1;padding:15px 8px;border-radius:24px;background:#f9f4ed;box-shadow:inset 0 0 0 1px rgba(32,30,29,.07);transition:background .15s',
+        'flex:1;padding:15px 8px;border-radius:24px;background:#ffffff;box-shadow:inset 0 0 0 1px rgba(32,30,29,.07);transition:background .15s',
       pick: async () => {
         // The cook is already in the log; this annotates it. The same row goes
         // back up to the cloud, where the upsert on client id overwrites.
@@ -3151,10 +3166,10 @@ export function usePantry() {
     wasteHeadline: w ? w.head : '',
     wasteBody: w ? w.body : '',
     resetWaste: () => setState({ waste: null }),
-    keepBg: recipe.keeps ? '#e1eecc' : '#eee7db',
-    keepIconBg: recipe.keeps ? '#8fa073' : '#c0b6a5',
+    keepBg: recipe.keeps ? '#e2f8c6' : '#fdf0e3',
+    keepIconBg: recipe.keeps ? '#7cc24a' : '#cbb79f',
     keepIcon: recipe.keeps ? '✓' : '✕',
-    keepFg: recipe.keeps ? '#3d472b' : '#645c50',
+    keepFg: recipe.keeps ? '#2c5410' : '#6a5c4c',
     keepTitle: (food.keepText(lg, recipe.id) || [recipe.keepTitle, recipe.keepBody])[0],
     keepBody: (food.keepText(lg, recipe.id) || [recipe.keepTitle, recipe.keepBody])[1],
     /* The button only exists when tapping it schedules a real notification:
@@ -3204,7 +3219,7 @@ export function usePantry() {
       key: i,
       label: d,
       bg: i < Math.min(streakDays, 7) ? 'rgba(246,160,107,.9)' : 'rgba(245,234,216,.12)',
-      fg: i < Math.min(streakDays, 7) ? '#402310' : 'rgba(245,234,216,.45)',
+      fg: i < Math.min(streakDays, 7) ? '#571f02' : 'rgba(245,234,216,.45)',
     })),
     finishMeal: () => {
       // The cook was logged when the last step was done; this is just leaving.
@@ -3227,8 +3242,8 @@ export function usePantry() {
       name: foodName(p.name),
       amount: AM['a' + (i + 1)] || p.amount,
       days: p.days,
-      chipBg: p.days <= 2 ? '#ffc6a5' : p.days <= 4 ? '#ffe1d0' : '#e1eecc',
-      chipFg: p.days <= 4 ? '#8c491a' : '#3d472b',
+      chipBg: p.days <= 2 ? '#ffc79b' : p.days <= 4 ? '#ffe4cd' : '#e2f8c6',
+      chipFg: p.days <= 4 ? '#a83f06' : '#2c5410',
       use: () => go('results', { query: p.name, pickId: ranked()[0].id }),
     })),
     staples: STAPLES.map((label) => {
@@ -3261,10 +3276,10 @@ export function usePantry() {
           ' ' +
           (p.times === 1 ? AM.time : AM.times),
         price: fmt(p.price),
-        bg: i === 0 ? '#fff2eb' : '#f9f4ed',
-        rankFg: i === 0 ? '#c67139' : '#a19786',
-        chipBg: i === 0 ? '#c67139' : '#ebddc5',
-        chipFg: i === 0 ? '#fff' : '#645c50',
+        bg: i === 0 ? '#fff4ea' : '#ffffff',
+        rankFg: i === 0 ? '#e85d04' : '#96866f',
+        chipBg: i === 0 ? '#e85d04' : '#ffe9d2',
+        chipFg: i === 0 ? '#fff' : '#6a5c4c',
       })),
     /* This line used to read "84 countries you have never cooked from. The
        cheapest one you are missing is Ethiopia — misir wot lands at £0.71 a
@@ -3317,7 +3332,7 @@ export function usePantry() {
       key: i,
       label: i === weekly.length - 1 ? X.nowW : '−' + (weekly.length - 1 - i),
       h: Math.max(4, Math.round((v / Math.max(1, maxWeek)) * 108)) + 'px',
-      bg: i === weekly.length - 1 ? '#c67139' : '#dcc9a6',
+      bg: i === weekly.length - 1 ? '#e85d04' : '#f7dcb4',
     })),
     topDishes: byDish.map((d) => ({
       key: d.id,
@@ -3334,7 +3349,7 @@ export function usePantry() {
         label: diffWord(d),
         pct: Math.round((n / Math.max(1, S.history.length)) * 100) + '%',
         w: Math.round((n / Math.max(1, S.history.length)) * 100) + '%',
-        bg: ['#8fa073', '#aebf92', '#d67f48', '#b2622d'][d - 1],
+        bg: ['#7cc24a', '#a8dc78', '#fb7c2b', '#c04a03'][d - 1],
       };
     }),
     statsSub: (X.statsSub || '').split('{n}').join(String(S.history.length)),
@@ -3394,8 +3409,8 @@ export function usePantry() {
          screen prints, by construction. */
       per: fmtSpan(spanOf(x).lo / x.servings, spanOf(x).hi / x.servings),
       diffLabel: diffWord(x.diff),
-      diffBg: x.diff <= 1 ? '#e1eecc' : x.diff <= 2 ? '#f7eeda' : x.diff <= 3 ? '#ffe1d0' : '#ffc6a5',
-      diffFg: x.diff <= 2 ? '#3d472b' : '#8c491a',
+      diffBg: x.diff <= 1 ? '#e2f8c6' : x.diff <= 2 ? '#fffaf4' : x.diff <= 3 ? '#ffe4cd' : '#ffc79b',
+      diffFg: x.diff <= 2 ? '#2c5410' : '#a83f06',
       pick: () => go('results', { pickId: x.id, query: x.name, showMicro: false }),
     })),
 
@@ -3524,11 +3539,11 @@ export function usePantry() {
               : word('planUse', '1 meal'),
           price: l.owned ? fmt(0) : fmt(l.cost),
           owned: l.owned,
-          nameFg: l.owned ? '#82796a' : '#201e1d',
+          nameFg: l.owned ? '#847462' : '#1b1714',
           strike: l.owned ? 'line-through' : 'none',
-          boxBg: l.owned ? '#8fa073' : '#eee7db',
+          boxBg: l.owned ? '#7cc24a' : '#fdf0e3',
           tick: l.owned ? '✓' : '',
-          priceFg: l.owned ? '#a19786' : '#201e1d',
+          priceFg: l.owned ? '#96866f' : '#1b1714',
         }));
     })(),
     planTotal: (() => {
@@ -3645,7 +3660,7 @@ export function usePantry() {
       label: t.label,
       sub: t.sub,
       on: !!S.toggles[t.k],
-      trackBg: S.toggles[t.k] ? '#8fa073' : '#dcd3c4',
+      trackBg: S.toggles[t.k] ? '#7cc24a' : '#efdcc8',
       knobX: S.toggles[t.k] ? '23px' : '3px',
       flip: () => setState({ toggles: { ...S.toggles, [t.k]: !S.toggles[t.k] } }),
     })),
@@ -3809,7 +3824,7 @@ export function usePantry() {
     nav: navItems.map((n) => ({
       key: n.id,
       label: T[n.t] || n.label,
-      fg: screen === n.id ? '#c67139' : '#a19786',
+      fg: screen === n.id ? '#e85d04' : '#96866f',
       d: n.d,
       go: () => go(n.id),
     })),

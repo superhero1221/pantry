@@ -34,11 +34,11 @@ export function Legal({ v }: { v: Pantry }) {
       </h1>
       <div
         dir="auto"
-        style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#a19786;margin-top:9px')}
+        style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#96866f;margin-top:9px')}
       >
         {v.legalUpdated}
       </div>
-      <p dir="auto" style={css('font-size:14.5px;line-height:1.55;margin:11px 0 0;color:#645c50;text-wrap:pretty')}>
+      <p dir="auto" style={css('font-size:14.5px;line-height:1.55;margin:11px 0 0;color:#6a5c4c;text-wrap:pretty')}>
         {v.legalIntro}
       </p>
 
@@ -49,7 +49,7 @@ export function Legal({ v }: { v: Pantry }) {
             <p
               key={i}
               dir="auto"
-              style={css('font-size:14px;line-height:1.6;margin:9px 0 0;color:#474238;text-wrap:pretty;overflow-wrap:anywhere')}
+              style={css('font-size:14px;line-height:1.6;margin:9px 0 0;color:#3b3229;text-wrap:pretty;overflow-wrap:anywhere')}
             >
               {para}
             </p>
@@ -61,8 +61,8 @@ export function Legal({ v }: { v: Pantry }) {
           not belong on the page. */}
       <A
         href={'mailto:' + v.legalContact}
-        css="display:block;margin-top:26px;padding:16px 18px;border-radius:26px;background:#fff2eb;font-size:14.5px;font-weight:700;color:#8c491a;text-decoration:none;text-align:center;overflow-wrap:anywhere"
-        hover="background:#ffe1d0"
+        css="display:block;margin-top:26px;padding:16px 18px;border-radius:26px;background:#fff4ea;font-size:14.5px;font-weight:700;color:#a83f06;text-decoration:none;text-align:center;overflow-wrap:anywhere"
+        hover="background:#ffe4cd"
       >
         {v.legalContact}
       </A>

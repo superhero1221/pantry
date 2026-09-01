@@ -11,13 +11,13 @@ import type { Technique } from '../lib/technique';
  * never drawn. The hook is there for when the dishes get shot properly.
  */
 
-const ACCENT = '#c67139';
-const ACCENT_D = '#8c491a';
-const SAGE = '#8fa073';
-const SAGE_D = '#56633f';
-const CREAM = '#f5ead8';
-const SAND = '#ebddc5';
-const INK = '#474238';
+const ACCENT = '#e85d04';
+const ACCENT_D = '#a83f06';
+const SAGE = '#7cc24a';
+const SAGE_D = '#3d7213';
+const CREAM = '#fffaf3';
+const SAND = '#ffe9d2';
+const INK = '#3b3229';
 
 const stroke = {
   fill: 'none',

@@ -86,15 +86,15 @@ export class Boundary extends Component<Props, State> {
         </h1>
         <p
           dir="auto"
-          style={css('margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#645c50;text-wrap:pretty')}
+          style={css('margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#6a5c4c;text-wrap:pretty')}
         >
           {x('crashBody')}
         </p>
 
         <Btn
           onClick={() => window.location.reload()}
-          css="width:100%;height:54px;border-radius:999px;background:#c67139;color:#fff;font-size:16px;font-weight:700;margin-top:20px"
-          hover="background:#b2622d"
+          css="width:100%;height:54px;border-radius:999px;background:#a83f06;color:#fff;font-size:16px;font-weight:700;margin-top:20px"
+          hover="background:#c04a03"
         >
           {x('crashReload')}
         </Btn>
@@ -102,21 +102,21 @@ export class Boundary extends Component<Props, State> {
             everything you told it still in your hand. */}
         <Btn
           onClick={() => exportBackup(readStore())}
-          css="width:100%;height:48px;border-radius:999px;background:#ebddc5;color:#474238;font-size:14.5px;font-weight:700;margin-top:9px"
-          hover="background:#dcd3c4"
+          css="width:100%;height:48px;border-radius:999px;background:#ffe9d2;color:#3b3229;font-size:14.5px;font-weight:700;margin-top:9px"
+          hover="background:#efdcc8"
         >
           {x('crashSave')}
         </Btn>
 
-        <div style={css('margin-top:20px;padding:14px 16px;border-radius:22px;background:#f9f4ed')}>
-          <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#645c50')}>
+        <div style={css('margin-top:20px;padding:14px 16px;border-radius:22px;background:#ffffff')}>
+          <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#6a5c4c')}>
             {x('crashWhat')}
           </div>
           {/* One line, in the direction the runtime wrote it, wrapping rather
               than overflowing. The stack is in the console. */}
           <div
             dir="ltr"
-            style={css('margin-top:6px;font-size:12.5px;line-height:1.5;color:#645c50;overflow-wrap:anywhere')}
+            style={css('margin-top:6px;font-size:12.5px;line-height:1.5;color:#6a5c4c;overflow-wrap:anywhere')}
           >
             {err.message || String(err)}
           </div>

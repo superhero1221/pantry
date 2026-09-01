@@ -19,9 +19,9 @@ export function After({ v }: { v: Pantry }) {
         aria-label={v.t.navTonight}
         onClick={v.goHome}
         css="flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-inline-start:-6px;margin-bottom:6px"
-        hover="background:#eee7db"
+        hover="background:#fdf0e3"
       >
-        <X size={19} stroke="#645c50" />
+        <X size={19} stroke="#6a5c4c" />
       </Btn>
       <h1
         dir="auto"
@@ -29,7 +29,7 @@ export function After({ v }: { v: Pantry }) {
       >
         {v.t.afterTitle}
       </h1>
-      <p dir="auto" style={css('font-size:15px;line-height:1.5;margin:9px 0 0;color:#645c50;text-wrap:pretty')}>
+      <p dir="auto" style={css('font-size:15px;line-height:1.5;margin:9px 0 0;color:#6a5c4c;text-wrap:pretty')}>
         {v.t.afterSub} {v.t.afterOptional}
       </p>
 
@@ -44,11 +44,11 @@ export function After({ v }: { v: Pantry }) {
       {v.photoSkipped && (
         <Btn
           onClick={v.unskipPhoto}
-          css="width:100%;margin-top:16px;padding:15px 18px;border-radius:26px;background:#f9f4ed;display:flex;gap:11px;align-items:center;text-align:start"
-          hover="background:#eee7db"
+          css="width:100%;margin-top:16px;padding:15px 18px;border-radius:26px;background:#ffffff;display:flex;gap:11px;align-items:center;text-align:start"
+          hover="background:#fdf0e3"
         >
-          <CameraOff size={19} stroke="#a19786" style={{ flex: 'none' }} />
-          <span style={css('flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#645c50')}>
+          <CameraOff size={19} stroke="#96866f" style={{ flex: 'none' }} />
+          <span style={css('flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#6a5c4c')}>
             {v.u.noPhoto}
           </span>
         </Btn>
@@ -56,13 +56,13 @@ export function After({ v }: { v: Pantry }) {
 
       {v.photoWanted && (
         <>
-          <div style={css('margin-top:16px;height:200px;border-radius:28px;overflow:hidden;background:#eee7db')}>
+          <div style={css('margin-top:16px;height:200px;border-radius:28px;overflow:hidden;background:#fdf0e3')}>
             <PlateDrop src={v.plate} placeholder={v.platePlaceholder} onPick={v.setPlate} />
           </div>
           <Btn
             onClick={v.skipPhoto}
-            css="width:100%;height:42px;border-radius:999px;font-size:13.5px;font-weight:700;color:#645c50;margin-top:8px"
-            hover="background:#eee7db"
+            css="width:100%;height:42px;border-radius:999px;font-size:13.5px;font-weight:700;color:#6a5c4c;margin-top:8px"
+            hover="background:#fdf0e3"
           >
             {v.t.afterSkip}
           </Btn>
@@ -74,7 +74,7 @@ export function After({ v }: { v: Pantry }) {
           <Kicker>{v.t.afterTell}</Kicker>
           <div style={css('display:flex;gap:8px;margin-top:10px')}>
             {v.wasteChoices.map((w) => (
-              <Btn key={w.key} onClick={w.pick} css={w.style} hover="background:#eee7db">
+              <Btn key={w.key} onClick={w.pick} css={w.style} hover="background:#fdf0e3">
                 <span style={css("display:block;font-family:'Caprasimo',serif;font-size:19px;line-height:1")}>
                   {w.pct}
                 </span>
@@ -89,19 +89,19 @@ export function After({ v }: { v: Pantry }) {
 
       {v.wasteSet && (
         <div style={css('animation:pgUp .34s ease-out both')}>
-          <div style={css('margin-top:16px;padding:19px 20px;border-radius:28px;background:#ebddc5')}>
+          <div style={css('margin-top:16px;padding:19px 20px;border-radius:28px;background:#ffe9d2')}>
             <div style={css('display:flex;align-items:baseline;justify-content:space-between')}>
               <div style={css("font-family:'Caprasimo',serif;font-size:30px;line-height:1")}>
                 {v.wasteHeadline}
               </div>
               <Btn
                 onClick={v.resetWaste}
-                css="flex:none;white-space:nowrap;margin-inline-start:12px;font-size:12.5px;font-weight:600;color:#8c491a;text-decoration:underline"
+                css="flex:none;white-space:nowrap;margin-inline-start:12px;font-size:12.5px;font-weight:600;color:#a83f06;text-decoration:underline"
               >
                 {v.u.notRight}
               </Btn>
             </div>
-            <p dir="auto" style={css('margin:9px 0 0;font-size:14px;line-height:1.5;color:#474238;text-wrap:pretty')}>
+            <p dir="auto" style={css('margin:9px 0 0;font-size:14px;line-height:1.5;color:#3b3229;text-wrap:pretty')}>
               {v.wasteBody}
             </p>
           </div>
@@ -128,8 +128,8 @@ export function After({ v }: { v: Pantry }) {
             {v.canRemind && (
               <Btn
                 onClick={v.setReminder}
-                css="width:100%;height:46px;border-radius:999px;background:#56633f;color:#fff;font-size:14.5px;font-weight:700;margin-top:14px"
-                hover="background:#3d472b"
+                css="width:100%;height:46px;border-radius:999px;background:#3d7213;color:#fff;font-size:14.5px;font-weight:700;margin-top:14px"
+                hover="background:#2c5410"
               >
                 {v.remindCta}
               </Btn>
@@ -137,7 +137,7 @@ export function After({ v }: { v: Pantry }) {
             {v.remindNeedsAccount && (
               <p
                 dir="auto"
-                style={css('margin:12px 2px 0;font-size:12.5px;line-height:1.5;color:#56633f;opacity:.85;text-wrap:pretty')}
+                style={css('margin:12px 2px 0;font-size:12.5px;line-height:1.5;color:#3d7213;opacity:.85;text-wrap:pretty')}
               >
                 {v.remindNeedsAccountLine}
               </p>
@@ -149,13 +149,13 @@ export function After({ v }: { v: Pantry }) {
               and no code kept any of them. An offer the app cannot honour is
               not a feature, so it is gone rather than half-built. */}
 
-          <div style={css('margin-top:12px;padding:20px;border-radius:28px;background:#201e1d;color:#f5ead8')}>
+          <div style={css('margin-top:12px;padding:20px;border-radius:28px;background:#1b1714;color:#fffaf3')}>
             <div style={css('display:flex;align-items:center;gap:12px')}>
               <span style={css('flex:none;width:52px;height:52px;border-radius:50%;background:rgba(246,160,107,.16);display:flex;align-items:center;justify-content:center;animation:pgFlick 2.4s ease-in-out infinite')}>
-                <Flame size={27} stroke="#f6a06b" />
+                <Flame size={27} stroke="#ff9d4f" />
               </span>
               <div style={css('min-width:0')}>
-                <div style={css("font-family:'Caprasimo',serif;font-size:26px;line-height:1;color:#f6a06b")}>
+                <div style={css("font-family:'Caprasimo',serif;font-size:26px;line-height:1;color:#ff9d4f")}>
                   {v.streakBig}
                 </div>
                 <div style={css('font-size:13px;opacity:.72;margin-top:5px')}>{v.streakSub}</div>
@@ -175,8 +175,8 @@ export function After({ v }: { v: Pantry }) {
 
           <Btn
             onClick={v.finishMeal}
-            css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;margin-top:16px"
-            hover="background:#b2622d"
+            css="width:100%;height:56px;border-radius:999px;background:#e85d04;color:#fff;font-size:19px;font-weight:700;margin-top:16px"
+            hover="background:#c04a03"
           >
             {v.u.doneThanks}
           </Btn>

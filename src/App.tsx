@@ -54,11 +54,11 @@ export default function App() {
             style={css('animation:pgDrop .34s cubic-bezier(.2,.9,.3,1.2) both')}
           >
             <div style={css('display:flex;gap:11px;align-items:flex-start;padding:13px 14px;border-radius:22px;background:rgba(255,255,255,.93);backdrop-filter:blur(18px);box-shadow:0 12px 32px rgba(46,43,37,.24)')}>
-              <div style={css("flex:none;width:34px;height:34px;border-radius:11px;background:#c67139;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:17px")}>
+              <div style={css("flex:none;width:34px;height:34px;border-radius:11px;background:#e85d04;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:17px")}>
                 P
               </div>
               <div style={css('min-width:0')}>
-                <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#82796a')}>
+                <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#847462')}>
                   Pantry · {v.u.nowTag}
                 </div>
                 <div style={css('font-size:13.5px;line-height:1.4;font-weight:600;margin-top:2px')}>{v.notif}</div>

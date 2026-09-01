@@ -12,7 +12,7 @@ type IconProps = {
   style?: CSSProperties;
 };
 
-const base = ({ size = 20, stroke = '#201e1d', width = 2.75, style }: IconProps) => ({
+const base = ({ size = 20, stroke = '#1b1714', width = 2.75, style }: IconProps) => ({
   width: size,
   height: size,
   viewBox: '0 0 24 24',

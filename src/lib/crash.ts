@@ -95,7 +95,7 @@ function paint(message: string) {
 
   const card = el(
     'div',
-    "padding:32px 22px;max-width:520px;margin:0 auto;text-align:start;font-family:'Figtree',system-ui,sans-serif;color:#474238",
+    "padding:32px 22px;max-width:520px;margin:0 auto;text-align:start;font-family:'Figtree',system-ui,sans-serif;color:#3b3229",
   );
   card.setAttribute('dir', dir);
   card.setAttribute('lang', lang);
@@ -111,14 +111,14 @@ function paint(message: string) {
   card.appendChild(
     el(
       'p',
-      'margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#645c50;text-wrap:pretty',
+      'margin:12px 0 0;font-size:14.5px;line-height:1.55;color:#6a5c4c;text-wrap:pretty',
       x('crashBody'),
     ),
   );
 
   const reload = el(
     'button',
-    'width:100%;height:54px;border-radius:999px;border:0;background:#c67139;color:#fff;font:inherit;font-size:16px;font-weight:700;margin-top:20px;cursor:pointer',
+    'width:100%;height:54px;border-radius:999px;border:0;background:#a83f06;color:#fff;font:inherit;font-size:16px;font-weight:700;margin-top:20px;cursor:pointer',
     x('crashReload'),
   );
   reload.addEventListener('click', () => window.location.reload());
@@ -126,30 +126,30 @@ function paint(message: string) {
 
   const save = el(
     'button',
-    'width:100%;height:48px;border-radius:999px;border:0;background:#ebddc5;color:#474238;font:inherit;font-size:14.5px;font-weight:700;margin-top:9px;cursor:pointer',
+    'width:100%;height:48px;border-radius:999px;border:0;background:#ffe9d2;color:#3b3229;font:inherit;font-size:14.5px;font-weight:700;margin-top:9px;cursor:pointer',
     x('crashSave'),
   );
   save.addEventListener('click', () => exportBackup(readStore()));
   card.appendChild(save);
 
-  const why = el('div', 'margin-top:20px;padding:14px 16px;border-radius:22px;background:#f9f4ed');
+  const why = el('div', 'margin-top:20px;padding:14px 16px;border-radius:22px;background:#ffffff');
   why.appendChild(
     el(
       'div',
-      'font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#82796a',
+      'font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#847462',
       x('crashWhat'),
     ),
   );
   const line = el(
     'div',
-    'margin-top:6px;font-size:12.5px;line-height:1.5;color:#645c50;overflow-wrap:anywhere',
+    'margin-top:6px;font-size:12.5px;line-height:1.5;color:#6a5c4c;overflow-wrap:anywhere',
     message,
   );
   line.setAttribute('dir', 'ltr');
   why.appendChild(line);
   card.appendChild(why);
 
-  const page = el('div', 'min-height:100vh;background:#f5ead8');
+  const page = el('div', 'min-height:100vh;background:#fffaf3');
   page.appendChild(card);
   root.appendChild(page);
 }

@@ -3,40 +3,40 @@
    Screens carry the literal ramp values the design exported; these variables
    drive the app shell and anything that needs to reach for a token by name. */
 :root {
-  --color-bg: #f5ead8;
-  --color-surface: #ebddc5;
-  --color-text: #201e1d;
-  --color-accent: #c67139;
-  --color-accent-2: #7a8a5e;
+  --color-bg: #fffaf3;
+  --color-surface: #ffe9d2;
+  --color-text: #1b1714;
+  --color-accent: #e85d04;
+  --color-accent-2: #5fa62c;
 
-  --color-neutral-100: #f9f4ed;
-  --color-neutral-200: #eee7db;
-  --color-neutral-300: #dcd3c4;
-  --color-neutral-400: #c0b6a5;
-  --color-neutral-500: #a19786;
-  --color-neutral-600: #82796a;
-  --color-neutral-700: #645c50;
-  --color-neutral-800: #474238;
-  --color-neutral-900: #2e2b25;
+  --color-neutral-100: #ffffff;
+  --color-neutral-200: #fdf0e3;
+  --color-neutral-300: #efdcc8;
+  --color-neutral-400: #cbb79f;
+  --color-neutral-500: #96866f;
+  --color-neutral-600: #847462;
+  --color-neutral-700: #6a5c4c;
+  --color-neutral-800: #3b3229;
+  --color-neutral-900: #241e18;
 
-  --color-accent-100: #fff2eb;
-  --color-accent-200: #ffe1d0;
-  --color-accent-300: #ffc6a5;
-  --color-accent-400: #f6a06b;
-  --color-accent-500: #d67f48;
-  --color-accent-600: #b2622d;
-  --color-accent-700: #8c491a;
-  --color-accent-800: #643312;
-  --color-accent-900: #402310;
+  --color-accent-100: #fff4ea;
+  --color-accent-200: #ffe4cd;
+  --color-accent-300: #ffc79b;
+  --color-accent-400: #ff9d4f;
+  --color-accent-500: #fb7c2b;
+  --color-accent-600: #c04a03;
+  --color-accent-700: #a83f06;
+  --color-accent-800: #7d2f04;
+  --color-accent-900: #571f02;
 
-  --color-accent-2-100: #f0fae1;
-  --color-accent-2-200: #e1eecc;
-  --color-accent-2-300: #ccdbb2;
-  --color-accent-2-400: #aebf92;
-  --color-accent-2-500: #8fa073;
-  --color-accent-2-600: #728157;
-  --color-accent-2-700: #56633f;
-  --color-accent-2-800: #3d472b;
+  --color-accent-2-100: #f1fde0;
+  --color-accent-2-200: #e2f8c6;
+  --color-accent-2-300: #cdf0a4;
+  --color-accent-2-400: #a8dc78;
+  --color-accent-2-500: #7cc24a;
+  --color-accent-2-600: #4f9021;
+  --color-accent-2-700: #3d7213;
+  --color-accent-2-800: #2c5410;
   --color-accent-2-900: #272e1b;
 
   --font-heading: 'Caprasimo', system-ui, sans-serif;
@@ -49,7 +49,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: #efe3cd;
+  background: #fdf0e2;
   font-family: var(--font-body);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
@@ -58,11 +58,11 @@ body {
   box-sizing: border-box;
 }
 a {
-  color: #8c491a;
+  color: #a83f06;
   text-decoration: none;
 }
 a:hover {
-  color: #b2622d;
+  color: #c04a03;
 }
 button {
   font-family: inherit;
@@ -76,11 +76,11 @@ select {
   font-family: inherit;
 }
 :focus-visible {
-  outline: 2px solid #c67139;
+  outline: 2px solid #e85d04;
   outline-offset: 2px;
 }
 ::selection {
-  background: #ffe1d0;
+  background: #ffe4cd;
 }
 
 /* Untranslated fragments inside a translated sentence keep their own direction,
@@ -200,7 +200,7 @@ select {
   font-size: 14.5px;
   line-height: 1.5;
   margin: 10px auto 20px;
-  color: #645c50;
+  color: #6a5c4c;
   text-align: center;
   max-width: 330px;
   text-wrap: pretty;
@@ -227,19 +227,41 @@ select {
   }
 }
 
-/* A card of the opening carousel arriving. React is keyed on the card, so the
-   whole subtree is replaced and this plays from the top every time — there is
-   no transition to interrupt and nothing to reverse when you swipe back.
-   Short and mostly opacity: the point is that the frame around it did not
-   move, and a card sliding a long way would argue the opposite. Reduced
-   motion kills it below and leaves the text exactly where it lands. */
+/* A card of the opening carousel arriving — sliding in from the side you
+   pushed it from, so the gesture and the motion agree. React is keyed on the
+   card, so the whole subtree is replaced and this plays from the top every
+   time; there is no transition to interrupt and nothing to reverse.
+   The frame around it (logo, dots, button) never moves — that stillness is
+   what makes a 60px slide read as a card changing rather than a page
+   loading. The mascot on the card carries its own hop (pgHop), so it lands a
+   beat after the card does. Forward and back mirror in Arabic and Urdu, where
+   forward is the other way. Reduced motion kills all of it below. */
 .pg-slide {
-  animation: pgSlideIn 0.28s ease-out both;
+  animation: pgSlideFwd 0.34s cubic-bezier(0.2, 0.8, 0.25, 1) both;
 }
-@keyframes pgSlideIn {
+.pg-slide-back {
+  animation-name: pgSlideBack;
+}
+[dir='rtl'] .pg-slide {
+  animation-name: pgSlideBack;
+}
+[dir='rtl'] .pg-slide-back {
+  animation-name: pgSlideFwd;
+}
+@keyframes pgSlideFwd {
   0% {
     opacity: 0;
-    transform: translateY(7px) scale(0.985);
+    transform: translateX(64px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pgSlideBack {
+  0% {
+    opacity: 0;
+    transform: translateX(-64px);
   }
   100% {
     opacity: 1;
@@ -310,7 +332,7 @@ select {
   min-height: 100dvh;
   display: flex;
   justify-content: center;
-  background: radial-gradient(120% 80% at 12% 0%, #f7eeda 0%, #efe3cd 55%, #e6d8bd 100%);
+  background: radial-gradient(120% 80% at 12% 0%, #fffaf4 0%, #fdf0e2 55%, #f9e6d2 100%);
 }
 /* The notification banner, floated over whatever screen is showing. Clears the
    notch band on an installed phone via --pg-top, and the nav rail on a desktop
@@ -380,7 +402,7 @@ select {
   padding-top: var(--pg-top);
   display: flex;
   flex-direction: column;
-  background: #f5ead8;
+  background: #fffaf3;
   overflow: hidden;
 }
 /* ── Tablet ───────────────────────────────────────────────────────────────

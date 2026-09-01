@@ -18,25 +18,25 @@ export function Stats({ v }: { v: Pantry }) {
       >
         {v.t.statsTitle}
       </h1>
-      <p dir="auto" style={css('font-size:14px;line-height:1.5;margin:8px 0 0;color:#645c50;text-wrap:pretty')}>
+      <p dir="auto" style={css('font-size:14px;line-height:1.5;margin:8px 0 0;color:#6a5c4c;text-wrap:pretty')}>
         {v.statsSub}
       </p>
 
       {v.isSampleLog && (
         <div
           dir="auto"
-          style={css('margin-top:14px;padding:15px 17px;border-radius:24px;background:#ebddc5;font-size:12.5px;line-height:1.5;color:#645c50;text-wrap:pretty')}
+          style={css('margin-top:14px;padding:15px 17px;border-radius:24px;background:#ffe9d2;font-size:12.5px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}
         >
           {v.xt('sampleStats')}
         </div>
       )}
 
-      <div style={css('margin-top:16px;padding:22px 20px 20px;border-radius:30px;background:#201e1d;color:#f5ead8')}>
+      <div style={css('margin-top:16px;padding:22px 20px 20px;border-radius:30px;background:#1b1714;color:#fffaf3')}>
         <div style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;opacity:.55')}>
           {v.t.statsSpend}
         </div>
         <div style={css('display:flex;align-items:baseline;gap:11px;margin-top:7px')}>
-          <span style={css("font-family:'Caprasimo',serif;font-size:40px;line-height:1;color:#f6a06b")}>
+          <span style={css("font-family:'Caprasimo',serif;font-size:40px;line-height:1;color:#ff9d4f")}>
             {v.statsSpendWeek}
           </span>
           <span style={css('font-size:13px;opacity:.7')}>{v.statsSpendDelta}</span>
@@ -56,41 +56,41 @@ export function Stats({ v }: { v: Pantry }) {
       </div>
 
       <div style={css('display:flex;gap:9px;margin-top:12px')}>
-        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#e1eecc')}>
-          <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#56633f")}>
+        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#e2f8c6')}>
+          <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#3d7213")}>
             {v.statsAvgServing}
           </div>
-          <div style={css('font-size:11.5px;color:#56633f;margin-top:6px;opacity:.85')}>
+          <div style={css('font-size:11.5px;color:#3d7213;margin-top:6px;opacity:.85')}>
             {v.aServingAvgLabel}
           </div>
         </div>
-        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#fff2eb')}>
-          <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#8c491a")}>
+        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#fff4ea')}>
+          <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#a83f06")}>
             {v.statsSaved}
           </div>
-          <div style={css('font-size:11.5px;color:#8c491a;margin-top:6px;opacity:.85')}>{v.notSpentLabel}</div>
+          <div style={css('font-size:11.5px;color:#a83f06;margin-top:6px;opacity:.85')}>{v.notSpentLabel}</div>
         </div>
-        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#ebddc5')}>
-          <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#474238")}>
+        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#ffe9d2')}>
+          <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#3b3229")}>
             {v.statsWaste}
           </div>
-          <div style={css('font-size:11.5px;color:#645c50;margin-top:6px')}>{v.leftOnPlateLabel}</div>
+          <div style={css('font-size:11.5px;color:#6a5c4c;margin-top:6px')}>{v.leftOnPlateLabel}</div>
         </div>
       </div>
 
       <Kicker style={{ marginTop: 24 }}>{v.t.statsCooked}</Kicker>
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:11px')}>
         {v.topDishes.map((d) => (
-          <div key={d.key} style={css('display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:24px;background:#f9f4ed')}>
-            <DishPic src={d.pic} size={44} radius={15} style={{ background: '#ebddc5' }} />
+          <div key={d.key} style={css('display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:24px;background:#ffffff')}>
+            <DishPic src={d.pic} size={44} radius={15} style={{ background: '#ffe9d2' }} />
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:14.5px;font-weight:700;line-height:1.25')}>{d.name}</span>
-              <span style={css('display:block;font-size:11.5px;color:#645c50;margin-top:3px')}>{d.meta}</span>
-              <span style={css('display:block;height:5px;border-radius:999px;background:#eee7db;margin-top:7px;overflow:hidden')}>
-                <span style={css(`display:block;height:100%;width:${d.barW};border-radius:999px;background:#d67f48`)} />
+              <span style={css('display:block;font-size:11.5px;color:#6a5c4c;margin-top:3px')}>{d.meta}</span>
+              <span style={css('display:block;height:5px;border-radius:999px;background:#fdf0e3;margin-top:7px;overflow:hidden')}>
+                <span style={css(`display:block;height:100%;width:${d.barW};border-radius:999px;background:#fb7c2b`)} />
               </span>
             </span>
-            <span style={css("flex:none;font-family:'Caprasimo',serif;font-size:19px;color:#8c491a")}>
+            <span style={css("flex:none;font-family:'Caprasimo',serif;font-size:19px;color:#a83f06")}>
               {d.count}
             </span>
           </div>
@@ -98,14 +98,14 @@ export function Stats({ v }: { v: Pantry }) {
       </div>
 
       <Kicker style={{ marginTop: 24 }}>{v.t.statsHard}</Kicker>
-      <div style={css('margin-top:11px;padding:18px 20px;border-radius:28px;background:#f9f4ed;display:flex;flex-direction:column;gap:12px')}>
+      <div style={css('margin-top:11px;padding:18px 20px;border-radius:28px;background:#ffffff;display:flex;flex-direction:column;gap:12px')}>
         {v.diffBars.map((d) => (
           <div key={d.key} style={css('display:flex;align-items:center;gap:11px')}>
             <span style={css('flex:none;width:88px;font-size:13px;font-weight:600')}>{d.label}</span>
-            <span style={css('flex:1;height:9px;border-radius:999px;background:#eee7db;overflow:hidden')}>
+            <span style={css('flex:1;height:9px;border-radius:999px;background:#fdf0e3;overflow:hidden')}>
               <span style={css(`display:block;height:100%;width:${d.w};border-radius:999px;background:${d.bg}`)} />
             </span>
-            <span style={css('flex:none;width:34px;text-align:end;font-size:12.5px;color:#645c50')}>{d.pct}</span>
+            <span style={css('flex:none;width:34px;text-align:end;font-size:12.5px;color:#6a5c4c')}>{d.pct}</span>
           </div>
         ))}
       </div>
@@ -113,17 +113,17 @@ export function Stats({ v }: { v: Pantry }) {
       <Kicker style={{ marginTop: 24 }}>{v.t.statsLearned}</Kicker>
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:11px')}>
         {v.learnedList.map((l) => (
-          <div key={l.key} style={css('padding:17px 19px;border-radius:26px;background:#e1eecc')}>
+          <div key={l.key} style={css('padding:17px 19px;border-radius:26px;background:#e2f8c6')}>
             <div style={css('display:flex;align-items:flex-start;justify-content:space-between;gap:12px')}>
-              <span style={css('font-size:15px;font-weight:700;color:#3d472b')}>{l.title}</span>
+              <span style={css('font-size:15px;font-weight:700;color:#2c5410')}>{l.title}</span>
               <Btn
                 onClick={l.forget}
-                css="flex:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:#56633f;text-decoration:underline"
+                css="flex:none;white-space:nowrap;font-size:12.5px;font-weight:700;color:#3d7213;text-decoration:underline"
               >
                 {v.t.statsForget}
               </Btn>
             </div>
-            <p dir="auto" style={css('margin:7px 0 0;font-size:13.5px;line-height:1.5;color:#3d472b;opacity:.85;text-wrap:pretty')}>
+            <p dir="auto" style={css('margin:7px 0 0;font-size:13.5px;line-height:1.5;color:#2c5410;opacity:.85;text-wrap:pretty')}>
               {l.body}
             </p>
           </div>
@@ -131,7 +131,7 @@ export function Stats({ v }: { v: Pantry }) {
         {v.nothingLearned && (
           <div
             dir="auto"
-            style={css('padding:17px 19px;border-radius:26px;background:#f9f4ed;font-size:13.5px;line-height:1.5;color:#645c50;text-wrap:pretty')}
+            style={css('padding:17px 19px;border-radius:26px;background:#ffffff;font-size:13.5px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}
           >
             {v.nothingLearnedText}
           </div>
@@ -140,8 +140,8 @@ export function Stats({ v }: { v: Pantry }) {
 
       <Btn
         onClick={v.forgetAll}
-        css="width:100%;height:50px;border-radius:999px;font-size:14.5px;font-weight:700;color:#8c491a;margin-top:14px"
-        hover="background:#ffe1d0"
+        css="width:100%;height:50px;border-radius:999px;font-size:14.5px;font-weight:700;color:#a83f06;margin-top:14px"
+        hover="background:#ffe4cd"
       >
         {v.forgetAllLabel}
       </Btn>

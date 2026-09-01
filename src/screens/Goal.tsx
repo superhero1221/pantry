@@ -32,8 +32,8 @@ export function Goal({ v }: { v: Pantry }) {
       foot={
         <Btn
           onClick={v.toTier}
-          css="width:100%;height:56px;border-radius:999px;background:#c67139;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16)"
-          hover="background:#b2622d"
+          css="width:100%;height:56px;border-radius:999px;background:#e85d04;color:#fff;font-size:19px;font-weight:700;box-shadow:0 3px 10px rgba(46,43,37,.16)"
+          hover="background:#c04a03"
         >
           {v.t.tierNext}
         </Btn>

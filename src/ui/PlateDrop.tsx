@@ -47,7 +47,7 @@ export function PlateDrop({
       }}
       style={css(
         'width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;background:' +
-          (over ? '#ffe1d0' : '#eee7db'),
+          (over ? '#ffe4cd' : '#fdf0e3'),
       )}
       onClick={() => input.current?.click()}
     >
@@ -59,13 +59,13 @@ export function PlateDrop({
         />
       ) : (
         <div style={css('display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 26px;text-align:center')}>
-          <span style={css('width:46px;height:46px;border-radius:50%;background:#dcd3c4;display:flex;align-items:center;justify-content:center')}>
+          <span style={css('width:46px;height:46px;border-radius:50%;background:#efdcc8;display:flex;align-items:center;justify-content:center')}>
             <svg
               width="22"
               height="22"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#82796a"
+              stroke="#847462"
               strokeWidth={2.75}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -74,7 +74,7 @@ export function PlateDrop({
               <circle cx="12" cy="12" r="3.4" />
             </svg>
           </span>
-          <span dir="auto" style={css('font-size:13.5px;font-weight:600;color:#645c50;line-height:1.45;text-wrap:pretty')}>
+          <span dir="auto" style={css('font-size:13.5px;font-weight:600;color:#6a5c4c;line-height:1.45;text-wrap:pretty')}>
             {placeholder}
           </span>
         </div>
