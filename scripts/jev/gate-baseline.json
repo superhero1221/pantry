@@ -1,0 +1,4 @@
+{
+  "$comment": "Reviewed exceptions for scripts/jev/gate.mjs. Each entry silences one finding, matched by id and by fp (a hash of the content it was accepted for, so editing that recipe or translation brings the finding back). An entry only counts once 'reason' says why the finding is acceptable: entries written by --update-baseline start with 'TODO' and are ignored until a person replaces it.",
+  "exceptions": []
+}

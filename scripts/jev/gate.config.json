@@ -1,0 +1,8 @@
+{
+  "$comment": "Settings for scripts/jev/gate.mjs; see 'CI gate' in scripts/jev/README.md. mode 'report' never fails the job (the summary says what WOULD block); 'block' fails it on any block not accepted in gate-baseline.json. Thresholds are Jev's probability that the app's claim holds: below block_below blocks, below warn_below warns, anything higher is agreement. max_usd caps a normal (changes-only) run; max_usd_full caps the weekly --full run.",
+  "mode": "report",
+  "max_usd": 0.03,
+  "max_usd_full": 0.1,
+  "diets": { "block_below": 0.1, "warn_below": 0.8 },
+  "translations": { "block_below": 0.2, "warn_below": 0.8 }
+}

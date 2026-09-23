@@ -28,7 +28,7 @@ node scripts/jev/run.mjs diets --limit=3 --max-usd=0.02   # first: a tiny run
 node scripts/jev/run.mjs all --max-usd=0.25
 
 # The harness's own tests (offline, not part of the app's vitest run)
-node --test scripts/jev/lib.test.mjs
+node --test scripts/jev/lib.test.mjs scripts/jev/gate.test.mjs
 ```
 
 Flags: `--dry`, `--mock`, `--limit=N` (the first N calls of each check), `--max-usd=0.5` (for the whole run, all checks together), `--out=jev-results`, `--concurrency=4`, `--no-build` (picks: reuse the last build in `node_modules/.cache/jev-app`).
@@ -81,6 +81,50 @@ Then come Jev's results:
 - `identical`: all five translations equal the English
 - `no-words`: fewer than two letters
 
+## CI gate
+
+`gate.mjs` runs on every push and pull request that touches `src/data/**`, `src/lib/diets.ts`, `src/lib/diet-audit.js` or `scripts/jev/**` (workflow **Jev gate**, `.github/workflows/jev-gate.yml`). Every Monday it also does a full run.
+
+**What it checks.** It imports the app's own data at the base commit and at HEAD (`snapshot.mjs`, one process each) and compares canonical JSON, so a comment or a moved line counts as no change and a price-only edit is not sent to Jev. The base is the pull request's merge base, or the commit before the push, or `HEAD~1`. Jev is asked only about:
+- recipes whose name, ingredients, method or tags changed, or whose `meetsDiet()` answer changed. It is asked only about the diets the app says the dish **meets**, because Jev can add a caution but never remove one. If `diets.ts`, `diet-audit.js` or the `DIETS` list changed, every recipe is re-checked.
+- translations that changed, per language. If the English changed, all five languages are asked.
+
+These free checks run over everything, every time: `{placeholder}` mismatches, pork or alcohol words in any recipe's ingredients or method (the word lists are read from `src/data/nopork.test.ts`), and the app's own diet-tag audit.
+
+**What blocks.** Thresholds are in `gate.config.json`:
+
+| finding | block | warn |
+|---|---|---|
+| the app says a recipe meets a diet, Jev's P(yes) | below 0.10 | 0.10–0.80 |
+| a changed translation, Jev's P(same meaning) | below 0.20 | 0.20–0.80 |
+| a deterministic failure | always | — |
+
+A finding listed in `gate-baseline.json` with a reason does not block.
+
+**Jev being down never blocks.** No key (a fork, or the secret is not added yet) skips Jev with a notice, and the free checks still run. Network errors and 5xx, after retries, give a warning. The gate stops trying after 10 failures in a row. 401 and 402 give a loud warning ("rotate the key" / "top up credits").
+
+**Cost.** Each run is capped at `--max-usd` (default $0.03). Estimates from real diffs: one recipe plus one translation came to ~$0.0001, and commit `9c7c44f` (40 translation keys) to ~$0.0023. `node scripts/jev/gate.mjs --dry` shows the estimate for your branch and makes no calls. On this branch a full run (every recipe and key) was estimated at ~$0.056, and the weekly run is capped at $0.10.
+
+```sh
+node scripts/jev/gate.mjs --dry                   # what would be asked, and the price
+node scripts/jev/gate.mjs --mock                  # the whole gate, against the offline fake
+node scripts/jev/gate.mjs --base=main --mode=block
+node scripts/jev/gate.mjs --mock --base-dir=/tmp/old-copy --head-dir=/tmp/new-copy   # two trees, no git
+```
+
+The results are written to `jev-results/gate-summary.md` (the same table the Actions run shows as its job summary) and `jev-results/gate.json`. The workflow uploads both as the `jev-results` artifact.
+
+**Turning Jev on.** Go to Settings → Secrets and variables → Actions → New repository secret. Name it `OPENROUTER_API_KEY` and paste the key. The workflow passes it to the script only as an environment variable. Pull requests from forks never receive it, so they get the free checks only.
+
+**Accepting an exception.** When a block is wrong, or is a deliberate choice:
+1. Run `node scripts/jev/gate.mjs --update-baseline` locally (with the key, or `--mock` to see only the deterministic ones). It adds each current block to `gate-baseline.json` with `"reason": "TODO: …"`.
+2. Replace every `TODO` with a sentence saying why the finding is acceptable. An entry still marked TODO does not count.
+3. Commit it, so the exception is reviewed in the pull request like any other change.
+
+Each entry stores a fingerprint of the content it was accepted for. If that recipe or translation is edited later, the finding comes back. The summary also lists entries that no longer match anything, so they can be removed.
+
+**Report mode and block mode.** `gate.config.json` starts in `"mode": "report"`. In that mode the job never fails, and the summary heading says **WOULD BLOCK** when something would. After a few runs, when every would-block has been fixed or accepted in the baseline, change it to `"mode": "block"`. From then on, a block fails the job. `--mode=report|block` overrides the setting for a single local run.
+
 ## How the pick check reads the app
 
 Home's pick comes from `ranked()` inside the `usePantry` hook. That function closes over the cupboard, the extras, the store multiplier, the profile and the level. It cannot be imported, and the harness does not refactor app code, so `app-driver.mjs` asks the app directly:
@@ -95,5 +139,5 @@ The seed only takes effect if it goes in before boot and every key passes `SHAPE
 
 - It is read from `process.env.OPENROUTER_API_KEY` **only**. The harness never writes it to disk, and when it prints the key it masks it (`sk-or-v1-…abcd (73 chars)`). Logs and the raw response are scrubbed of anything shaped like a key.
 - **Never put it in `src/`**, in a `VITE_*` variable or anywhere else the build can reach. Pantry is a static client-side app, and everything in the bundle is public. The bundle's own licence banner says as much.
-- On GitHub, add it as the repository secret `OPENROUTER_API_KEY` and run the **Jev second opinions** workflow from the Actions tab. It only runs when started by hand.
+- On GitHub, add it as the repository secret `OPENROUTER_API_KEY` and run the **Jev second opinions** workflow from the Actions tab. It only runs when started by hand. The **Jev gate** workflow uses the same secret on every relevant push (see [CI gate](#ci-gate)).
 - A key that has been pasted into a chat, an issue or a commit should be treated as exposed. Rotate it on openrouter.ai and put the new one in the secret.

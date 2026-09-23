@@ -19,7 +19,7 @@ import { MOCK_BANNER, esc, noul, r3 } from './lib.mjs';
 
 export const name = 'translations';
 
-const LANG_NAME = { es: 'Spanish', fr: 'French', pl: 'Polish', ur: 'Urdu', ar: 'Arabic' };
+export const LANG_NAME = { es: 'Spanish', fr: 'French', pl: 'Polish', ur: 'Urdu', ar: 'Arabic' };
 
 /** Leaves of a nested pack section as dotted keys: 'dishes.pad_thai', 'levels.2'. */
 function flatten(x, prefix, out) {
@@ -88,7 +88,7 @@ export function skipReason(r) {
   return null;
 }
 
-const question = (l) =>
+export const question = (l) =>
   noul(
     `Does the ${LANG_NAME[l]} text (field "${l}") say the same thing as the English (field "english") — nothing important added, dropped, reversed or mistranslated? It is interface copy for a cooking app; natural idiom and tone changes are fine. Placeholders in braces like {n} are deliberately left untranslated and are not an error. Judge only ${LANG_NAME[l]}; ignore the other languages.`,
     {

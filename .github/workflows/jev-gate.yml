@@ -1,0 +1,110 @@
+# Jev checks every change: the CI gate in scripts/jev/gate.mjs.
+#
+# On every push and pull request that touches recipes, diet rules or
+# translations, it works out WHAT changed since the base commit and asks
+# TypeSafe's Jev about only that: the diets the app claims for each changed
+# recipe, and each changed (key, language) translation. A normal run costs a
+# fraction of a cent. The free deterministic checks (placeholders, pork and
+# alcohol words, the app's own diet-tag audit) run over everything, every time.
+#
+# Weekly, a full run re-asks about every recipe and key, capped at $0.10.
+#
+# It never blocks because Jev is unavailable: no secret (forks, or not added
+# yet) skips the Jev part with a notice; network trouble and 5xx warn; a
+# refused key or empty credit warns loudly. Whether a finding blocks is set by
+# `mode` in scripts/jev/gate.config.json ("report" until a baseline has been
+# reviewed). See the "CI gate" section of scripts/jev/README.md.
+#
+# This does not replace ci.yml (tests, types, build) or jev.yml (the manual
+# full second-opinion reports); it only reads the repository.
+name: Jev gate
+
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'src/data/**'
+      - 'src/lib/diets.ts'
+      - 'src/lib/diet-audit.js'
+      - 'src/data/lang/**'
+      - 'scripts/jev/**'
+      - '.github/workflows/jev-gate.yml'
+  pull_request:
+    paths:
+      - 'src/data/**'
+      - 'src/lib/diets.ts'
+      - 'src/lib/diet-audit.js'
+      - 'src/data/lang/**'
+      - 'scripts/jev/**'
+      - '.github/workflows/jev-gate.yml'
+  schedule:
+    # Mondays 06:17 UTC: the full run, every recipe and every key.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      full:
+        description: 'Check everything, not just what changed'
+        type: boolean
+        default: false
+      max_usd:
+        description: 'Spend cap for this run in dollars (blank = 0.03, or 0.10 for a full run)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jev-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    # A hung API must not turn into a red build: the gate stops itself after
+    # ten failed attempts in a row, long before this.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The gate compares with an earlier commit (the push's "before", the
+          # pull request's base, or HEAD~1), so it needs the history.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          # 22.18+ strips TypeScript types natively; the gate imports the
+          # app's own modules at both commits with no build step.
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Everything from the event goes in through the environment and is read
+      # by the script as data. Nothing here is interpolated into the shell.
+      - name: Run the gate
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          EVENT_NAME: ${{ github.event_name }}
+          GATE_BEFORE: ${{ github.event.before }}
+          GATE_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          INPUT_FULL: ${{ inputs.full }}
+          INPUT_MAX_USD: ${{ inputs.max_usd }}
+        run: |
+          args=(--out=jev-results)
+          if [ "$EVENT_NAME" = schedule ] || [ "$INPUT_FULL" = true ]; then
+            args+=(--full)
+          fi
+          if [ -n "$INPUT_MAX_USD" ]; then
+            args+=("--max-usd=$INPUT_MAX_USD")
+          fi
+          node scripts/jev/gate.mjs "${args[@]}"
+
+      # Uploaded whatever happened, so a block or a warning can be read in full.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jev-results
+          path: jev-results/
+          if-no-files-found: warn
+          retention-days: 30
