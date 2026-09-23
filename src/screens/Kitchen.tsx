@@ -49,7 +49,7 @@ export function Kitchen({ v }: { v: Pantry }) {
             >
               <span style={css("font-family:'Caprasimo',serif;font-size:16px")}>{p.days}</span>
               <span style={css('font-size:8px;font-weight:700;letter-spacing:.4px;margin-top:2px')}>
-                {v.daysWord}
+                {p.daysWord}
               </span>
             </span>
             <span style={css('flex:1;min-width:0')}>

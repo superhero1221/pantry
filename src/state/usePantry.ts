@@ -39,6 +39,7 @@ import { fromLocal, toLocal } from '../lib/money';
 import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
 import { xt } from '../data/extra-copy';
+import { pickForm } from '../lib/plural';
 import { loadPack, needsPack, ready as packReady } from '../data/lang-pack';
 import { exportBackup, readBackup, readStore, STORE_KEY } from '../lib/backup';
 import {
@@ -815,7 +816,10 @@ export function usePantry() {
     } catch {
       /* no session storage, no confirmation — the data arrived regardless */
     }
-    if (n !== null) ping(xt(ref.current.lang || 'en', 'dataImported').split('{n}').join(n));
+    if (n !== null) {
+      const L = ref.current.lang || 'en';
+      ping(pickForm(L, xt(L, 'dataImported'), Number(n)).split('{n}').join(n));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1454,8 +1458,13 @@ export function usePantry() {
       });
       return s;
     };
-    const QQ = (id: string, field: string, vals?: Record<string, string | number>) =>
-      sub(((QP[id] || {}) as Record<string, string>)[field] || '', vals);
+    /* `count`, where given, picks the question's grammatical form: the number
+       its noun agrees with, which is not always {k} — Arabic counts the
+       cooks in "{k} of your last {n}", and {n} is the one with a noun. */
+    const QQ = (id: string, field: string, vals?: Record<string, string | number>, count?: number) => {
+      const t = ((QP[id] || {}) as Record<string, string>)[field] || '';
+      return sub(count == null ? t : pickForm(lg, t, count), vals);
+    };
     const QO = (id: string, ix: number, vals?: Record<string, string | number>) =>
       sub((QP[id]?.o || [])[ix] || '', vals);
     const share = (fn: (x: HistoryRow) => boolean) => h.filter(fn).length;
@@ -1465,7 +1474,7 @@ export function usePantry() {
     if (!S.profile.training && !S.dismissed.training && hp / n >= 0.4)
       out.push({
         id: 'training',
-        q: QQ('training', 'q', { k: hp, n }),
+        q: QQ('training', 'q', { k: hp, n }, hp),
         why: QQ('training', 'why'),
         opts: [
           { v: 'strength', l: QO('training', 0) },
@@ -1478,7 +1487,7 @@ export function usePantry() {
     if (!S.profile.calorieGoal && !S.dismissed.calorieGoal && lc / n >= 0.4)
       out.push({
         id: 'calorieGoal',
-        q: QQ('calorieGoal', 'q', { k: lc, n }),
+        q: QQ('calorieGoal', 'q', { k: lc, n }, n),
         why: QQ('calorieGoal', 'why'),
         opts: [
           { v: 'cut', l: QO('calorieGoal', 0) },
@@ -1495,7 +1504,7 @@ export function usePantry() {
     if (!S.profile.cuisine && !S.dismissed.cuisine && counts[top] / n >= 0.25)
       out.push({
         id: 'cuisine',
-        q: QQ('cuisine', 'q', { k: counts[top], n, c: cuisineWord(top) }),
+        q: QQ('cuisine', 'q', { k: counts[top], n, c: cuisineWord(top) }, n),
         why: QQ('cuisine', 'why'),
         opts: [
           { v: top, l: QO('cuisine', 0, { c: cuisineWord(top) }) },
@@ -1774,6 +1783,12 @@ export function usePantry() {
     return s;
   };
   const hs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(HH[k] || fb, vals);
+  /** A counted string: `n` picks the form your language uses for that many
+   *  (lib/plural.ts) and is then filled in as {n}. `vals` go in after it, so a
+   *  string whose count is called {m} or {t} names it there. Below fill, and
+   *  above every caller — a const arrow cannot be reached before its line. */
+  const px = (tpl: string, n: number, vals?: Record<string, string | number>) =>
+    fill(pickForm(lg, tpl, n), { n, ...vals });
   /* Down here, not beside clashOf, because clashOf calls fill(), and a const
      arrow cannot be called above its own line. Up there it threw for anyone
      with a diet set — the only people who ever reach the fill() call. */
@@ -1867,9 +1882,7 @@ export function usePantry() {
    *  call is genuinely in flight: once Overpass has answered this is the count,
    *  and before anything has been asked it is not this line's turn to speak. */
   const shopsLine = S.liveShops
-    ? hs('liveShops', '{n} shops within walking distance, straight off OpenStreetMap', {
-        n: S.liveShops.length,
-      })
+    ? px(HH.liveShops || '{n} shops within walking distance, straight off OpenStreetMap', S.liveShops.length)
     : vs('looking', 'Looking for shops near you…');
 
   const wasteMap = {
@@ -2364,7 +2377,7 @@ export function usePantry() {
     })(),
     /* Zero is not shown rather than dressed up: the flame chip only appears
        once there is a real day to count. */
-    streak: streakDays + ' ' + (HH.daysWord || 'days'),
+    streak: px(xt(lg, 'streakShort'), streakDays),
     showStreak: streakDays > 0,
     query: S.query,
     onQuery: (e: ChangeEvent<HTMLInputElement>) => setState({ query: e.target.value }),
@@ -2386,7 +2399,7 @@ export function usePantry() {
        Nothing about the arithmetic changes here: the budget has always covered
        the whole dish, and `pricePer` beside it has always been per serving.
        What changes is that the screen now says which dish it means. */
-    servingsLabel: hs('forServings', 'for {n} servings', { n: recipe.servings }),
+    servingsLabel: px(HH.forServings || 'for {n} servings', recipe.servings),
     budgetChips: BUDGETS.map((b) => ({
       key: String(b),
       label: fmt(b),
@@ -2458,7 +2471,7 @@ export function usePantry() {
       { m: 999, w: 'noRush', l: 'No rush' },
     ].map((t) => ({
       key: String(t.m),
-      label: t.w ? word(t.w, t.l!) : t.m + ' ' + word('minutes', 'min'),
+      label: t.w ? word(t.w, t.l!) : px(xt(lg, 'minutesShort'), t.m),
       on: S.maxTime === t.m,
       style: (S.maxTime === t.m ? PILL_ON : PILL_OFF) + 'flex:none;',
       pick: () => setState({ maxTime: t.m, timeSet: true }),
@@ -2506,9 +2519,8 @@ export function usePantry() {
        shop, which is true. Null when the ends collapsed, so nothing explains a
        range that is not on screen. */
     tonightRangeWhy: oIsSpan ? fill(xt(lg, 'rangeShops'), { a: oSpan.loShop, b: oSpan.hiShop }) : null,
-    tonightSub:
-      word('toBuyFor', 'to buy, for') + ' ' + offer.servings + ' ' + word('servings', 'servings'),
-    tonightMins: offer.total + ' ' + word('minutes', 'min'),
+    tonightSub: px(xt(lg, 'toBuyForN'), offer.servings),
+    tonightMins: px(xt(lg, 'minutesShort'), offer.total),
     tonightOpen: () => go('results', { pickId: offer.id, showMicro: false }),
     /* Walks down the ranked list rather than shuffling, so pressing it four
        times shows four different dinners instead of the same one twice. It
@@ -2529,7 +2541,7 @@ export function usePantry() {
       ? fill(xt(lg, 'noneOfThat'), { q: S.query.trim().toLowerCase(), d: dish(offer) })
       : null,
     tonightWrapped: !offerMissed && offerWrapped && S.query.trim()
-      ? fill(xt(lg, 'lastOfThat'), { q: S.query.trim().toLowerCase(), n: pool.length })
+      ? px(xt(lg, 'lastOfThat'), pool.length, { q: S.query.trim().toLowerCase() })
       : null,
     /* Dropping the word is the only thing that helps in either case, so it is
        one tap rather than a trip back into the refiner to clear a text field.
@@ -2561,7 +2573,7 @@ export function usePantry() {
        YOUR kitchen" over a shipped list, with a static beansprouts nudge that
        named produce nobody had bought. The Kitchen screen's banner owns the
        full honesty; this card matches it in one line. */
-    pantryLine: fill(xt(lg, 'pantryLineSample'), { n: STAPLES.length + PERISH.length }),
+    pantryLine: px(xt(lg, 'pantryLineSample'), STAPLES.length + PERISH.length),
     pantryNudge: xt(lg, 'pantrySubSample'),
 
     /* ── Results ────────────────────────────────────────────────────────── */
@@ -2573,7 +2585,7 @@ export function usePantry() {
     dishPic: recipe.pic,
     dishCredit: photoCredit(recipe.id),
     priceTotal: fmtSpan(rSpan.lo, rSpan.hi),
-    priceSub: word('toBuyFor', 'to buy, for') + ' ' + recipe.servings + ' ' + word('servings', 'servings'),
+    priceSub: px(xt(lg, 'toBuyForN'), recipe.servings),
     priceTotalFs: rIsSpan ? '27px' : '44px',
     pricePerFs: rIsSpan ? '17px' : '26px',
     priceRangeWhy: rIsSpan ? fill(xt(lg, 'rangeShops'), { a: rSpan.loShop, b: rSpan.hiShop }) : null,
@@ -2620,7 +2632,7 @@ export function usePantry() {
          still gives the exact headroom at the shop you are actually on. */
       if (S.budgetSet && rSpan.hi <= S.budget) add('budget', fill(xt(lg, 'whyBudget'), { b: fmt(S.budget) }));
       if (!overTime && S.timeSet && S.maxTime !== 999)
-        add('time', fill(xt(lg, 'whyTime'), { t: recipe.total, m: S.maxTime }));
+        add('time', px(xt(lg, 'whyTime'), recipe.total, { t: recipe.total, m: S.maxTime }));
 
       /* The diets this dish keeps, out of the ones they actually set. Named
          rather than counted, because "halal" is the word somebody is looking
@@ -2637,7 +2649,7 @@ export function usePantry() {
          recipe assumes most kitchens have, not something you have told me".
          A justification cannot contradict a disclaimer in the same app. */
       const have = recipe.items.filter((i) => S.owned[keyOf(i.n)] === true).length;
-      if (have >= 2) add('owned', fill(xt(lg, 'whyOwned'), { n: have }));
+      if (have >= 2) add('owned', px(xt(lg, 'whyOwned'), have));
 
       /* Last, and only when the first four did not fill it: a dish at or below
          where they are is a reason, but a weaker one than money or a clock. */
@@ -2675,10 +2687,10 @@ export function usePantry() {
     // Over a 55-minute dish this chip used to read "under 30 min". Now it reads
     // "55 min · over your 30", and the note below says why it is here at all.
     timeLabel: overTime
-      ? recipe.total + ' ' + word('minutes', 'min') + ' · ' + overBy
+      ? px(xt(lg, 'minutesShort'), recipe.total) + ' · ' + overBy
       : S.maxTime === 999
         ? R.noRush
-        : R.underMins + ' ' + S.maxTime + ' ' + word('minutes', 'min'),
+        : R.underMins + ' ' + px(xt(lg, 'minutesShort'), S.maxTime),
     timeOverNote: overTime
       ? fill(xt(lg, 'timeOverWhy'), { m: S.maxTime, t: recipe.total })
       : null,
@@ -2736,13 +2748,12 @@ export function usePantry() {
        which totals whole cooks (portions x servings). Both units are now
        named in the sentence and neither screen can be read as the other. */
     savingLine: recipe.copycat
-      ? fill(xt(lg, 'copycatKeep'), {
+      ? px(xt(lg, 'copycatKeep'), recipe.servings, {
           who: recipe.copycat,
           a: fmt(recipe.restaurant),
           b: fmt(per),
           c: fmt(keep),
           d: fmt(asShown(keep) * recipe.servings),
-          n: recipe.servings,
         })
       : X.youKeep +
         ' ' +
@@ -2754,7 +2765,7 @@ export function usePantry() {
         ' ' +
         fmt(keep * 4) +
         '.',
-    timeTotal: recipe.total + ' ' + word('minutes', 'min'),
+    timeTotal: px(xt(lg, 'minutesShort'), recipe.total),
     timeActive: recipe.active + ' ' + word('activeMins', 'of them are you'),
     diffLabel: diffWord(recipe.diff),
     alternates: ranked()
@@ -2767,9 +2778,7 @@ export function usePantry() {
         meta:
           cuisineWord(a.cuisine) +
           ' · ' +
-          a.total +
-          ' ' +
-          word('minutes', 'min') +
+          px(xt(lg, 'minutesShort'), a.total) +
           (fitsTime(a) ? '' : ' · ' + overBy) +
           ' · ' +
           Math.round(a.per.protein) +
@@ -3078,7 +3087,7 @@ export function usePantry() {
         return !!S.medians[k] || !!S.openPrices[k];
       }).length;
       return real
-        ? fill(xt(lg, 'someMeasured'), { n: real, of: lines.length })
+        ? px(xt(lg, 'someMeasured'), real, { of: lines.length })
         : fill(SL.modelled, { c: countryName });
     })(),
     toCook: () => go('cook', { step: 0, timerRun: false, timerLeft: 0, cookLogId: null }),
@@ -3258,7 +3267,7 @@ export function usePantry() {
         dueAt: due,
       });
     },
-    streakBig: streakDays + ' ' + word('daysRunning', 'days running'),
+    streakBig: px(xt(lg, 'streakRunning'), streakDays),
     /* The clean-plate line used to claim "roughly £6.40 saved" — a hardcoded
        literal, whoever you were and whatever you cooked. The money claim is
        gone; a clean plate is worth stating without inventing its price. */
@@ -3284,7 +3293,6 @@ export function usePantry() {
     goingOffLabel: word('goingOff', 'going off soon'),
     cupboardLabel: word('cupboard', 'cupboard stock'),
     keepsMonthsLabel: word('keepsMonths', 'Keeps for months'),
-    daysWord: word('days', 'DAYS'),
     useItLabel: word('useIt', 'Use it'),
     useFirstCount: PERISH.filter((p) => p.days <= 4).length,
     stockValue: fmt(18.4),
@@ -3293,6 +3301,10 @@ export function usePantry() {
       name: foodName(p.name),
       amount: AM['a' + (i + 1)] || p.amount,
       days: p.days,
+      /* Per badge, not one word for all five: the number is printed above it
+         and the word has to agree with it — Arabic takes a different form
+         for 2, for 3-10 and for 12. */
+      daysWord: pickForm(lg, xt(lg, 'daysBadge'), p.days),
       chipBg: p.days <= 2 ? '#ffc79b' : p.days <= 4 ? '#ffe4cd' : '#e2f8c6',
       chipFg: p.days <= 4 ? '#a83f06' : '#2c5410',
       use: () => go('results', { query: p.name, pickId: ranked()[0].id }),
@@ -3318,14 +3330,7 @@ export function usePantry() {
         rank: i + 1,
         code: p.code,
         dish: dish(RECIPES.filter((r) => r.name === p.dish)[0] || { name: p.dish }),
-        meta:
-          (PC[p.code] || p.country) +
-          ' · ' +
-          AM.cooked +
-          ' ' +
-          p.times +
-          ' ' +
-          (p.times === 1 ? AM.time : AM.times),
+        meta: (PC[p.code] || p.country) + ' · ' + px(xt(lg, 'cookedNTimes'), p.times),
         price: fmt(p.price),
         bg: i === 0 ? '#fff4ea' : '#ffffff',
         rankFg: i === 0 ? '#e85d04' : '#96866f',
@@ -3352,8 +3357,7 @@ export function usePantry() {
       // Per serving at the cheapest tier, the same basis the passport rows use.
       const per = (r: Recipe) => (r.items.reduce((s, i) => s + i.s, 0) * 0.82) / r.servings;
       const cheapest = missing.reduce((a, r) => (per(r) < per(a) ? r : a));
-      return fill(xt(lg, 'passportNudgeReal'), {
-        n: new Set(missing.map((r) => r.code)).size,
+      return px(xt(lg, 'passportNudgeReal'), new Set(missing.map((r) => r.code)).size, {
         c: P.cn[cheapest.code] || COUNTRIES[cheapest.code]?.name || COUNTRY_NAMES[cheapest.code] || cheapest.code,
         d: dish(cheapest),
         a: fmt(per(cheapest)),
@@ -3403,7 +3407,7 @@ export function usePantry() {
         bg: ['#7cc24a', '#a8dc78', '#fb7c2b', '#c04a03'][d - 1],
       };
     }),
-    statsSub: (X.statsSub || '').split('{n}').join(String(S.history.length)),
+    statsSub: px(X.statsSub || '', S.history.length),
     /** True while every row in the log is the sample data the app ships with. */
     isSampleLog: S.history.length > 0 && S.history.every((c) => c.seeded),
     questions: openQuestions()
@@ -3446,11 +3450,11 @@ export function usePantry() {
       style: (S.browseCat === b.k ? PILL_ON : PILL_OFF) + 'flex:none;font-size:13.5px;padding:9px 15px;',
       pick: () => setState({ browseCat: b.k }),
     })),
-    browseCount: browseSet.length + ' ' + word('dishesWord', 'dishes'),
+    browseCount: px(xt(lg, 'dishesCount'), browseSet.length),
     browseList: browseSet.map((x) => ({
       key: x.id,
       name: dish(x),
-      cuisine: cuisineWord(x.cuisine) + ' · ' + x.total + ' ' + word('minutes', 'min'),
+      cuisine: cuisineWord(x.cuisine) + ' · ' + px(xt(lg, 'minutesShort'), x.total),
       pic: x.pic,
       /* Was fmt(toBuy(x, 0.82) / servings) — a hardcoded discount tier, so a
          browse card quoted the Aldi price and tapping it showed the price at
@@ -3521,15 +3525,16 @@ export function usePantry() {
         key: i + ':' + id,
         day: Math.floor(i / S.planMeals) + 1,
         showDay: i % S.planMeals === 0,
-        dayLabel: word('planDay', 'Day') + ' ' + (Math.floor(i / S.planMeals) + 1),
+        /* xt, not word(): planDay was added after the design pack and lives in
+           the added copy, so word() found no such key in any language and
+           printed the English fallback inside a Polish or Arabic plan. */
+        dayLabel: xt(lg, 'planDay') + ' ' + (Math.floor(i / S.planMeals) + 1),
         name: dish(r),
         pic: r.pic,
         meta:
           cuisineWord(r.cuisine) +
           ' · ' +
-          r.total +
-          ' ' +
-          word('minutes', 'min') +
+          px(xt(lg, 'minutesShort'), r.total) +
           (fitsTime(r) ? '' : ' · ' + overBy) +
           ' · ' +
           diffWord(r.diff),
@@ -3584,10 +3589,8 @@ export function usePantry() {
         .map((l) => ({
           key: l.key,
           name: l.name,
-          sub:
-            l.uses > 1
-              ? l.uses + ' ' + word('planUses', 'meals')
-              : word('planUse', '1 meal'),
+          // planUses/planUse were never in any pack, so this was English everywhere.
+          sub: px(xt(lg, 'mealsCount'), l.uses),
           price: l.owned ? fmt(0) : fmt(l.cost),
           owned: l.owned,
           nameFg: l.owned ? '#847462' : '#1b1714',

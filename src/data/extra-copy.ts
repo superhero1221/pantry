@@ -138,6 +138,17 @@ export const EXTRA: Record<string, Record<string, string>> = {
     planPerDay: 'a day',
     planCook: 'Cook it',
     planDay: 'Day',
+    /* Counted strings. A value is either plain text, or forms labelled with
+       the CLDR category they answer for — see lib/plural.ts. Each language
+       lists only the forms its grammar has; a missing one falls to other. */
+    streakShort: "one:{n} day|other:{n} days",
+    streakRunning: "one:{n} day running|other:{n} days running",
+    daysBadge: "one:DAY|other:DAYS",
+    dishesCount: "one:{n} dish|other:{n} dishes",
+    minutesShort: "{n} min",
+    mealsCount: "one:{n} meal|other:{n} meals",
+    cookedNTimes: "one:cooked {n} time|other:cooked {n} times",
+    toBuyForN: "one:to buy, for {n} serving|other:to buy, for {n} servings",
     planNeedsAccount: 'Sign in to keep a week across devices. It works here either way.',
 
     /* ── Install and notifications ── */
@@ -163,11 +174,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
     /* ── Getting around without a mouse ── */
     stepBack: 'Previous step',
     passportNudgeReal:
-      '{n} countries in here you have never cooked from. The cheapest you are missing is {c} — {d} lands at {a} a serving.',
+      "one:{n} country in here you have never cooked from: {c} — {d} lands at {a} a serving.|other:{n} countries in here you have never cooked from. The cheapest you are missing is {c} — {d} lands at {a} a serving.",
     streakCleanReal: 'Nothing binned tonight — the plate came back clean.',
     locStart: 'Where are you cooking?',
     storeModelled: 'typical prices for this kind of shop here',
-    pantryLineSample: '{n} things a kitchen usually has',
+    pantryLineSample: "one:{n} thing a kitchen usually has|other:{n} things a kitchen usually has",
     pantrySubSample: 'A starting assumption, not a scan of your shelves',
     morning: 'Morning',
     afternoon: 'Afternoon',
@@ -223,7 +234,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     dataImport: "Load a copy back",
     dataImportSub: "Pick a file you saved here. It replaces what is on this device, and Pantry restarts.",
     dataImportCloud: "You are signed in: your cook log will merge, but your account’s settings win the next time it syncs. Sign out first if this file should replace them.",
-    dataImported: "Loaded. {n} cooks came back with it.",
+    dataImported: "one:Loaded. {n} cook came back with it.|other:Loaded. {n} cooks came back with it.",
     dataBadFile: "That is not a Pantry file. Nothing has changed.",
     dataFutureFile: "That file comes from a newer Pantry than this one. I will not open half of it and quietly drop the rest, so nothing has changed.",
     budgetRange: "Give me a number between {a} and {b}.",
@@ -233,18 +244,18 @@ export const EXTRA: Record<string, Record<string, string>> = {
     sendingLink: "Sending…",
 
     /* ── The small print ── */
-    someMeasured: "{n} of the {of} lines here are real prices somebody paid and reported — the dots beside them say which. The rest are modelled, and are a good estimate rather than a receipt.",
+    someMeasured: "one:{n} of the {of} lines here is a real price somebody paid and reported — the dot beside it says which. The rest are modelled, and are a good estimate rather than a receipt.|other:{n} of the {of} lines here are real prices somebody paid and reported — the dots beside them say which. The rest are modelled, and are a good estimate rather than a receipt.",
     noneOfThat: "No {q} in the book — not yet. The closest I have is {d}.",
-    lastOfThat: "That is the last of the {q} I have. There are {n}, and you have seen them all.",
+    lastOfThat: "one:That is the last of the {q} I have. There is only {n}, and you have seen it.|other:That is the last of the {q} I have. There are {n}, and you have seen them all.",
     goWider: "Show me anything",
     whyTitle: "Why this one",
     whyBudget: "Inside the {b} you set",
-    whyTime: "{t} minutes, under the {m} you asked for",
+    whyTime: "one:{t} minute, under the {m} you asked for|other:{t} minutes, under the {m} you asked for",
     whyDiet: "{d} — nothing in the ingredient list breaks it",
     dietClash: "This one breaks your {d} setting",
     dietClashWhy: "Because of the {i}.",
     dietClashNote: "You asked me not to show you these, and I still ranked it below the ones that fit. You can cook it anyway — but check the label yourself, because I am reading a list of ingredients, not the packet in your hand.",
-    whyOwned: "{n} of these are already in your kitchen",
+    whyOwned: "one:{n} of these is already in your kitchen|other:{n} of these are already in your kitchen",
     whyLevel: "{l} — about where you are",
     pctDearer: "{n}% dearer",
     priceRange: "{a} – {b}",
