@@ -160,7 +160,7 @@ export function Settings({ v }: { v: Pantry }) {
             </span>
             <span style={css('flex:none;display:flex;align-items:center;gap:6px')}>
               {s.note && (
-                <span style={css('font-size:10.5px;font-weight:700;color:#96866f;white-space:nowrap')}>
+                <span style={css('font-size:10.5px;font-weight:700;color:#6a5c4c;white-space:nowrap')}>
                   {s.note}
                 </span>
               )}
@@ -332,24 +332,26 @@ export function Settings({ v }: { v: Pantry }) {
       {/* The last thing on the last screen, which is where a copyright line
           belongs: it is a claim rather than an instruction, and nobody came
           here to read it.
-          #6a5c4c rather than the lighter #96866f the other small print uses —
-          at 11.5px this is below the 18.66px the AA large-text rule needs, so
-          it is held to 4.5:1 like body text. A notice nobody can read asserts
-          nothing.
+          #6a5c4c, like all the small print now, rather than the lighter
+          #96866f it used to share — at 11.5px this is below the 18.66px the
+          AA large-text rule needs, so it is held to 4.5:1 like body text. A
+          notice nobody can read asserts nothing.
           Deliberately placed BELOW Start over. It is the one control on this
           screen that throws work away, and it should be the last thing in the
           tab order that does anything.
-          The 104px of padding under it is the mascot. .pg-mascot is absolutely
+          The room under it is the mascot's. .pg-mascot is absolutely
           positioned against the shell rather than the scroller, so it does not
           scroll away — it stands in the trailing corner above the tab bar and
           the last screenful of any long screen passes underneath it. At 41px
-          of jar it renders about 92px tall, and without this the last two
-          lines of the notice came to rest behind a wooden spoon. Padding is
-          the fix rather than a narrower column, because the character is on
-          the trailing side and the line is centred: shrinking the text to
-          clear it would leave the notice visibly off-centre in English and
-          off-centre the other way in Arabic. */}
-      <div style={css('margin-top:26px;text-align:center;padding-bottom:104px')}>
+          of jar it renders about 92px tall, and without room the last two
+          lines of the notice came to rest behind a wooden spoon. Most of that
+          room is now the 76px every screen gets while the mascot is showing
+          (.pg-main::after in styles.css); these 28px make up the 104 this
+          notice has always had. Room rather than a narrower column, because
+          the character is on the trailing side and the line is centred:
+          shrinking the text to clear it would leave the notice visibly
+          off-centre in English and off-centre the other way in Arabic. */}
+      <div style={css('margin-top:26px;text-align:center;padding-bottom:28px')}>
         <div dir={v.dir} style={css('font-size:12px;font-weight:700;color:#6a5c4c')}>
           {v.xt('ownCopy')}
         </div>

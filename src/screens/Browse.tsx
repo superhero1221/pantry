@@ -14,6 +14,7 @@ export function Browse({ v }: { v: Pantry }) {
     <Btn
       key={x.key}
       onClick={x.pick}
+      className="pg-lift"
       css="display:flex;gap:13px;align-items:center;padding:12px;border-radius:28px;background:#ffffff;text-align:start;width:100%"
       hover="background:#fdf0e3"
     >

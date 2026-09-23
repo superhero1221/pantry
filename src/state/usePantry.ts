@@ -2961,7 +2961,9 @@ export function usePantry() {
                 ? '#ff9d4f'
                 : '#cbb79f',
         price: off ? fmt(0) : measured != null ? fmt(measured) : fmt(i.s * mult),
-        priceFg: off ? '#96866f' : '#1b1714',
+        // Quieter than a price still to pay, but small text all the same:
+        // #6a5c4c holds 5.9:1 even on the row's hover tint.
+        priceFg: off ? '#6a5c4c' : '#1b1714',
       };
     }),
     /* "3 shops within walking distance of Birmingham" — true only when
@@ -3384,7 +3386,10 @@ export function usePantry() {
         meta: (countryLabel(lg, p.code, PC) || p.country) + ' · ' + px(xt(lg, 'cookedNTimes'), p.times),
         price: fmt(p.price),
         bg: i === 0 ? '#fff4ea' : '#ffffff',
-        rankFg: i === 0 ? '#e85d04' : '#96866f',
+        /* 17px is small text, so both clear 4.5:1: #c04a03 on the leader's
+           #fff4ea is 4.6, #6a5c4c on white 6.5. The brand orange and the
+           lighter grey these replaced were 3.2 and 3.5. */
+        rankFg: i === 0 ? '#c04a03' : '#6a5c4c',
         chipBg: i === 0 ? '#e85d04' : '#ffe9d2',
         chipFg: i === 0 ? '#fff' : '#6a5c4c',
       })),
@@ -3523,8 +3528,14 @@ export function usePantry() {
            screen prints, by construction. */
         per: fmtSpan(span.lo / x.servings, span.hi / x.servings),
         diffLabel: diffWord(x.diff),
-        diffBg: x.diff <= 1 ? '#e2f8c6' : x.diff <= 2 ? '#fffaf4' : x.diff <= 3 ? '#ffe4cd' : '#ffc79b',
-        diffFg: x.diff <= 2 ? '#2c5410' : '#a83f06',
+        /* A ramp you can read at a glance: deepest green at the easy end,
+           deepest orange at the hard one, and a filled pill at every step.
+           "Easy enough" was #fffaf4 on a white card, so it read as loose text
+           beside everyone else's pill, and #a83f06 on the hardest step's
+           #ffc79b was 4.1:1. Every pair here clears 4.5:1 (7.0, 7.8, 5.1,
+           6.1). */
+        diffBg: x.diff <= 1 ? '#cdf0a4' : x.diff <= 2 ? '#e2f8c6' : x.diff <= 3 ? '#ffe4cd' : '#ffc79b',
+        diffFg: x.diff <= 2 ? '#2c5410' : x.diff <= 3 ? '#a83f06' : '#7d2f04',
         pick: () => go('results', { pickId: x.id, query: x.name, showMicro: false }),
       };
     }),
@@ -3660,7 +3671,7 @@ export function usePantry() {
           strike: l.owned ? 'line-through' : 'none',
           boxBg: l.owned ? '#7cc24a' : '#fdf0e3',
           tick: l.owned ? '✓' : '',
-          priceFg: l.owned ? '#96866f' : '#1b1714',
+          priceFg: l.owned ? '#6a5c4c' : '#1b1714',
         }));
     })(),
     planTotal: (() => {

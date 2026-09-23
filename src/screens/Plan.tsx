@@ -1,6 +1,7 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { DishPic, Kicker } from '../ui/bits';
+import { CalendarDays } from '../ui/Icon';
 import type { Pantry } from '../state/usePantry';
 
 /* Each field is at least as wide as its three chips (3 × 56 + 2 × 6). Side by
@@ -65,11 +66,27 @@ export function Plan({ v }: { v: Pantry }) {
       </Btn>
 
       {v.planEmpty ? (
+        /* A space waiting to be filled rather than a white box saying so: the
+           dashed edge is the week before it is planned, and the button above
+           is what fills it. #7d2f04 on #fff4ea is 8.5:1.
+           A row, words first and the calendar at the trailing end, and kept
+           short. On a 640px-tall phone this panel ends where the corner
+           mascot begins, and that corner is the trailing one in every
+           language: a centred stack put the end of the sentence behind it in
+           English and the start of it in Arabic, while this way the only thing
+           that can meet the mascot is a drawing of a calendar. */
         <div
-          dir="auto"
-          style={css('margin-top:16px;padding:19px 20px;border-radius:28px;background:#ffffff;font-size:13.5px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}
+          style={css('margin-top:16px;padding:16px 18px;border-radius:28px;background:#fff4ea;border:2px dashed #ffc79b;display:flex;align-items:center;gap:14px')}
         >
-          {x('planEmpty')}
+          <p dir="auto" style={css('flex:1;min-width:0;margin:0;font-size:14px;line-height:1.5;color:#7d2f04;text-align:start;text-wrap:pretty')}>
+            {x('planEmpty')}
+          </p>
+          <span
+            aria-hidden="true"
+            style={css('flex:none;width:44px;height:44px;border-radius:50%;background:#ffe4cd;display:flex;align-items:center;justify-content:center')}
+          >
+            <CalendarDays size={22} stroke="#c04a03" />
+          </span>
         </div>
       ) : (
         <>

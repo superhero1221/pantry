@@ -55,8 +55,12 @@ export function Stats({ v }: { v: Pantry }) {
         <div style={css('font-size:11.5px;opacity:.45;margin-top:10px')}>{v.eightWeeksLabel}</div>
       </div>
 
-      <div style={css('display:flex;gap:9px;margin-top:12px')}>
-        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#e2f8c6')}>
+      {/* Three across while they fit, and a tile drops to its own row rather
+          than pushing the screen sideways when they do not: "AED7.87" in the
+          display face is wider than a third of a 360px phone, and the three
+          tiles came to 6px more than the screen in Arabic. */}
+      <div style={css('display:flex;flex-wrap:wrap;gap:9px;margin-top:12px')}>
+        <div style={css('flex:1 1 80px;padding:16px 15px;border-radius:24px;background:#e2f8c6')}>
           <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#3d7213")}>
             {v.statsAvgServing}
           </div>
@@ -64,13 +68,13 @@ export function Stats({ v }: { v: Pantry }) {
             {v.aServingAvgLabel}
           </div>
         </div>
-        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#fff4ea')}>
+        <div style={css('flex:1 1 80px;padding:16px 15px;border-radius:24px;background:#fff4ea')}>
           <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#a83f06")}>
             {v.statsSaved}
           </div>
           <div style={css('font-size:11.5px;color:#a83f06;margin-top:6px;opacity:.85')}>{v.notSpentLabel}</div>
         </div>
-        <div style={css('flex:1;padding:16px 15px;border-radius:24px;background:#ffe9d2')}>
+        <div style={css('flex:1 1 80px;padding:16px 15px;border-radius:24px;background:#ffe9d2')}>
           <div style={css("font-family:'Caprasimo',serif;font-size:23px;line-height:1;color:#3b3229")}>
             {v.statsWaste}
           </div>
@@ -81,7 +85,7 @@ export function Stats({ v }: { v: Pantry }) {
       <Kicker style={{ marginTop: 24 }}>{v.t.statsCooked}</Kicker>
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:11px')}>
         {v.topDishes.map((d) => (
-          <div key={d.key} style={css('display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:24px;background:#ffffff')}>
+          <div key={d.key} className="pg-lift" style={css('display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:24px;background:#ffffff')}>
             <DishPic src={d.pic} size={44} radius={15} style={{ background: '#ffe9d2' }} />
             <span style={css('flex:1;min-width:0')}>
               <span style={css('display:block;font-size:14.5px;font-weight:700;line-height:1.25')}>{d.name}</span>

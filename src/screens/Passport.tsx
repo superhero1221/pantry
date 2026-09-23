@@ -48,7 +48,7 @@ export function Passport({ v }: { v: Pantry }) {
 
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:16px')}>
         {v.passport.map((p) => (
-          <div key={p.key} style={css(`display:flex;gap:12px;align-items:center;padding:13px 15px;border-radius:24px;background:${p.bg}`)}>
+          <div key={p.key} className="pg-lift" style={css(`display:flex;gap:12px;align-items:center;padding:13px 15px;border-radius:24px;background:${p.bg}`)}>
             <span style={css(`flex:none;width:22px;text-align:center;font-family:'Caprasimo',serif;font-size:17px;color:${p.rankFg}`)}>
               {p.rank}
             </span>

@@ -91,7 +91,7 @@ export function Shop({ v }: { v: Pantry }) {
           {v.pricesBusy ? v.xt('pricesChecking') : v.listSummary}
         </div>
       </div>
-      <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#96866f;text-wrap:pretty')}>
+      <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}>
         {v.xt('tapToToggle')}
         {v.assumedOwned ? ' ' + v.xt('assumedHave') : ''}
         {v.canReport ? ' ' + v.xt('tapPrice') : ''}
@@ -183,7 +183,7 @@ export function Shop({ v }: { v: Pantry }) {
       <p dir="auto" style={css('margin:8px 2px 0;font-size:12px;line-height:1.5;color:#6a5c4c;text-wrap:pretty;font-weight:600')}>
         {v.basketNotTill}
       </p>
-      <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#96866f;text-wrap:pretty')}>
+      <p dir="auto" style={css('margin:6px 2px 0;font-size:12px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}>
         {v.xt('totalMeansBody')}
       </p>
 
@@ -211,7 +211,7 @@ export function Shop({ v }: { v: Pantry }) {
         </p>
         {/* The store list is OpenStreetMap and the medians are Open Prices.
             Both are ODbL, and ODbL wants the notice where the data is. */}
-        <p dir="auto" style={css('margin:6px 0 0;font-size:11px;line-height:1.45;color:#96866f;text-wrap:pretty')}>
+        <p dir="auto" style={css('margin:6px 0 0;font-size:11px;line-height:1.45;color:#6a5c4c;text-wrap:pretty')}>
           {v.xt('creditShort')}
         </p>
       </div>

@@ -11,17 +11,19 @@ import type { Pantry } from '../state/usePantry';
  * Everything on them is derived in usePantry from the screen you are on, so
  * this file decides nothing about which document it is showing.
  *
- * 130px of padding at the foot rather than 30. The character stands in the
+ * 130px of room at the foot rather than 30. The character stands in the
  * trailing corner above the tab bar, absolutely positioned against the shell,
  * so it does not scroll away — and the contact pill, which is the last thing
  * on both of these documents and the only control on them, came to rest
  * underneath it. It still took a tap, because .pg-mascot is
  * pointer-events:none, but a button you cannot see is not one you press.
+ * 76px of that is the room every screen gets while the mascot is showing
+ * (.pg-main::after in styles.css), so the padding here is the other 54.
  * Same reason and same amount as the notice at the foot of Settings.
  */
 export function Legal({ v }: { v: Pantry }) {
   return (
-    <div style={css('padding:6px 22px 130px')}>
+    <div style={css('padding:6px 22px 54px')}>
       <div style={css('margin-inline-start:-6px')}>
         <BackBtn label={v.t.back} onClick={v.back} />
       </div>
@@ -34,7 +36,7 @@ export function Legal({ v }: { v: Pantry }) {
       </h1>
       <div
         dir={v.dir}
-        style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#96866f;margin-top:9px')}
+        style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#6a5c4c;margin-top:9px')}
       >
         {v.legalUpdated}
       </div>

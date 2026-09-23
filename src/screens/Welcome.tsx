@@ -88,8 +88,14 @@ export function Welcome({ v }: { v: Pantry }) {
           if (Math.abs(t.clientY - s.y) > Math.abs(t.clientX - s.x)) s.live = false;
         }}
         onTouchEnd={(e) => onEnd(e.changedTouches[0]?.clientX ?? 0)}
+        /* A stage with rounded corners of its own, so the two blobs are cut
+           off by something you can see. They used to be cut off by the
+           screen's edge, which on a phone is the glass and on a desktop is
+           the side of an invisible 560px column — a green circle sliced flat
+           down the middle of the window, which read as a rendering fault on
+           the first thing a visitor sees. */
         style={css(
-          'flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 0;touch-action:pan-y',
+          'flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px 16px;margin-top:12px;border-radius:36px;overflow:hidden;background:linear-gradient(165deg,#fff4ea 0%,#fffaf3 58%,#f1fde0 100%);box-shadow:inset 0 0 0 1px rgba(239,220,200,.7);touch-action:pan-y',
         )}
       >
         <div style={css(BLOB + ';top:2%;inset-inline-end:-58px;width:190px;height:190px;background:#e2f8c6;opacity:.7')} />

@@ -43,7 +43,7 @@ export function Kitchen({ v }: { v: Pantry }) {
       </Kicker>
       <div style={css('display:flex;flex-direction:column;gap:8px;margin-top:10px')}>
         {v.perishables.map((p) => (
-          <div key={p.key} style={css('display:flex;gap:12px;align-items:center;padding:13px 16px;border-radius:22px;background:#ffffff')}>
+          <div key={p.key} className="pg-lift" style={css('display:flex;gap:12px;align-items:center;padding:13px 16px;border-radius:22px;background:#ffffff')}>
             <span
               style={css(`flex:none;width:40px;height:40px;border-radius:14px;background:${p.chipBg};color:${p.chipFg};display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1`)}
             >

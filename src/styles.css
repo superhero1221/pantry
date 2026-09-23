@@ -70,6 +70,35 @@ button {
   border: 0;
   background: none;
   color: inherit;
+  transition: scale 0.12s ease-out;
+}
+/* Something has to answer a tap. Hover tints never show on a phone, so until
+   now a press changed nothing until the next screen arrived, and for somebody
+   who is not sure the tap landed that gap is where the second tap comes from.
+   Everywhere, a press darkens a shade. Links get it too. */
+button:not(:disabled):active,
+a[href]:active {
+  filter: brightness(0.94);
+}
+/* Only where nothing but a finger points does it also shrink. A press that
+   shrinks the button pulls its edge in from under a mouse, the button goes up
+   on the page behind it rather than on the button, and the click never
+   happens — Done on Cook stopped answering within a few pixels of either end.
+   A finger is not a point: the browser matches a tap to the control under
+   the whole contact patch, which is wider than the 1.5% the edge moves in, so
+   a touchscreen keeps the fuller feedback. `not all and (any-pointer: fine)`
+   rather than (pointer: coarse), because a tablet with a mouse or trackpad
+   plugged in still reports its touchscreen as the primary pointer.
+   The individual `scale` property rather than `transform`, so it composes with
+   any transform a button already has instead of replacing it. Buttons whose
+   own css carries a `transition:` shorthand drop this easing and simply snap,
+   which still reads as a press. An inline link in a sentence is not
+   transformable, so only the ones laid out as blocks and cards move. */
+@media not all and (any-pointer: fine) {
+  button:not(:disabled):active,
+  a[href]:active {
+    scale: 0.97;
+  }
 }
 input,
 select {
@@ -340,6 +369,20 @@ select {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Shortening is not enough for the things that change size or position.
+     The screen arrives where it is, the card stays put under a mouse, and a
+     press only darkens its shade, so the tap still answers without anything
+     moving. */
+  .pg-main > * {
+    animation: none !important;
+  }
+  button:not(:disabled):active,
+  a[href]:active {
+    scale: none !important;
+  }
+  .pg-lift {
+    translate: none !important;
+  }
 }
 
 /* ── Shell ──────────────────────────────────────────────────────────────
@@ -397,6 +440,32 @@ select {
   contain-intrinsic-size: auto 80px;
 }
 
+/* A white card on the cream shell is 1.02:1 — close enough to nothing that a
+   list of them read as one washed-out sheet with text on it. A soft, warm
+   shadow is what lifts each one off the page. A card you can press also rises
+   a little further under a mouse; a card that is only a line of information
+   does not, because moving under the pointer is a promise that clicking does
+   something. `translate`, not `transform`, for the same reason the press uses
+   `scale`: the two stack instead of fighting. */
+.pg-lift {
+  box-shadow:
+    0 1px 2px rgba(46, 43, 37, 0.06),
+    0 8px 22px -6px rgba(46, 43, 37, 0.12);
+  transition:
+    translate 0.16s ease-out,
+    box-shadow 0.16s ease-out,
+    scale 0.12s ease-out;
+}
+@media (hover: hover) {
+  button.pg-lift:hover,
+  a.pg-lift:hover {
+    translate: 0 -2px;
+    box-shadow:
+      0 2px 4px rgba(46, 43, 37, 0.07),
+      0 14px 30px -8px rgba(46, 43, 37, 0.18);
+  }
+}
+
 .pg-shell {
   /* Nothing at all on a desktop; the status bar and the notch on a phone that
      has been installed to its home screen, where viewport-fit=cover means the
@@ -452,20 +521,25 @@ select {
       0 40px 90px rgba(46, 43, 37, 0.24),
       0 4px 12px rgba(46, 43, 37, 0.12);
   }
-  /* Dish cards have a picture, a name, two lines of meta and a price. Below
-     about 260px those start fighting each other, so the track count comes from
-     the space available rather than from a guess about the device: two on a
-     tablet, three in a desktop pane, and the same rule covers every window
-     width in between without another breakpoint. */
+  /* Dish cards run sideways: a picture, a name with two lines of meta under
+     it, and a price. Much below 320px the name is left a column a word wide
+     ("Cheese / and / Herb / Omelette") and the difficulty pill breaks in two,
+     so the track count comes from the space available rather than from a
+     guess about the device: one on a tablet, two in a desktop pane, and the
+     same rule covers every window width in between without another
+     breakpoint. It was 260px, which bought a third column in the 1280 pane
+     and lost the names to it. 320 rather than anything wider because at
+     1024 the pane is 668px, and two cards of 330 beat one of 668 with a
+     hand's width of nothing between the name and the price. */
   .pg-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     align-items: stretch;
   }
-  /* In a grid track the name wraps, and a row is as tall as its tallest
-     card: 114-133px of content in the middle of the range. */
+  /* In a grid track the name wraps to two or three lines, and a row is as
+     tall as its tallest card: 80-110px of content across the range. */
   .pg-cards > * {
-    contain-intrinsic-size: auto 130px;
+    contain-intrinsic-size: auto 92px;
   }
 }
 
@@ -539,6 +613,28 @@ select {
   flex: 1;
   min-height: 0;
   position: relative;
+}
+/* A screen arriving rises a few pixels into place, once. Each screen is its
+   own conditional child of <main>, so this plays when you get somewhere and
+   never on a re-render: a Cook step, "Show me another" and a Welcome card all
+   change what is inside the screen, not the screen. A quarter of a second is
+   a cue that you have landed, not movement to follow.
+   While it runs the screen has a transform, which would make it the
+   containing block for anything position:fixed inside it. Nothing is today;
+   anything that ever is should live outside <main>, as the toast does. */
+.pg-main > * {
+  animation: pgUp 0.24s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+/* Room to scroll the end of a list out from under the corner mascot. It
+   stands over the last price on Browse and the last line on Passport, and
+   pointer-events:none lets taps through but not eyes. Only while it is
+   there: switched off in Settings, or on the screens that never show it,
+   there is nothing to clear. The desktop measure rule matches `> *`, which a
+   pseudo-element is not. */
+.pg-shell:has(.pg-mascot) .pg-main::after {
+  content: '';
+  display: block;
+  height: 76px;
 }
 .pg-nav {
   flex: none;
