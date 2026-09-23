@@ -38,6 +38,7 @@ import { DERIVED, breaksDietBecause, meetsDiet } from '../lib/diets';
 import { fromLocal, toLocal } from '../lib/money';
 import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
+import { orderBrowse } from './browse';
 import { xt } from '../data/extra-copy';
 import { pickForm } from '../lib/plural';
 import { EN_COUNTRY, countryLabel } from '../lib/region';
@@ -1977,23 +1978,11 @@ export function usePantry() {
     .sort((a, b) => b.n - a.n)
     .slice(0, 6);
 
-  const browseSet = (() => {
-    const list = RECIPES;
-    switch (S.browseCat) {
-      case 'quick':
-        return list.filter((x) => x.total <= 30);
-      case 'cheap':
-        return list.slice().sort((a, b) => toBuy(a, 0.82) / a.servings - toBuy(b, 0.82) / b.servings);
-      case 'protein':
-        return list.slice().sort((a, b) => b.per.protein - a.per.protein);
-      case 'veg':
-        return list.filter((x) => x.tags.indexOf('vegetarian') >= 0 || x.tags.indexOf('vegan') >= 0);
-      case 'easy':
-        return list.slice().sort((a, b) => a.diff - b.diff);
-      default:
-        return list;
-    }
-  })();
+  /* Ordered only while Browse is on screen. This ran on every render of every
+     screen — a Cook timer tick included — and Tonight, the one other reader,
+     only ever wanted its length. */
+  const onBrowse = screen === 'browse';
+  const browseSet = orderBrowse(RECIPES, S.browseCat, (x) => toBuy(x, 0.82), onBrowse);
 
   /* Four, not five. Stats came out because it is a readout you land on rather
      than a place you launch from — it lives in You now, under its own title,
@@ -3470,23 +3459,29 @@ export function usePantry() {
       pick: () => setState({ browseCat: b.k }),
     })),
     browseCount: px(xt(lg, 'dishesCount'), browseSet.length),
-    browseList: browseSet.map((x) => ({
-      key: x.id,
-      name: dish(x),
-      cuisine: cuisineWord(x.cuisine) + ' · ' + px(xt(lg, 'minutesShort'), x.total),
-      pic: x.pic,
-      /* Was fmt(toBuy(x, 0.82) / servings) — a hardcoded discount tier, so a
-         browse card quoted the Aldi price and tapping it showed the price at
-         the shop you had actually chosen. The number moved on the way in and
-         nothing on either screen said why. A span drawn from the same `stores`
-         array cannot do that: the card's range contains the figure the next
-         screen prints, by construction. */
-      per: fmtSpan(spanOf(x).lo / x.servings, spanOf(x).hi / x.servings),
-      diffLabel: diffWord(x.diff),
-      diffBg: x.diff <= 1 ? '#e2f8c6' : x.diff <= 2 ? '#fffaf4' : x.diff <= 3 ? '#ffe4cd' : '#ffc79b',
-      diffFg: x.diff <= 2 ? '#2c5410' : '#a83f06',
-      pick: () => go('results', { pickId: x.id, query: x.name, showMicro: false }),
-    })),
+    browseCatNow: S.browseCat,
+    /* Empty off Browse: two price walks per shop for all 153 dishes is the
+       dearest thing in this hook, and no other screen draws a card. */
+    browseList: (onBrowse ? browseSet : []).map((x) => {
+      const span = spanOf(x);
+      return {
+        key: x.id,
+        name: dish(x),
+        cuisine: cuisineWord(x.cuisine) + ' · ' + px(xt(lg, 'minutesShort'), x.total),
+        pic: x.pic,
+        /* Was fmt(toBuy(x, 0.82) / servings) — a hardcoded discount tier, so a
+           browse card quoted the Aldi price and tapping it showed the price at
+           the shop you had actually chosen. The number moved on the way in and
+           nothing on either screen said why. A span drawn from the same `stores`
+           array cannot do that: the card's range contains the figure the next
+           screen prints, by construction. */
+        per: fmtSpan(span.lo / x.servings, span.hi / x.servings),
+        diffLabel: diffWord(x.diff),
+        diffBg: x.diff <= 1 ? '#e2f8c6' : x.diff <= 2 ? '#fffaf4' : x.diff <= 3 ? '#ffe4cd' : '#ffc79b',
+        diffFg: x.diff <= 2 ? '#2c5410' : '#a83f06',
+        pick: () => go('results', { pickId: x.id, query: x.name, showMicro: false }),
+      };
+    }),
 
     /* ── The week ───────────────────────────────────────────────────────── */
     isPlan: screen === 'plan',

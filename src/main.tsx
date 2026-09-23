@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { warmFirst } from './lazy-screens';
 import { Boundary } from './ui/Boundary';
 import { installCrashNet, langOf, reportStale } from './lib/crash';
 import { loadPack, needsPack, packFailure } from './data/lang-pack';
@@ -55,11 +56,27 @@ if (import.meta.env.PROD && !standalone && 'serviceWorker' in navigator) {
  */
 const lang = langOf();
 
+/* The screen in the address bar, fetched alongside the language rather than
+ * after it. A shared #/browse link, or the app reopened on one, used to mount
+ * an empty shell: its chunk was only asked for once the first render had
+ * already suspended on it, and React then held that blank for 300ms on top.
+ * Waiting here instead keeps index.html's fallback up a little longer — the
+ * same pre-mount frame every visitor already sees — and the first React frame
+ * has the screen in it. Started before the language wait so the two overlap.
+ *
+ * Bounded for the same reason the language is. warmFirst swallows a failure,
+ * so a stale chunk still reaches its lazy import during render, and the crash
+ * net and the Boundary deal with it exactly as before. Welcome and Tonight are
+ * in this chunk already, so no-hash and #/home resolve at once. */
+const first = warmFirst(location.hash);
+
 if (needsPack(lang)) {
   const deadline = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 2500));
   const ok = await Promise.race([loadPack(lang), deadline]);
   if (!ok && packFailure()) reportStale(packFailure());
 }
+
+await Promise.race([first, new Promise((resolve) => setTimeout(resolve, 1500))]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

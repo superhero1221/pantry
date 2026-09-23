@@ -1,9 +1,50 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
 import { DishPic } from '../ui/bits';
+import { Later } from '../ui/Later';
 import type { Pantry } from '../state/usePantry';
 
+/* Two phone screens of cards drawn on arrival; the rest are drawn a frame
+   later, so opening the whole menu is not one long freeze. */
+const FIRST = 16;
+
 export function Browse({ v }: { v: Pantry }) {
+  /* One dish, the same card whether it is in the first rows or the rest. */
+  const card = (x: Pantry['browseList'][number]) => (
+    <Btn
+      key={x.key}
+      onClick={x.pick}
+      css="display:flex;gap:13px;align-items:center;padding:12px;border-radius:28px;background:#ffffff;text-align:start;width:100%"
+      hover="background:#fdf0e3"
+    >
+      <DishPic src={x.pic} size={74} radius={22} />
+      <span style={css('flex:1;min-width:0')}>
+        <span style={css('display:block;font-size:15.5px;font-weight:700;line-height:1.25')}>{x.name}</span>
+        <span style={css('display:block;font-size:12.5px;color:#6a5c4c;margin-top:3px')}>{x.cuisine}</span>
+        <span
+          style={css(
+            `display:inline-block;margin-top:8px;padding:4px 11px;border-radius:999px;background:${x.diffBg};color:${x.diffFg};font-size:11px;font-weight:700`,
+          )}
+        >
+          {x.diffLabel}
+        </span>
+      </span>
+      <span style={css('flex:none;text-align:end')}>
+        {/* 14px, not 20. A span is twice the characters of a price, and
+            this column sits beside the dish name on a 360px phone —
+            at 20px "Cheese and Herb Omelette" wrapped to four lines and
+            the card became a price with a title squeezed against it.
+            The name is what somebody is scanning for here. */}
+        <span style={css("display:block;font-family:'Caprasimo',serif;font-size:14px;line-height:1.15;color:#a83f06")}>
+          {x.per}
+        </span>
+        <span style={css('display:block;font-size:10.5px;color:#6a5c4c;margin-top:2px')}>
+          {v.t.resServing}
+        </span>
+      </span>
+    </Btn>
+  );
+
   return (
     <div className="pg-wide" style={css('padding:14px 22px 26px')}>
       <h1
@@ -27,40 +68,10 @@ export function Browse({ v }: { v: Pantry }) {
       {/* Layout lives in .pg-cards, not here: an inline display wins over a
           stylesheet, so a media query could never turn this into a grid. */}
       <div className="pg-cards" style={css('margin-top:16px')}>
-        {v.browseList.map((x) => (
-          <Btn
-            key={x.key}
-            onClick={x.pick}
-            css="display:flex;gap:13px;align-items:center;padding:12px;border-radius:28px;background:#ffffff;text-align:start;width:100%"
-            hover="background:#fdf0e3"
-          >
-            <DishPic src={x.pic} size={74} radius={22} />
-            <span style={css('flex:1;min-width:0')}>
-              <span style={css('display:block;font-size:15.5px;font-weight:700;line-height:1.25')}>{x.name}</span>
-              <span style={css('display:block;font-size:12.5px;color:#6a5c4c;margin-top:3px')}>{x.cuisine}</span>
-              <span
-                style={css(
-                  `display:inline-block;margin-top:8px;padding:4px 11px;border-radius:999px;background:${x.diffBg};color:${x.diffFg};font-size:11px;font-weight:700`,
-                )}
-              >
-                {x.diffLabel}
-              </span>
-            </span>
-            <span style={css('flex:none;text-align:end')}>
-              {/* 14px, not 20. A span is twice the characters of a price, and
-                  this column sits beside the dish name on a 360px phone —
-                  at 20px "Cheese and Herb Omelette" wrapped to four lines and
-                  the card became a price with a title squeezed against it.
-                  The name is what somebody is scanning for here. */}
-              <span style={css("display:block;font-family:'Caprasimo',serif;font-size:14px;line-height:1.15;color:#a83f06")}>
-                {x.per}
-              </span>
-              <span style={css('display:block;font-size:10.5px;color:#6a5c4c;margin-top:2px')}>
-                {v.t.resServing}
-              </span>
-            </span>
-          </Btn>
-        ))}
+        {v.browseList.slice(0, FIRST).map(card)}
+        {/* Keyed on the chip, so a tap on one paints the new top rows first
+            and the tail a frame later, rather than all 153 in one block. */}
+        <Later key={v.browseCatNow}>{v.browseList.slice(FIRST).map(card)}</Later>
       </div>
     </div>
   );

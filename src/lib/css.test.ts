@@ -47,6 +47,20 @@ describe('css', () => {
     expect(css('')).toEqual({});
   });
 
+  it('hands back the same frozen object for the same string', () => {
+    const a = css('display:flex;gap:11px');
+    // A copy of the string, not the literal, so the hit is on content.
+    const b = css(['display:flex', 'gap:11px'].join(';'));
+    expect(b).toBe(a);
+    expect(b).toEqual({ display: 'flex', gap: '11px' });
+    expect(Object.isFrozen(a)).toBe(true);
+    // Different strings still parse to their own styles.
+    expect(css('display:grid;gap:11px')).toEqual({ display: 'grid', gap: '11px' });
+    // Nothing is still a fresh, writable object each time.
+    expect(css('')).not.toBe(css(''));
+    expect(Object.isFrozen(css(''))).toBe(false);
+  });
+
   it('joins only the truthy parts', () => {
     expect(join('a:1', false, null, 'b:2')).toBe('a:1;b:2');
   });

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { css } from './lib/css';
 import { usePantry } from './state/usePantry';
 import { Boundary } from './ui/Boundary';
@@ -9,33 +9,47 @@ import { Welcome } from './screens/Welcome';
 
 /* Two screens ship in the first chunk, because between them they are every
    possible first paint: Welcome if you have never been here, Tonight if you
-   have. The other fifteen arrive when you walk to them.
+   have. The other fifteen follow once that first screen is up.
 
    This is the whole reason screens were built to hold no state — a screen is a
    pure function of the one object the hook returns, so it can be code-split
    without a single other line changing. The service worker keeps each one after
    its first visit, so the cost is paid once and never offline.
 
-   The dynamic imports are written out longhand rather than generated from a
-   map, because a bundler can only split what it can see statically. */
-const After = lazy(() => import('./screens/After').then((m) => ({ default: m.After })));
-const Browse = lazy(() => import('./screens/Browse').then((m) => ({ default: m.Browse })));
-const Cook = lazy(() => import('./screens/Cook').then((m) => ({ default: m.Cook })));
-const Diet = lazy(() => import('./screens/Diet').then((m) => ({ default: m.Diet })));
-const Goal = lazy(() => import('./screens/Goal').then((m) => ({ default: m.Goal })));
-const Kitchen = lazy(() => import('./screens/Kitchen').then((m) => ({ default: m.Kitchen })));
-const Legal = lazy(() => import('./screens/Legal').then((m) => ({ default: m.Legal })));
-const Level = lazy(() => import('./screens/Level').then((m) => ({ default: m.Level })));
-const Locate = lazy(() => import('./screens/Locate').then((m) => ({ default: m.Locate })));
-const Passport = lazy(() => import('./screens/Passport').then((m) => ({ default: m.Passport })));
-const Plan = lazy(() => import('./screens/Plan').then((m) => ({ default: m.Plan })));
-const Results = lazy(() => import('./screens/Results').then((m) => ({ default: m.Results })));
-const Settings = lazy(() => import('./screens/Settings').then((m) => ({ default: m.Settings })));
-const Shop = lazy(() => import('./screens/Shop').then((m) => ({ default: m.Shop })));
-const Stats = lazy(() => import('./screens/Stats').then((m) => ({ default: m.Stats })));
+   The fifteen live in lazy-screens.tsx, and are fetched in the idle time
+   after the first paint, so the walk to one finds it already here. */
+import {
+  After, Browse, Cook, Diet, Goal, Kitchen, Legal, Level, Locate, Passport,
+  Plan, Results, Settings, Shop, Stats, WARM_SETUP, WARM_TABS,
+} from './lazy-screens';
 
 export default function App() {
   const v = usePantry();
+
+  /* Every split screen, fetched while nothing else is happening. A few
+     kilobytes each, about 25kB for the lot, and the worker keeps them — but
+     not on a connection that has asked to save data, where a screen is
+     fetched when it is walked to, as before. All asked for in the first idle
+     moment rather than one per idle moment, in the order people walk, so an
+     early tap is not queued behind fourteen idle waits. Never reportStale(): a
+     background fetch failing must not reload the page under someone
+     mid-recipe. The real visit meets any failure the way it always did. */
+  useEffect(() => {
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (conn && conn.saveData) return;
+    // Booting into the setup means the setup is what comes next.
+    const list = v.isWelcome || v.isGoal || v.isTier || v.isDiet || v.isLocate ? WARM_SETUP : WARM_TABS;
+    const warm = () => {
+      for (const s of list) s.preload().catch(() => {});
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(warm, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = globalThis.setTimeout(warm, 300);
+    return () => globalThis.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per boot
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = v.lang;
@@ -76,11 +90,11 @@ export default function App() {
               adds no element between .pg-main and the screen, so the desktop
               measure rule still lands. */}
           <Boundary lang={v.lang} dir={v.dir} resetKey={v.screen + '/' + v.pickId}>
-            {/* Nothing rather than a spinner. A screen arrives in a few
-                milliseconds from the same origin and instantly once the worker
-                has it; a flash of loading furniture would be more disruptive
-                than the wait it describes, on an app built for people who lose
-                their thread. */}
+            {/* Nothing rather than a spinner. Reached now only on the second
+                try after a screen's chunk failed to arrive (lazy-screens.tsx);
+                a flash of loading furniture would be more disruptive than the
+                wait it describes, on an app built for people who lose their
+                thread. */}
             <Suspense fallback={null}>
             {v.isWelcome && <Welcome v={v} />}
           {v.isGoal && <Goal v={v} />}

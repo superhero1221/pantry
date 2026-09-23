@@ -376,6 +376,15 @@ select {
   flex-direction: column;
   gap: 9px;
 }
+/* Cards off screen skip layout and paint until they are scrolled near. The
+   `auto` keeps a card's real height once it has been seen, so the scrollbar
+   stops guessing. It sizes the content box, inside the 12px padding: a phone
+   card's is 74-86px (a long name makes it taller), and sizing it as the whole
+   card, 98px, overshot the list by about 2800px. */
+.pg-cards > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
+}
 
 .pg-shell {
   /* Nothing at all on a desktop; the status bar and the notch on a phone that
@@ -441,6 +450,11 @@ select {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     align-items: stretch;
+  }
+  /* In a grid track the name wraps, and a row is as tall as its tallest
+     card: 114-133px of content in the middle of the range. */
+  .pg-cards > * {
+    contain-intrinsic-size: auto 130px;
   }
 }
 
