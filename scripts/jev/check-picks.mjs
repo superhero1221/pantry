@@ -87,7 +87,7 @@ function seedOf(s) {
 
 const dietLabel = (id) => dietWords[id] || DIETS.find((d) => d.id === id)?.label || id;
 
-function person(s) {
+export function person(s) {
   return {
     lives_in: `${COUNTRIES[s.country].city}, ${COUNTRIES[s.country].name}`,
     currency: COUNTRIES[s.country].cur,
@@ -111,6 +111,25 @@ function dish(r, offer) {
     protein_g_per_serving: r.per.protein,
     ingredients: r.items.map((i) => `${i.g} ${i.n}${i.opt ? ' (optional)' : ''}`),
   };
+}
+
+/** The hard-constraints line every pick question is read against. */
+export const HARD_CONSTRAINTS = 'Diets are absolute. The time available is a hard limit. The budget covers the whole shop for the recipe, all servings, not per serving.';
+
+/** Does the #1 pick keep every hard constraint? Exported so bench.mjs asks it word for word. */
+export const pickOkQuestion = () =>
+  noul(
+    "Does the app's pick (apps_pick) satisfy every one of this person's hard constraints — it fits every diet listed, can be made within the time available, and its price to buy is within the budget?",
+    { true: 'It fits every diet, the time and the budget.', false: 'It breaks at least one: a diet, the time limit or the budget.' },
+  );
+
+/** Which of these recipes fits best, with the options in `order` (indexes into `recipes`), plus "none". */
+export function bestQuestion(recipes, order) {
+  const criteria = Object.fromEntries([
+    ...order.map((i) => [recipes[i].id, { what: `${recipes[i].name} (${recipes[i].cuisine}, ${recipes[i].total} min, difficulty ${recipes[i].diff}/4)`, not_for: 'Anyone whose diet, time or budget it breaks.' }]),
+    ['none', { what: 'None of these dishes is a reasonable dinner for this person tonight.', not_for: 'Use only if every dish above breaks a hard constraint or is clearly unsuitable.' }],
+  ]);
+  return choice('Which one of these dishes best fits this person for dinner tonight, given their diets, time, budget, cooking level and goal?', criteria);
 }
 
 /** h1 text -> recipe. English pack names first (they can differ from r.name). */
@@ -148,12 +167,6 @@ export async function prepare({ limit, rebuild = true, say = console.log }) {
         failures.push({ id: s.id, error: `dish name(s) not in the cookbook: ${unknown.map((o) => o.title).join(', ')}` });
         continue;
       }
-      const labels = top.map((o) => o.recipe.id);
-      const crit = (order) =>
-        Object.fromEntries([
-          ...order.map((i) => [labels[i], { what: `${top[i].recipe.name} (${top[i].recipe.cuisine}, ${top[i].recipe.total} min, difficulty ${top[i].recipe.diff}/4)`, not_for: 'Anyone whose diet, time or budget it breaks.' }]),
-          ['none', { what: 'None of these dishes is a reasonable dinner for this person tonight.', not_for: 'Use only if every dish above breaks a hard constraint or is clearly unsuitable.' }],
-        ]);
       const fwd = [0, 1, 2, 3, 4];
       const rev = [4, 3, 2, 1, 0];
       const pick = top[0].recipe;
@@ -161,17 +174,14 @@ export async function prepare({ limit, rebuild = true, say = console.log }) {
         id: s.id,
         state: {
           person: person(s),
-          hard_constraints: 'Diets are absolute. The time available is a hard limit. The budget covers the whole shop for the recipe, all servings, not per serving.',
+          hard_constraints: HARD_CONSTRAINTS,
           apps_pick: dish(pick, top[0]),
           candidates: Object.fromEntries(top.map((o) => [o.recipe.id, dish(o.recipe, o)])),
         },
         questions: {
-          pick_ok: noul(
-            "Does the app's pick (apps_pick) satisfy every one of this person's hard constraints — it fits every diet listed, can be made within the time available, and its price to buy is within the budget?",
-            { true: 'It fits every diet, the time and the budget.', false: 'It breaks at least one: a diet, the time limit or the budget.' },
-          ),
-          best_a: choice('Which one of these dishes best fits this person for dinner tonight, given their diets, time, budget, cooking level and goal?', crit(fwd)),
-          best_b: choice('Which one of these dishes best fits this person for dinner tonight, given their diets, time, budget, cooking level and goal?', crit(rev)),
+          pick_ok: pickOkQuestion(),
+          best_a: bestQuestion(top.map((o) => o.recipe), fwd),
+          best_b: bestQuestion(top.map((o) => o.recipe), rev),
         },
         meta: { scenario: s, top: top.map((o) => ({ id: o.recipe.id, title: o.title, card: o.card, alert: o.alert })) },
       });

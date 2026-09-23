@@ -85,6 +85,10 @@ export function stateOf(r) {
   };
 }
 
+/** One noul per diet the app offers, worded as DEFS. Exported so bench.mjs asks the same words. */
+export const dietQuestions = () =>
+  Object.fromEntries(DIETS.map((d) => [d.id, noul(DEFS[d.id].q, { true: DEFS[d.id].t, false: DEFS[d.id].f })]));
+
 export async function prepare({ limit }) {
   const missing = DIETS.map((d) => d.id).filter((d) => !DEFS[d]);
   if (missing.length) throw new Error(`diets offered by the app with no definition here: ${missing.join(', ')} — add them to DEFS`);
@@ -92,9 +96,7 @@ export async function prepare({ limit }) {
   const calls = recipes.map((r) => ({
     id: r.id,
     state: stateOf(r),
-    questions: Object.fromEntries(
-      DIETS.map((d) => [d.id, noul(DEFS[d.id].q, { true: DEFS[d.id].t, false: DEFS[d.id].f })]),
-    ),
+    questions: dietQuestions(),
     meta: { app: Object.fromEntries(DIETS.map((d) => [d.id, meetsDiet(r, d.id)])) },
   }));
   return { calls, notes: [`${recipes.length} of ${RECIPES.length} recipes x ${DIETS.length} diets`] };
