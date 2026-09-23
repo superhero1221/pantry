@@ -27,18 +27,18 @@ export function Legal({ v }: { v: Pantry }) {
       </div>
 
       <h1
-        dir="auto"
+        dir={v.dir}
         style={css("font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.04;margin:8px 0 0;letter-spacing:-.4px")}
       >
         {v.legalTitle}
       </h1>
       <div
-        dir="auto"
+        dir={v.dir}
         style={css('font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#96866f;margin-top:9px')}
       >
         {v.legalUpdated}
       </div>
-      <p dir="auto" style={css('font-size:14.5px;line-height:1.55;margin:11px 0 0;color:#6a5c4c;text-wrap:pretty')}>
+      <p dir={v.dir} style={css('font-size:14.5px;line-height:1.55;margin:11px 0 0;color:#6a5c4c;text-wrap:pretty')}>
         {v.legalIntro}
       </p>
 
@@ -48,7 +48,7 @@ export function Legal({ v }: { v: Pantry }) {
           {s.body.map((para, i) => (
             <p
               key={i}
-              dir="auto"
+              dir={v.dir}
               style={css('font-size:14px;line-height:1.6;margin:9px 0 0;color:#3b3229;text-wrap:pretty;overflow-wrap:anywhere')}
             >
               {para}

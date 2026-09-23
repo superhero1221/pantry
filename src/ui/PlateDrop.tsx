@@ -17,6 +17,11 @@ export function PlateDrop({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
+  /* The input is the one tab stop, and it is a 1px speck at opacity 0, so the
+     global :focus-visible ring drawn on it is invisible. The ring goes on the
+     whole plate instead, and only for keyboard focus — the same rule the
+     stylesheet applies everywhere else. */
+  const [ring, setRing] = useState(false);
   const owned = useRef<string | null>(null);
 
   useEffect(
@@ -46,7 +51,7 @@ export function PlateDrop({
         take(e.dataTransfer.files?.[0]);
       }}
       style={css(
-        'width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;background:' +
+        'width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;border-radius:inherit;background:' +
           (over ? '#ffe4cd' : '#fdf0e3'),
       )}
       onClick={() => input.current?.click()}
@@ -79,11 +84,25 @@ export function PlateDrop({
           </span>
         </div>
       )}
+      {/* Its own layer, drawn inset because the frame around the plate clips
+          anything outside it. An outline on the plate itself sat under the
+          photo: the img's filter makes it a stacking context painted on top. */}
+      {ring && (
+        <span
+          aria-hidden="true"
+          style={css('position:absolute;inset:0;z-index:1;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 0 3px #a83f06')}
+        />
+      )}
       <input
         ref={input}
         type="file"
         accept="image/*"
+        // Named by the words on the plate. Once a photo is on it they are gone
+        // from the screen, and the control still does the same thing.
+        aria-label={placeholder}
         onChange={(e) => take(e.target.files?.[0])}
+        onFocus={(e) => setRing(e.currentTarget.matches(':focus-visible'))}
+        onBlur={() => setRing(false)}
         style={css('position:absolute;width:1px;height:1px;opacity:0;pointer-events:none')}
       />
     </div>

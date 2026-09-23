@@ -92,12 +92,12 @@ export function Results({ v }: { v: Pantry }) {
             is shop spread and not confidence, and a reader will assume the
             opposite unless the shops are named. */}
         {v.priceRangeWhy && (
-          <div dir="auto" style={css('font-size:12px;color:#6a5c4c;margin-top:9px')}>
+          <div dir={v.dir} style={css('font-size:12px;color:#6a5c4c;margin-top:9px')}>
             {v.priceRangeWhy}
           </div>
         )}
         <div
-          dir="auto"
+          dir={v.dir}
           style={css(`margin-top:14px;padding:11px 14px;border-radius:18px;background:${v.verdictBg};color:${v.verdictFg};font-size:13.5px;font-weight:700;line-height:1.4`)}
         >
           {v.verdict}
@@ -198,14 +198,22 @@ export function Results({ v }: { v: Pantry }) {
         <div style={css('font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.6')}>
           {v.insteadLabel}
         </div>
-        <div style={css('display:flex;align-items:baseline;gap:12px;margin-top:9px')}>
-          <span style={css("font-family:'Caprasimo',serif;font-size:27px;text-decoration:line-through;opacity:.5")}>
+        {/* Wraps, and the arrow travels with the price it points at. At 360px
+            "AED63.40 › AED11.49" is wider than the card, and on one line the
+            new price ran off the edge of the screen with the arrow before it.
+            On two it reads as crossed out, then the arrow, then yours. */}
+        <div style={css('display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;margin-top:9px')}>
+          <span style={css("font-family:'Caprasimo',serif;font-size:27px;text-decoration:line-through;opacity:.5;min-width:0;overflow-wrap:anywhere")}>
             {v.takeawayPrice}
           </span>
-          <ChevronRight size={19} stroke="#ff9d4f" />
-          <span style={css("font-family:'Caprasimo',serif;font-size:34px;color:#ff9d4f")}>{v.pricePer}</span>
+          <span style={css('display:flex;align-items:baseline;gap:12px;min-width:0')}>
+            <ChevronRight size={19} stroke="#ff9d4f" />
+            <span style={css("font-family:'Caprasimo',serif;font-size:34px;color:#ff9d4f;min-width:0;overflow-wrap:anywhere")}>
+              {v.pricePer}
+            </span>
+          </span>
         </div>
-        <p dir="auto" style={css('margin:9px 0 0;font-size:13.5px;line-height:1.5;opacity:.82;text-wrap:pretty')}>
+        <p dir={v.dir} style={css('margin:9px 0 0;font-size:13.5px;line-height:1.5;opacity:.82;text-wrap:pretty')}>
           {v.savingLine}
         </p>
       </div>
@@ -241,16 +249,25 @@ export function Results({ v }: { v: Pantry }) {
               hover="background:#fdf0e3"
             >
               <DishPic src={a.pic} size={62} radius={18} />
-              <span style={css('flex:1;min-width:0')}>
-                <span style={css('display:block;font-size:15.5px;font-weight:700;line-height:1.2')}>{a.name}</span>
-                <span style={css('display:block;font-size:12.5px;color:#6a5c4c;margin-top:4px')}>{a.meta}</span>
-              </span>
-              <span style={css('flex:none;text-align:end')}>
-                <span style={css("display:block;font-family:'Caprasimo',serif;font-size:19px;color:#a83f06")}>
-                  {a.price}
+              {/* The price drops under the name when the two will not share a
+                  line, rather than the name giving way to it. It used to be the
+                  other way round: a price column that never shrank, so an AED
+                  or naira range left the name one word per line and was itself
+                  cut off at the edge of the card. */}
+              <span style={css('flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 10px')}>
+                <span style={css('flex:1 1 128px;min-width:0')}>
+                  <span style={css('display:block;font-size:15.5px;font-weight:700;line-height:1.2;overflow-wrap:anywhere')}>
+                    {a.name}
+                  </span>
+                  <span style={css('display:block;font-size:12.5px;color:#6a5c4c;margin-top:4px')}>{a.meta}</span>
                 </span>
-                <span style={css('display:block;font-size:11px;color:#6a5c4c;margin-top:2px')}>
-                  {v.t.resServing}
+                <span style={css('flex:none;max-width:100%;margin-inline-start:auto;text-align:end')}>
+                  <span style={css("display:block;font-family:'Caprasimo',serif;font-size:17px;line-height:1.15;color:#a83f06")}>
+                    {a.price}
+                  </span>
+                  <span style={css('display:block;font-size:11px;color:#6a5c4c;margin-top:2px')}>
+                    {v.t.resServing}
+                  </span>
                 </span>
               </span>
             </Btn>

@@ -350,11 +350,11 @@ export function Settings({ v }: { v: Pantry }) {
           clear it would leave the notice visibly off-centre in English and
           off-centre the other way in Arabic. */}
       <div style={css('margin-top:26px;text-align:center;padding-bottom:104px')}>
-        <div dir="auto" style={css('font-size:12px;font-weight:700;color:#6a5c4c')}>
+        <div dir={v.dir} style={css('font-size:12px;font-weight:700;color:#6a5c4c')}>
           {v.xt('ownCopy')}
         </div>
         <p
-          dir="auto"
+          dir={v.dir}
           style={css('margin:7px 0 0;font-size:11.5px;line-height:1.55;color:#6a5c4c;text-wrap:pretty')}
         >
           {v.xt('ownMark')}

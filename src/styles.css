@@ -99,6 +99,17 @@ select {
 .pg-scroll input {
   unicode-bidi: plaintext;
 }
+/* ...except where a screen has said which way the block runs. plaintext takes
+   the direction from the first strong letter and ignores the dir attribute, so
+   an Arabic or Urdu sentence that opens on a Latin token — "AED7.50 أقل من…",
+   "Pantry™ …", a shop name, a URL — came out left-aligned with its words
+   reordered. dir={v.dir} goes on interface copy that can start that way; the
+   isolate here is the browser's own default for [dir], put back. User text and
+   bare names keep dir="auto" and stay plaintext. */
+.pg-scroll [dir='rtl'],
+.pg-scroll [dir='ltr'] {
+  unicode-bidi: isolate;
+}
 
 .pg-scroll {
   overflow-y: auto;

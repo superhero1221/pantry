@@ -74,7 +74,7 @@ export function Home({ v }: { v: Pantry }) {
         </div>
       </div>
       {v.tonightRangeWhy && (
-        <div dir="auto" style={css('font-size:12px;color:#6a5c4c;margin-top:8px')}>
+        <div dir={v.dir} style={css('font-size:12px;color:#6a5c4c;margin-top:8px')}>
           {v.tonightRangeWhy}
         </div>
       )}
@@ -135,7 +135,7 @@ export function Home({ v }: { v: Pantry }) {
           costs it the reader's trust. */}
       {(v.tonightMissed || v.tonightWrapped) && (
         <div style={css('margin-top:10px;padding:14px 17px;border-radius:26px;background:#fff4ea')}>
-          <p dir="auto" style={css('margin:0;font-size:13.5px;line-height:1.5;color:#a83f06;text-wrap:pretty')}>
+          <p dir={v.dir} style={css('margin:0;font-size:13.5px;line-height:1.5;color:#a83f06;text-wrap:pretty')}>
             {v.tonightMissed || v.tonightWrapped}
           </p>
           <Btn
@@ -274,7 +274,7 @@ export function Home({ v }: { v: Pantry }) {
           {v.budgetOtherOpen && v.budgetErr && (
             <p
               role="status"
-              dir="auto"
+              dir={v.dir}
               style={css('margin:8px 4px 0;font-size:12.5px;line-height:1.5;font-weight:600;color:#a83f06;text-wrap:pretty')}
             >
               {v.budgetRangeLine}
