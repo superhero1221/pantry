@@ -21,10 +21,40 @@ installCrashNet();
 const standalone = import.meta.env.VITE_STANDALONE === '1';
 
 if (import.meta.env.PROD && !standalone && 'serviceWorker' in navigator) {
+  // What this page fetched with no worker in the way, handed to the worker,
+  // so one visit is enough to cook offline. On a first visit the bundle, the
+  // warmed screens and the first photograph all load before any worker exists;
+  // after an update the new worker has just thrown the old one's caches away,
+  // and it can take over before this line has even run. So once a worker is
+  // active, and again whenever another takes over, the page names everything
+  // it has loaded — and anything already on its way at that moment is named as
+  // it lands. The worker fetches only what it has not got, which makes a name
+  // sent twice cost nothing; see its message handler in public/sw.js.
+  const sw = navigator.serviceWorker;
+  const mine = (u: string) => u.startsWith(location.origin + '/');
+  let to: ServiceWorker | null = null;
+  let handedAt = -1;
+  const handOver = (worker: ServiceWorker | null) => {
+    if (!worker) return;
+    to = worker;
+    handedAt = performance.now();
+    worker.postMessage({ keep: performance.getEntriesByType('resource').map((e) => e.name).filter(mine) });
+  };
+  sw.addEventListener('controllerchange', () => handOver(sw.controller));
+  if (typeof PerformanceObserver === 'function') {
+    new PerformanceObserver((list) => {
+      const keep = list.getEntries().filter((e) => e.startTime < handedAt).map((e) => e.name).filter(mine);
+      if (keep.length) to?.postMessage({ keep });
+    }).observe({ type: 'resource' });
+  }
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch((e) => {
-      console.warn('service worker registration failed', e);
-    });
+    sw.register(import.meta.env.BASE_URL + 'sw.js')
+      .then(() => sw.ready)
+      .then((reg) => handOver(reg.active))
+      .catch((e) => {
+        console.warn('service worker registration failed', e);
+      });
   });
 }
 
