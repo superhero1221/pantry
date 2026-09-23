@@ -5,11 +5,11 @@
  * it never does, because the signal died) the interface reads in English
  * rather than in nothing.
  *
- * A handful of keys arrive here already stated twice — the source carries
- * several languages' worth of `anHour` stacked in every pack, with the last
- * one winning under plain JS semantics. Only the last is kept, which is
- * exactly what the engine was already handing back; data/equiv.test.ts holds
- * the whole of this file to that.
+ * `anHour` and `noRush` in `pack.w` used to arrive stated several times over:
+ * the source stacked every language's copy in every pack and the last one,
+ * English, won under plain JS semantics — which is how Spanish, French and
+ * Polish came to show "An hour" and "No rush" on the Home chips. Each is now
+ * stated once, in this language, and data.test.ts holds them to that.
  *
  * The five crash* keys in `extra` are also in data/crash-copy.ts, which is
  * eager, because a net that needs the module graph it exists to survive is not
@@ -126,7 +126,33 @@ export const pack: Record<string, unknown> = {
    "Mexican": "Meksykańska",
    "Vietnamese": "Wietnamska",
    "West African": "Zachodnioafrykańska",
-   "Italian": "Włoska"
+   "Italian": "Włoska",
+   "Pakistani": "Pakistańska",
+   "South Indian": "Południowoindyjska",
+   "Sri Lankan": "Lankijska",
+   "Japanese": "Japońska",
+   "Korean": "Koreańska",
+   "Indonesian": "Indonezyjska",
+   "Malaysian": "Malezyjska",
+   "Peruvian": "Peruwiańska",
+   "Argentinian": "Argentyńska",
+   "Lebanese": "Libańska",
+   "Syrian": "Syryjska",
+   "Palestinian": "Palestyńska",
+   "Iranian": "Irańska",
+   "Moroccan": "Marokańska",
+   "Egyptian": "Egipska",
+   "Ethiopian": "Etiopska",
+   "Tunisian": "Tunezyjska",
+   "East African": "Wschodnioafrykańska",
+   "Irish": "Irlandzka",
+   "Spanish": "Hiszpańska",
+   "Greek": "Grecka",
+   "Turkish": "Turecka",
+   "Balkan": "Bałkańska",
+   "Jamaican": "Jamajska",
+   "Cuban": "Kubańska",
+   "Brazilian": "Brazylijska"
   },
   "diff": {
    "1": "Bardzo łatwe",
@@ -195,8 +221,8 @@ export const pack: Record<string, unknown> = {
    "evening": "Dobry wieczór",
    "browseAll": "Przejrzyj wszystko",
    "minutes": "min",
-   "anHour": "An hour",
-   "noRush": "No rush",
+   "anHour": "Godzina",
+   "noRush": "Bez pośpiechu",
    "activeMins": "to twoja robota",
    "ofThem": "z",
    "toBuyFor": "do kupienia, na",
@@ -486,9 +512,9 @@ export const extra: Record<string, string> = {
     whyLevel: "{l} — mniej więcej twój poziom",
     pctDearer: "{n}% drożej",
     priceRange: "{a} – {b}",
-    rangeShops: "od {a} do {b}",
+    rangeShops: "{a} – {b}",
     storeKinds: "rodzaje sklepów, jakie znajdziesz w",
-    storeEstimate: "Szacunki, a nie własne ceny Aldi czy Tesco — żaden supermarket ich nie publikuje. Każda kwota to tyle, ile zwykle kosztuje w takim sklepie w twojej okolicy.",
+    storeEstimate: "Szacunki, a nie własne ceny sklepów {a} czy {b} — żaden supermarket ich nie publikuje. Każda kwota to tyle, ile zwykle kosztuje w takim sklepie w twojej okolicy.",
     legalKicker: "Drobny druk",
     privacyRow: "Prywatność",
     privacyRowSub: "Co jest przechowywane, gdzie i co opuszcza to urządzenie",
@@ -517,6 +543,14 @@ export const extra: Record<string, string> = {
     curEUR: "euro",
     curAED: "dirham",
     curTRY: "lira turecka",
+    locErrDenied: "Odmówiono dostępu do lokalizacji.",
+    locErrUnavailable: "Nie udało się ustalić twojego położenia.",
+    locErrTimeout: "Ustalanie położenia trwało zbyt długo.",
+    locErrNetwork: "Nie udało się połączyć z usługą map — brak zasięgu albo jest zablokowana.",
+    storeIn3: "Osiedlowa kirana na rogu",
+    storeNg1: "Stragan na lokalnym targu",
+    storePk3: "Sklepik karyana obok",
+    docTitle: "Pantry — jedna decyzja naraz, w cenach z twojej okolicy",
     ownMark: "Pantry™ i postać są znakami towarowymi. Przepisy, teksty, ilustracje i kod należą do autorów Pantry. Dane, fotografie i kroje pisma należą do źródeł wymienionych powyżej i zachowują własne licencje.",
     privTitle: "Prywatność",
     privIntro: "Pantry działa na twoim telefonie. Prawie nic z tego, co tu robisz, nigdy go nie opuszcza. Ta strona mówi dokładnie, co go opuszcza, kiedy i kto to widzi — nic więcej i nic mniej.",

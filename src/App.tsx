@@ -55,6 +55,12 @@ export default function App() {
     document.documentElement.lang = v.lang;
     document.documentElement.dir = v.dir;
   }, [v.lang, v.dir]);
+  /* Keyed on the words, not the language: the pack for a language lands a
+     beat after the switch, and a title set on the switch stayed English. */
+  const docTitle = v.xt('docTitle');
+  useEffect(() => {
+    document.title = docTitle;
+  }, [docTitle]);
 
   return (
     <div className="pg-page">

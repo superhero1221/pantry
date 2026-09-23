@@ -5,11 +5,11 @@
  * it never does, because the signal died) the interface reads in English
  * rather than in nothing.
  *
- * A handful of keys arrive here already stated twice — the source carries
- * several languages' worth of `anHour` stacked in every pack, with the last
- * one winning under plain JS semantics. Only the last is kept, which is
- * exactly what the engine was already handing back; data/equiv.test.ts holds
- * the whole of this file to that.
+ * `anHour` and `noRush` in `pack.w` used to arrive stated several times over:
+ * the source stacked every language's copy in every pack and the last one,
+ * English, won under plain JS semantics — which is how Spanish, French and
+ * Polish came to show "An hour" and "No rush" on the Home chips. Each is now
+ * stated once, in this language, and data.test.ts holds them to that.
  *
  * The five crash* keys in `extra` are also in data/crash-copy.ts, which is
  * eager, because a net that needs the module graph it exists to survive is not
@@ -126,7 +126,33 @@ export const pack: Record<string, unknown> = {
    "Mexican": "Mexicana",
    "Vietnamese": "Vietnamita",
    "West African": "Africana occidental",
-   "Italian": "Italiana"
+   "Italian": "Italiana",
+   "Pakistani": "Pakistaní",
+   "South Indian": "Del sur de la India",
+   "Sri Lankan": "Esrilanquesa",
+   "Japanese": "Japonesa",
+   "Korean": "Coreana",
+   "Indonesian": "Indonesia",
+   "Malaysian": "Malasia",
+   "Peruvian": "Peruana",
+   "Argentinian": "Argentina",
+   "Lebanese": "Libanesa",
+   "Syrian": "Siria",
+   "Palestinian": "Palestina",
+   "Iranian": "Iraní",
+   "Moroccan": "Marroquí",
+   "Egyptian": "Egipcia",
+   "Ethiopian": "Etíope",
+   "Tunisian": "Tunecina",
+   "East African": "Africana oriental",
+   "Irish": "Irlandesa",
+   "Spanish": "Española",
+   "Greek": "Griega",
+   "Turkish": "Turca",
+   "Balkan": "Balcánica",
+   "Jamaican": "Jamaicana",
+   "Cuban": "Cubana",
+   "Brazilian": "Brasileña"
   },
   "diff": {
    "1": "Muy fácil",
@@ -195,8 +221,8 @@ export const pack: Record<string, unknown> = {
    "evening": "Buenas noches",
    "browseAll": "Ver todo",
    "minutes": "min",
-   "anHour": "An hour",
-   "noRush": "No rush",
+   "anHour": "Una hora",
+   "noRush": "Sin prisa",
    "activeMins": "los pones tú",
    "ofThem": "de",
    "toBuyFor": "de compra, para",
@@ -488,7 +514,7 @@ export const extra: Record<string, string> = {
     priceRange: "{a} – {b}",
     rangeShops: "de {a} a {b}",
     storeKinds: "tipos de tienda que encontrarás en",
-    storeEstimate: "Estimaciones, no los precios propios de Aldi o Tesco — ningún supermercado los publica. Cada cifra es lo que suele cobrar ese tipo de tienda cerca de ti.",
+    storeEstimate: "Estimaciones, no los precios propios de {a} o {b}: ningún supermercado los publica. Cada cifra es lo que suele cobrar ese tipo de tienda cerca de ti.",
     legalKicker: "La letra pequeña",
     privacyRow: "Privacidad",
     privacyRowSub: "Qué se guarda, dónde, y qué sale de este dispositivo",
@@ -517,6 +543,14 @@ export const extra: Record<string, string> = {
     curEUR: "euros",
     curAED: "dírhams",
     curTRY: "liras",
+    locErrDenied: "Se denegó el permiso de ubicación.",
+    locErrUnavailable: "No se pudo determinar tu posición.",
+    locErrTimeout: "Encontrarte tardó demasiado.",
+    locErrNetwork: "No se pudo conectar con el servicio de mapas: no hay señal o está bloqueado.",
+    storeIn3: "Tienda kirana de la esquina",
+    storeNg1: "Puesto del mercado local",
+    storePk3: "Tienda karyana de al lado",
+    docTitle: "Pantry — una decisión cada vez, con los precios de donde estás",
     ownMark: "Pantry™ y el personaje son marcas registradas. Las recetas, los textos, las ilustraciones y el código pertenecen a los autores de Pantry. Los datos, las fotografías y las tipografías pertenecen a las fuentes citadas arriba y conservan sus propias licencias.",
     privTitle: "Privacidad",
     privIntro: "Pantry funciona en tu teléfono. Casi todo lo que haces aquí nunca sale de él. Esta página dice exactamente qué sí sale, cuándo, y quién lo ve — ni más, ni menos.",

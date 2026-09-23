@@ -261,7 +261,7 @@ export const EXTRA: Record<string, Record<string, string>> = {
     priceRange: "{a} – {b}",
     rangeShops: "{a} to {b}",
     storeKinds: "kinds of shop you will find in",
-    storeEstimate: "Estimates, not Aldi's or Tesco's own prices — no supermarket publishes those. Each figure is what that kind of shop typically charges near you.",
+    storeEstimate: "Estimates, not prices from {a} or {b} themselves — no supermarket publishes those. Each figure is what that kind of shop typically charges near you.",
     legalKicker: "The small print",
     privacyRow: "Privacy",
     privacyRowSub: "What is kept, where, and what leaves this device",
@@ -293,6 +293,20 @@ export const EXTRA: Record<string, Record<string, string>> = {
     curEUR: "euros",
     curAED: "dirhams",
     curTRY: "lira",
+    /* Why a location attempt failed, by kind rather than by the browser's or
+       the network's own English sentence. */
+    locErrDenied: "Location permission was declined.",
+    locErrUnavailable: "Your position could not be worked out.",
+    locErrTimeout: "Finding you took too long.",
+    locErrNetwork: "Could not reach the map service — no signal, or it is blocked.",
+    /* The three shops in STORES_BY_COUNTRY that are a kind of shop rather than
+       a chain, so their names are words to translate. Display only: the cook
+       log keeps the English name. */
+    storeIn3: "Kirana on the corner",
+    storeNg1: "Local market stall",
+    storePk3: "Karyana next door",
+    /* The browser tab. index.html carries the English for the first frame. */
+    docTitle: "Pantry — one decision at a time, priced where you actually stand",
     ownMark: "Pantry™ and the character are trade marks. The recipes, the writing, the artwork and the code belong to the Pantry authors. The data, the photographs and the typefaces belong to the sources named above and keep their own licences.",
     privTitle: "Privacy",
     privIntro: "Pantry runs on your phone. Most of what you do here never leaves it. This page says exactly what does, when it goes, and who sees it — no more than that, and no less.",

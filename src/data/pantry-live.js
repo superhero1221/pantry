@@ -33,16 +33,20 @@ const timed = (url, opts = {}, ms = 9000) => {
 };
 
 
-/** Browser geolocation. Resolves {lat, lon, accuracy} or rejects with a readable reason. */
+/** Browser geolocation. Resolves {lat, lon, accuracy} or rejects with a readable reason.
+ *  The rejection also carries `code` — 'Denied', 'Unavailable' or 'Timeout' —
+ *  because the message is English for the console and the screen needs a key
+ *  it can translate. Anything that rejects without a code is the network. */
+const geoErr = (msg, code) => Object.assign(new Error(msg), { code });
 export function locate(opts = {}) {
   return new Promise((res, rej) => {
-    if (!navigator.geolocation) return rej(new Error('This device has no location service.'));
+    if (!navigator.geolocation) return rej(geoErr('This device has no location service.', 'Unavailable'));
     navigator.geolocation.getCurrentPosition(
       p => res({ lat: p.coords.latitude, lon: p.coords.longitude, accuracy: p.coords.accuracy }),
-      e => rej(new Error(
-        e.code === 1 ? 'Location permission was declined.'
-        : e.code === 2 ? 'Your position could not be worked out.'
-        : 'Location timed out.')),
+      e => rej(
+        e.code === 1 ? geoErr('Location permission was declined.', 'Denied')
+        : e.code === 2 ? geoErr('Your position could not be worked out.', 'Unavailable')
+        : geoErr('Location timed out.', 'Timeout')),
       { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000, ...opts }
     );
   });

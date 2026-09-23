@@ -153,6 +153,40 @@ describe('translations', () => {
     }
   });
 
+  it('names every cuisine in the cookbook in every language', () => {
+    // cuisineWord() falls back to the English key, so a cuisine missing here
+    // is not a blank — it is "Pakistani · 28 min" in the Urdu interface, which
+    // is how 26 of the 37 went unnoticed.
+    const cuisines = [...new Set(RECIPES.map((r) => r.cuisine))];
+    for (const c of cuisines) expect(pack('en').cuisines[c], `en.${c}`).toBe(c);
+    for (const code of Object.keys(REST)) {
+      const own = REST[code].pack.cuisines as Record<string, string>;
+      for (const c of cuisines) {
+        expect(own[c], `${code}.${c}`).toBeTruthy();
+        expect(own[c], `${code}.${c} is still English`).not.toBe(c);
+      }
+    }
+  });
+
+  it('translates the two worded time chips', () => {
+    // es, fr and pl once carried the English here, left over from a block
+    // that stacked every language's copy and let the last one win.
+    const w = pack('en').w;
+    for (const code of Object.keys(REST)) {
+      const own = REST[code].pack.w as Record<string, string>;
+      for (const k of ['anHour', 'noRush']) expect(own[k], `${code}.${k}`).not.toBe(w[k]);
+    }
+  });
+
+  it('names the shops on the screen in the estimate note, not a British pair', () => {
+    for (const code of ['en', ...Object.keys(REST)]) {
+      const s = code === 'en' ? EXTRA.en.storeEstimate : REST[code].extra.storeEstimate;
+      expect(s, code).toContain('{a}');
+      expect(s, code).toContain('{b}');
+      expect(s, code).not.toMatch(/Aldi|Tesco/);
+    }
+  });
+
   it('ships every flat interface string in all six languages', () => {
     // Nothing tested this until the languages moved into their own files. A
     // key added to English and forgotten in Urdu renders the English word,

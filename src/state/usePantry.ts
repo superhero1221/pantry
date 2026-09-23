@@ -184,6 +184,8 @@ export interface PantryState {
   lang: string | null;
   langOpen: boolean;
   liveStatus: 'idle' | 'locating' | 'placed' | 'live' | 'noshops' | 'error';
+  /** Why the last location attempt failed, as the tail of a locErr* key
+   *  ('Denied', 'Unavailable', 'Timeout', 'Network') — never a message. */
   liveErr: string | null;
   liveCity: string | null;
   liveArea: string | null;
@@ -527,6 +529,10 @@ const keyOf = (name: string) => canonical(name.split(',')[0].trim());
 /** The budget presets the design ships, in GBP: the chip row on Home, and the
  *  set that a typed-in amount is measured against. */
 const BUDGETS = [3, 5, 6, 8, 12];
+
+/** Fallback shops whose name is a description, by id → the extra key that
+ *  translates it. Every other name is a brand and stays as the brand writes it. */
+const STORE_WORD: Record<string, string> = { in3: 'storeIn3', ng1: 'storeNg1', pk3: 'storePk3' };
 
 /** One of the four answers to "What can you already do?".
  *
@@ -1077,12 +1083,19 @@ export function usePantry() {
       tier: x.tierLabel,
       mult: x.mult,
       km: Math.round(x.km * 10) / 10,
-      closes: x.hours ? x.hours.split(';')[0] : 'hours unknown',
+      // Empty rather than 'hours unknown': the card's SH.hoursUnknown is the
+      // translated fallback, and an English one here meant it never ran.
+      closes: x.hours ? x.hours.split(';')[0] : '',
       real: true,
     }));
   }, [cc]);
 
   const stores = storeList();
+  /** A shop's name as the screen prints it. Three fallback cards are a kind of
+   *  shop rather than a chain — "Kirana on the corner" — and those are words,
+   *  so they follow the language. Display only: `store.name` in the cook log
+   *  stays the English data name, or a history would mix languages. */
+  const storeLabel = (s: Store) => (STORE_WORD[s.id] ? xt(lg, STORE_WORD[s.id]) : s.name);
   /** The shop actually in effect, which is not always the one in `S.store`.
    *  `store` is deliberately not in KEEP, so a reload resets it to the initial
    *  'gb1' — an id that exists in one country of eight. Everywhere else the
@@ -1200,9 +1213,11 @@ export function usePantry() {
       const lo = Math.min.apply(null, costs);
       const hi = Math.max.apply(null, costs);
       const at = (v: number) => pool.find((s) => Math.abs(toBuy(r, s.mult) - v) < 1e-9);
-      return { lo, hi, loShop: at(lo)?.name || '', hiShop: at(hi)?.name || '' };
+      const loAt = at(lo), hiAt = at(hi);
+      return { lo, hi, loShop: loAt ? storeLabel(loAt) : '', hiShop: hiAt ? storeLabel(hiAt) : '' };
     },
-    [stores, store, toBuy],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- storeLabel reads only lg
+    [stores, store, toBuy, lg],
   );
 
   /* ── How much cooking you have done ───────────────────────────────────── */
@@ -1358,9 +1373,14 @@ export function usePantry() {
       setState({ liveShops: shops, liveStatus: shops.length ? 'live' : 'noshops' });
       if (shops.length) setState({ store: 'live0' });
     } catch (e) {
+      /* A code, not e.message. The message was the browser's or the network's
+         English — "Failed to fetch", "Nominatim 503" — printed as-is under an
+         Arabic heading. Only locate() names a kind; anything else that throws
+         here is Nominatim or Overpass. */
+      const code = (e as { code?: unknown } | null)?.code;
       setState({
         liveStatus: 'error',
-        liveErr: e instanceof Error ? e.message : String(e),
+        liveErr: typeof code === 'string' ? code : 'Network',
         locating: false,
         located: true,
       });
@@ -2354,7 +2374,7 @@ export function usePantry() {
     liveBusy: S.liveStatus === 'locating',
     liveFailed: S.liveStatus === 'error',
     liveOn: S.liveStatus === 'live' || S.liveStatus === 'placed' || S.liveStatus === 'noshops',
-    liveErrText: S.liveErr || '',
+    liveErrText: S.liveErr ? xt(lg, 'locErr' + S.liveErr) : '',
     liveAreaLine: S.liveArea ? S.liveArea + ', ' + cityNow : cityNow,
     liveShopLine: shopsLine,
     /* Locate draws the four live states as four blocks; Settings has one line,
@@ -2366,7 +2386,7 @@ export function usePantry() {
       S.liveStatus === 'idle'
         ? xt(lg, 'liveLook')
         : S.liveStatus === 'error'
-          ? S.liveErr || xt(lg, 'liveLook')
+          ? (S.liveErr ? xt(lg, 'locErr' + S.liveErr) : xt(lg, 'liveLook'))
           : shopsLine,
     useLocation: useMyLocation,
 
@@ -2797,6 +2817,19 @@ export function usePantry() {
     toShop: () => go('shop'),
 
     /* ── Shop ───────────────────────────────────────────────────────────── */
+    /* The sentence under the cards names two chains, because those are who a
+       reader assumes the figure came from. It used to be Aldi and Tesco in
+       every country, Lagos and Lahore included, where neither is on the
+       screen. Now it is the brands on these cards — never a description like
+       "Local market stall" — topped up from the country's own list when the
+       cards have fewer than two. */
+    storeEstimateLine: (() => {
+      const brands = [...stores, ...(STORES_BY_COUNTRY[cc] || STORES_BY_COUNTRY.GB)]
+        .filter((s) => !STORE_WORD[s.id])
+        .map((s) => s.name)
+        .filter((n, i, all) => all.indexOf(n) === i);
+      return fill(xt(lg, 'storeEstimate'), { a: brands[0], b: brands[1] });
+    })(),
     stores: stores.map((s) => {
       const t = toBuy(recipe, s.mult);
       const base = Math.min.apply(null, stores.map((x) => toBuy(recipe, x.mult)));
@@ -2822,7 +2855,7 @@ export function usePantry() {
       const on = store.id === s.id;
       return {
         key: s.id,
-        name: s.name,
+        name: storeLabel(s),
         tier: P.shops[s.tier] || s.tier,
         /* A band, not a figure to the penny.
            This row is the most convincing thing in the app that nothing
@@ -2839,9 +2872,13 @@ export function usePantry() {
         /* A shop Overpass found carries its measured distance and hours. A
            fallback card used to invent both — "0.6 km · open till 22:00" for
            a shop nobody looked up — and now says what it actually is: a
-           typical price for that kind of shop here. */
+           typical price for that kind of shop here.
+           Distances are rounded to 0.1 km, so a shop across the road read
+           "0 km"; below that it says so rather than claiming no distance. The
+           distance is isolated left-to-right, as a price range is, so in
+           Arabic and Urdu the "<" stays in front of its number. */
         meta: s.real
-          ? s.km + ' km · ' + (s.closes || SH.hoursUnknown)
+          ? '⁦' + ((s.km ?? 0) < 0.1 ? '< 0.1 km' : s.km + ' km') + '⁩ · ' + (s.closes || SH.hoursUnknown)
           : xt(lg, 'storeModelled'),
         /* A percentage, where this used to be "+£0.41".
            The absolute gap between two cards inherits every bit of the

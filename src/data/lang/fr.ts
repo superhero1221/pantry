@@ -5,11 +5,11 @@
  * it never does, because the signal died) the interface reads in English
  * rather than in nothing.
  *
- * A handful of keys arrive here already stated twice — the source carries
- * several languages' worth of `anHour` stacked in every pack, with the last
- * one winning under plain JS semantics. Only the last is kept, which is
- * exactly what the engine was already handing back; data/equiv.test.ts holds
- * the whole of this file to that.
+ * `anHour` and `noRush` in `pack.w` used to arrive stated several times over:
+ * the source stacked every language's copy in every pack and the last one,
+ * English, won under plain JS semantics — which is how Spanish, French and
+ * Polish came to show "An hour" and "No rush" on the Home chips. Each is now
+ * stated once, in this language, and data.test.ts holds them to that.
  *
  * The five crash* keys in `extra` are also in data/crash-copy.ts, which is
  * eager, because a net that needs the module graph it exists to survive is not
@@ -126,7 +126,33 @@ export const pack: Record<string, unknown> = {
    "Mexican": "Mexicaine",
    "Vietnamese": "Vietnamienne",
    "West African": "Ouest-africaine",
-   "Italian": "Italienne"
+   "Italian": "Italienne",
+   "Pakistani": "Pakistanaise",
+   "South Indian": "Indienne du Sud",
+   "Sri Lankan": "Sri-lankaise",
+   "Japanese": "Japonaise",
+   "Korean": "Coréenne",
+   "Indonesian": "Indonésienne",
+   "Malaysian": "Malaisienne",
+   "Peruvian": "Péruvienne",
+   "Argentinian": "Argentine",
+   "Lebanese": "Libanaise",
+   "Syrian": "Syrienne",
+   "Palestinian": "Palestinienne",
+   "Iranian": "Iranienne",
+   "Moroccan": "Marocaine",
+   "Egyptian": "Égyptienne",
+   "Ethiopian": "Éthiopienne",
+   "Tunisian": "Tunisienne",
+   "East African": "Est-africaine",
+   "Irish": "Irlandaise",
+   "Spanish": "Espagnole",
+   "Greek": "Grecque",
+   "Turkish": "Turque",
+   "Balkan": "Balkanique",
+   "Jamaican": "Jamaïcaine",
+   "Cuban": "Cubaine",
+   "Brazilian": "Brésilienne"
   },
   "diff": {
    "1": "Très facile",
@@ -195,8 +221,8 @@ export const pack: Record<string, unknown> = {
    "evening": "Bonsoir",
    "browseAll": "Tout parcourir",
    "minutes": "min",
-   "anHour": "An hour",
-   "noRush": "No rush",
+   "anHour": "Une heure",
+   "noRush": "Pas pressé",
    "activeMins": "de vous",
    "ofThem": "sur",
    "toBuyFor": "à acheter, pour",
@@ -487,9 +513,9 @@ export const extra: Record<string, string> = {
     whyLevel: "{l} — à peu près votre niveau",
     pctDearer: "{n}% plus cher",
     priceRange: "{a} – {b}",
-    rangeShops: "de {a} à {b}",
+    rangeShops: "entre {a} et {b}",
     storeKinds: "types de magasin que vous trouverez à",
-    storeEstimate: "Des estimations, pas les prix d’Aldi ou de Tesco — aucun supermarché ne les publie. Chaque chiffre est ce que ce type de magasin facture habituellement près de chez vous.",
+    storeEstimate: "Des estimations, pas des prix fournis par {a} ou {b} — aucun supermarché ne publie les siens. Chaque chiffre est ce que ce type de magasin facture habituellement près de chez vous.",
     legalKicker: "Les petits caractères",
     privacyRow: "Confidentialité",
     privacyRowSub: "Ce qui est gardé, où, et ce qui quitte cet appareil",
@@ -518,6 +544,14 @@ export const extra: Record<string, string> = {
     curEUR: "euros",
     curAED: "dirhams",
     curTRY: "livres turques",
+    locErrDenied: "L’accès à la position a été refusé.",
+    locErrUnavailable: "Impossible de déterminer votre position.",
+    locErrTimeout: "La localisation a pris trop de temps.",
+    locErrNetwork: "Impossible de joindre le service de cartes — pas de réseau, ou il est bloqué.",
+    storeIn3: "Épicerie kirana du coin",
+    storeNg1: "Étal du marché local",
+    storePk3: "Épicerie karyana d’à côté",
+    docTitle: "Pantry — une décision à la fois, aux prix de là où vous êtes",
     ownMark: "Pantry™ et le personnage sont des marques déposées. Les recettes, les textes, les illustrations et le code appartiennent aux auteurs de Pantry. Les données, les photographies et les polices appartiennent aux sources citées ci-dessus et conservent leurs propres licences.",
     privTitle: "Confidentialité",
     privIntro: "Pantry tourne sur votre téléphone. Presque tout ce que vous y faites n’en sort jamais. Cette page dit exactement ce qui en sort, quand, et qui le voit — ni plus, ni moins.",

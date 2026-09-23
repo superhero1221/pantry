@@ -5,11 +5,11 @@
  * it never does, because the signal died) the interface reads in English
  * rather than in nothing.
  *
- * A handful of keys arrive here already stated twice — the source carries
- * several languages' worth of `anHour` stacked in every pack, with the last
- * one winning under plain JS semantics. Only the last is kept, which is
- * exactly what the engine was already handing back; data/equiv.test.ts holds
- * the whole of this file to that.
+ * `anHour` and `noRush` in `pack.w` used to arrive stated several times over:
+ * the source stacked every language's copy in every pack and the last one,
+ * English, won under plain JS semantics — which is how Spanish, French and
+ * Polish came to show "An hour" and "No rush" on the Home chips. Each is now
+ * stated once, in this language, and data.test.ts holds them to that.
  *
  * The five crash* keys in `extra` are also in data/crash-copy.ts, which is
  * eager, because a net that needs the module graph it exists to survive is not
@@ -126,7 +126,33 @@ export const pack: Record<string, unknown> = {
    "Mexican": "میکسیکن",
    "Vietnamese": "ویتنامی",
    "West African": "مغربی افریقی",
-   "Italian": "اطالوی"
+   "Italian": "اطالوی",
+   "Pakistani": "پاکستانی",
+   "South Indian": "جنوبی ہندوستانی",
+   "Sri Lankan": "سری لنکن",
+   "Japanese": "جاپانی",
+   "Korean": "کوریائی",
+   "Indonesian": "انڈونیشیائی",
+   "Malaysian": "ملائیشیائی",
+   "Peruvian": "پیروین",
+   "Argentinian": "ارجنٹینی",
+   "Lebanese": "لبنانی",
+   "Syrian": "شامی",
+   "Palestinian": "فلسطینی",
+   "Iranian": "ایرانی",
+   "Moroccan": "مراکشی",
+   "Egyptian": "مصری",
+   "Ethiopian": "ایتھوپیائی",
+   "Tunisian": "تیونسی",
+   "East African": "مشرقی افریقی",
+   "Irish": "آئرش",
+   "Spanish": "ہسپانوی",
+   "Greek": "یونانی",
+   "Turkish": "ترکی",
+   "Balkan": "بلقانی",
+   "Jamaican": "جمیکائی",
+   "Cuban": "کیوبائی",
+   "Brazilian": "برازیلی"
   },
   "diff": {
    "1": "بہت آسان",
@@ -249,7 +275,7 @@ export const pack: Record<string, unknown> = {
    "aServingAvg": "فی حصہ، اوسطاً",
    "notSpent": "باہر کے کھانے پر خرچ نہیں ہوئے",
    "leftOnPlate": "پلیٹ میں چھوڑا",
-   "eightWeeks": "آٹھ ہفتے، سب سے پرانا بائیں طرف",
+   "eightWeeks": "آٹھ ہفتے، سب سے پرانا دائیں طرف",
    "aCook": "فی بار",
    "wholeMenu": "پورا مینو",
    "dishesWord": "کھانے",
@@ -484,7 +510,7 @@ export const extra: Record<string, string> = {
     priceRange: "{a} – {b}",
     rangeShops: "{a} سے {b} تک",
     storeKinds: "قسم کی دکانیں جو یہاں ملتی ہیں، مقام:",
-    storeEstimate: "یہ تخمینے ہیں، Aldi یا Tesco کی اپنی قیمتیں نہیں — کوئی سپر مارکیٹ اُنہیں شائع نہیں کرتی۔ ہر عدد وہ ہے جو آپ کے قریب اِس قسم کی دکان عام طور پر لیتی ہے۔",
+    storeEstimate: "یہ تخمینے ہیں، {a} یا {b} کی اپنی قیمتیں نہیں — کوئی سپر مارکیٹ اُنہیں شائع نہیں کرتی۔ ہر عدد وہ ہے جو آپ کے قریب اِس قسم کی دکان عام طور پر لیتی ہے۔",
     legalKicker: "باریک تحریر",
     privacyRow: "پرائیویسی",
     privacyRowSub: "کیا محفوظ ہوتا ہے، کہاں، اور کیا اس ڈیوائس سے باہر جاتا ہے",
@@ -513,6 +539,14 @@ export const extra: Record<string, string> = {
     curEUR: "یورو",
     curAED: "درہم",
     curTRY: "لیرا",
+    locErrDenied: "مقام کی اجازت نہیں دی گئی۔",
+    locErrUnavailable: "آپ کا مقام معلوم نہیں ہو سکا۔",
+    locErrTimeout: "مقام ڈھونڈنے میں بہت دیر لگ گئی۔",
+    locErrNetwork: "نقشے کی سروس تک رسائی نہیں ہو سکی — سگنل نہیں، یا یہ بند ہے۔",
+    storeIn3: "نکڑ کی کریانہ دکان",
+    storeNg1: "مقامی بازار کا اسٹال",
+    storePk3: "ساتھ والی کریانہ دکان",
+    docTitle: "Pantry — ایک وقت میں ایک فیصلہ، وہاں کی قیمتوں پر جہاں آپ ہیں",
     ownMark: "Pantry™ اور کردار تجارتی نشانات ہیں۔ ترکیبیں، تحریر، فن پارے اور کوڈ Pantry کے مصنفین کی ملکیت ہیں۔ ڈیٹا، تصاویر اور فونٹ اوپر درج ذرائع کی ملکیت ہیں اور اپنے اپنے لائسنس کے تحت رہتے ہیں۔",
     privTitle: "پرائیویسی",
     privIntro: "Pantry آپ کے فون پر چلتی ہے۔ یہاں آپ جو کچھ کرتے ہیں، اُس کا بیشتر حصہ کبھی فون سے باہر نہیں جاتا۔ یہ صفحہ ٹھیک ٹھیک بتاتا ہے کہ کیا باہر جاتا ہے، کب جاتا ہے، اور کون دیکھتا ہے — نہ اس سے زیادہ، نہ کم۔",

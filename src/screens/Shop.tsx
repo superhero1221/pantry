@@ -72,12 +72,13 @@ export function Shop({ v }: { v: Pantry }) {
           A card can say "Aldi · 0.6 km · open till 22:00" and then a price,
           and every part of that except the price came from OpenStreetMap. The
           ≈ on each figure carries the point; this says it in words once, and
-          names the two chains people assume the number came from. */}
+          names the two chains people assume the number came from — the ones
+          on these cards, not a British pair in every country. */}
       <p
         dir="auto"
         style={css('font-size:12px;line-height:1.55;color:#6a5c4c;margin:11px 2px 0;text-wrap:pretty')}
       >
-        {v.xt('storeEstimate')}
+        {v.storeEstimateLine}
       </p>
 
       <div style={css('display:flex;align-items:baseline;justify-content:space-between;margin-top:26px')}>
