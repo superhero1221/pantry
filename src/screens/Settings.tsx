@@ -211,8 +211,44 @@ export function Settings({ v }: { v: Pantry }) {
       </div>
 
       <p dir="auto" style={css('font-size:12px;line-height:1.55;color:#6a5c4c;margin:12px 2px 0;text-wrap:pretty')}>
-        {v.u.picNote}
+        {v.picNote}
       </p>
+      {/* Every photograph by name, because the thumbnails elsewhere are too
+          small to carry a credit and the licences want one for each. Closed by
+          default: 108 rows is a reference, not something to scroll past. A
+          native <details>, so opening it costs no state. */}
+      <details style={css('margin-top:10px;border-radius:26px;background:#ffffff;overflow:hidden')}>
+        <summary style={css('padding:15px 18px;font-size:14.5px;font-weight:700;color:#6a5c4c;cursor:pointer')}>
+          {v.photoCreditsTitle}
+        </summary>
+        <div style={css('padding:0 18px 16px')}>
+          <p dir="auto" style={css('margin:0 0 8px;font-size:12.5px;line-height:1.55;color:#6a5c4c;text-wrap:pretty')}>
+            {v.xt('photoCreditsIntro')}
+          </p>
+          <ul style={css('list-style:none;margin:0;padding:0')}>
+            {v.photoCredits.map((p) => (
+              <li key={p.key} style={css('padding:8px 0;border-top:1px solid #f3e6d8')}>
+                <div dir="auto" style={css('font-size:13px;font-weight:700;color:#3b3229')}>
+                  {p.dish}
+                </div>
+                <div style={css('font-size:12px;line-height:1.5;color:#6a5c4c;overflow-wrap:anywhere')}>
+                  <A href={p.who.href} target="_blank" rel="noopener" aria-label={p.who.label} css="color:#a83f06;text-decoration:underline" hover="color:#7d2f04">
+                    <bdi>{p.who.text}</bdi>
+                  </A>
+                  {' · '}
+                  {p.lic.href ? (
+                    <A href={p.lic.href} target="_blank" rel="noopener" aria-label={p.lic.label} css="color:#a83f06;text-decoration:underline" hover="color:#7d2f04">
+                      <bdi>{p.lic.text}</bdi>
+                    </A>
+                  ) : (
+                    <bdi>{p.lic.text}</bdi>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
 
       {/* Everything Pantry knows about you is one key in this browser. Clear
           the browser and it is gone — there is no copy anywhere else unless

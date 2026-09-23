@@ -1,6 +1,6 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
-import { Kicker } from '../ui/bits';
+import { Kicker, PhotoCredit } from '../ui/bits';
 import { Bulb, Check, ChevronLeft, Clock, X } from '../ui/Icon';
 import { StepArt } from '../ui/StepArt';
 import type { Pantry } from '../state/usePantry';
@@ -72,6 +72,9 @@ export function Cook({ v }: { v: Pantry }) {
                   <StepArt technique={v.stepTechnique} size={46} />
                 </div>
               )}
+              {/* Whose photograph it is. Stops 88px short of the far edge so
+                  it never runs under the 58px badge, in either direction. */}
+              {v.stepCredit && <PhotoCredit credit={v.stepCredit} css="max-width:calc(100% - 88px)" />}
             </>
           ) : (
             <StepArt technique={v.stepTechnique} size={146} />

@@ -1,6 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { RECIPES } from './cookbook';
+import { PHOTO_CREDITS } from './cookbook-credits';
+import { build } from '../../scripts/make-photo-credits.mjs';
+import { creditOf, licenceUrl } from '../lib/photo-credit';
 
 /**
  * Every photograph has to name its photographer.
@@ -19,7 +22,7 @@ const manifest = JSON.parse(readFileSync('public/pix/manifest.json', 'utf8')) as
 const isPhoto = (pic: string) => /\.(webp|jpe?g|png)$/i.test(pic);
 
 /** Credits are keyed by recipe id, or by the photograph's own filename for the
- *  six that were filed under the picture's name before recipes had ids. */
+ *  five in use that were filed under the picture's name before recipes had ids. */
 const creditFor = (id: string, pic: string) =>
   manifest[id] ?? manifest[pic.replace(/^pix\//, '').replace(/\.\w+$/, '')];
 
@@ -68,5 +71,41 @@ describe('the pictures', () => {
       else seen.set(file, r.id);
     }
     expect(shared, 'one photograph on more than one dish').toEqual([]);
+  });
+
+  /* The manifest is the record; cookbook-credits.ts is what the app shows.
+     These hold the second to the first, so a photo fetched or swapped without
+     re-running the generator fails here instead of shipping uncredited. */
+  it('ships the credits the manifest says, for every photograph and nothing else', () => {
+    expect(PHOTO_CREDITS, 'cookbook-credits.ts is stale — run npm run credits').toEqual(build(manifest, RECIPES));
+    const photos = RECIPES.filter((r) => isPhoto(r.pic)).map((r) => r.id).sort();
+    expect(Object.keys(PHOTO_CREDITS).sort()).toEqual(photos);
+    for (const r of RECIPES) {
+      expect(!!creditOf(r.id), `${r.id} (${r.pic})`).toBe(isPhoto(r.pic));
+    }
+  });
+
+  it('credits each photograph with its own manifest entry', () => {
+    for (const r of RECIPES) {
+      if (!isPhoto(r.pic)) continue;
+      const m = creditFor(r.id, r.pic) as { licence: string; page: string };
+      const c = creditOf(r.id)!;
+      expect(c.page, r.id).toBe(m.page);
+      expect(c.licence, r.id).toBe(m.licence);
+    }
+  });
+
+  it('shows a name, not a scrape, as the photographer', () => {
+    for (const [id, [author]] of Object.entries(PHOTO_CREDITS)) {
+      expect(author.length, `${id}: "${author}"`).toBeGreaterThan(0);
+      expect(author.length, `${id}: "${author}"`).toBeLessThanOrEqual(40);
+      expect(author, id).not.toMatch(/User:|File:|Camera location|talk ;|https?:|\sfrom\s|[\u200e\u200f]/);
+    }
+  });
+
+  it('links every licence to its deed', () => {
+    for (const [id, [, licence]] of Object.entries(PHOTO_CREDITS)) {
+      expect(licenceUrl(licence), `${id}: ${licence}`).toMatch(/^https:\/\/creativecommons\.org\/.+\/$/);
+    }
   });
 });

@@ -23,8 +23,9 @@ and the CC0 dish tiles already published stay public domain.
 
 The distinction that survives unchanged is the one that mattered most. **None of
 the third-party material below is relicensed by that decision.** The data stays
-ODbL, the photographs stay CC BY-SA, the typefaces stay OFL, and the attribution
-they require is rendered in the app rather than filed here. Closing the code
+ODbL, the photographs stay under their own Creative Commons or public-domain
+terms, the typefaces stay OFL, and the attribution they require is rendered in
+the app rather than filed here. Closing the code
 does not close anything that was never ours to close.
 
 ## The data
@@ -138,6 +139,16 @@ named. `pictures.test.ts` fails the build if any photograph in the app has no
 credit, because an uncredited CC BY-SA image is a licence breach rather than an
 oversight. It also refuses any NC or ND licence: NC forbids exactly what a live
 site does, and ND forbids the resize every one of these has had.
+
+The credit is shown in the app, not only kept here. Wherever a photograph is
+shown large — the dish on Home, on Results and behind each Cook step — it
+carries "Photo: photographer · licence", the name linking to the file on
+Commons and the licence to its deed; Settings → Attribution lists all 108.
+Those come from `src/data/cookbook-credits.ts`, which `npm run credits`
+(scripts/make-photo-credits.mjs) generates from the manifest with the scraped
+author strings cleaned to a name. `pictures.test.ts` fails if it falls out of
+step with the manifest. Of the 108: 75 CC BY-SA, 17 CC BY, 16 CC0 or public
+domain.
 
 No photograph appears on two dishes. That is tested too — dal tadka and the Sri
 Lankan dhal were both handed the same stock photo of dried lentils, and Beef and

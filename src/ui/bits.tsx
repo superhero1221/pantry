@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { css } from '../lib/css';
-import { Btn } from './Btn';
+import { A, Btn } from './Btn';
 import { ChevronLeft } from './Icon';
 
 /** The 38px round back control that opens most screens. Its label is the only
@@ -267,6 +267,51 @@ export const DishPic = ({
         decoding="async"
         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
       />
+    )}
+  </span>
+);
+
+type CreditPart = { text: string; href: string | null; label: string };
+
+/** A photograph's credit, laid on the photograph: "Photo: name · licence", the
+ *  name linking to the original on Commons and the licence to its deed.
+ *
+ *  The parent has to be `position:relative`; `css` adds to the pill (Cook uses
+ *  it to stop short of the technique badge). A dark translucent pill because
+ *  the photograph under it can be anything from a white plate to a black pan:
+ *  at .72 over pure white the ground is still #5c5753, 7.1:1 against the white
+ *  text, and it only gets darker from there. It wraps rather than cutting the
+ *  name off — an ellipsis through the photographer is the one thing this
+ *  line is not allowed to lose. The licence never splits ("CC" on one line,
+ *  "BY-SA 2.0" on the next reads as two things). Links open a new tab so the
+ *  app, and a cook in progress, stay exactly where they were. */
+export const PhotoCredit = ({ credit, css: extra = '' }: { credit: { parts: CreditPart[]; lic: CreditPart }; css?: string }) => (
+  <span
+    className="pg-credit"
+    style={css(
+      'position:absolute;inset-inline-start:10px;bottom:10px;max-width:calc(100% - 20px);box-sizing:border-box;padding:4px 10px;border-radius:12px;background:rgba(28,22,16,.72);color:#ffffff;font-size:11px;font-weight:600;line-height:1.45;text-align:start;overflow-wrap:anywhere;unicode-bidi:isolate;' +
+        extra,
+    )}
+  >
+    {credit.parts.map((p, i) =>
+      p.href ? (
+        <A
+          key={i}
+          href={p.href}
+          target="_blank"
+          rel="noopener"
+          aria-label={p.label}
+          css={'color:#ffffff;text-decoration:underline;text-underline-offset:2px;padding-block:3px' + (p === credit.lic ? ';white-space:nowrap' : '')}
+          hover="color:#ffe4cd"
+        >
+          <bdi>{p.text}</bdi>
+        </A>
+      ) : (
+        // Bare text, not a span: every span on a scrolling screen is its own
+        // bidi paragraph (styles.css), and "الصورة: " in one of those lost its
+        // space and put the colon on the wrong side of the name.
+        <Fragment key={i}>{p.text}</Fragment>
+      ),
     )}
   </span>
 );

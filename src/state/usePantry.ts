@@ -32,6 +32,7 @@ import * as i18n from '../data/pantry-i18n';
 import type { Fx, Shop } from '../data/pantry-live';
 import { cloudEnabled, getDb } from '../lib/supabase';
 import { asset } from '../lib/asset';
+import { CREDITED_IDS, creditOf } from '../lib/photo-credit';
 import { techniqueOf } from '../lib/technique';
 import { DERIVED, breaksDietBecause, meetsDiet } from '../lib/diets';
 import { fromLocal, toLocal } from '../lib/money';
@@ -72,6 +73,20 @@ const RECIPES: Recipe[] = RAW_RECIPES.map((r) => ({
  *  denominator. Counted from the recipes rather than typed in, because the
  *  number that was typed in said 91 long after it meant anything. */
 const COVERED = new Set(RECIPES.map((r) => r.code)).size;
+
+/** The licence mix of the photographs, counted rather than typed in, for the
+ *  same reason: the sentence that was typed in said "almost all CC BY-SA"
+ *  about a set nearly a third of which is CC BY or free of any terms. */
+const PHOTO_MIX = (() => {
+  const mix = { sa: 0, by: 0, free: 0 };
+  for (const id of CREDITED_IDS) {
+    const l = creditOf(id)!.licence;
+    if (/^CC BY-SA /.test(l)) mix.sa++;
+    else if (/^CC BY /.test(l)) mix.by++;
+    else mix.free++;
+  }
+  return mix;
+})();
 
 export type Screen =
   | 'welcome'
@@ -929,6 +944,22 @@ export function usePantry() {
   const dir = i18n.dirOf(lg);
 
   const dish = (r: { id?: string; name: string }) => (r.id && P.dishes[r.id]) || r.name;
+  /** A photograph's credit, split into the pieces a screen renders: the words
+   *  of the sentence as they are, the name and the licence as links. The
+   *  sentence is split rather than assembled so each language keeps its own
+   *  order and punctuation around the two. Drawings answer null. */
+  const photoCredit = (id: string) => {
+    const c = creditOf(id);
+    if (!c) return null;
+    const licence = /^public domain$/i.test(c.licence) ? xt(lg, 'photoPublicDomain') : c.licence;
+    const who = { text: c.author, href: c.page, label: c.author + ' — ' + xt(lg, 'photoCreditOpen') };
+    const lic = { text: licence, href: c.licenceUrl, label: licence + ' — ' + xt(lg, 'photoLicenceOpen') };
+    const parts = xt(lg, 'photoCredit')
+      .split(/(\{who\}|\{licence\})/)
+      .filter(Boolean)
+      .map((t) => (t === '{who}' ? who : t === '{licence}' ? lic : { text: t, href: null, label: '' }));
+    return { who, lic, parts };
+  };
   const cuisineWord = (name: string) => P.cuisines[name] || name;
   const diffWord = (d: number) => P.diff[d] || ['Very easy', 'Easy enough', 'A stretch', 'A proper project'][d - 1];
   const word = (k: string, fb: string) => P.w[k] || fb;
@@ -2458,6 +2489,7 @@ export function usePantry() {
     tonightDish: dish(offer),
     tonightCuisine: cuisineWord(offer.cuisine),
     tonightPic: offer.pic,
+    tonightCredit: photoCredit(offer.id),
     /* A span rather than a figure, because this dish has not been chosen yet
        and the shop has not been either. Both ends of the baseline are divided
        before either is formatted — dividing a formatted string is how the "×4"
@@ -2539,6 +2571,7 @@ export function usePantry() {
     dishLocal: P.lo[recipe.id] || recipe.local,
     dishCuisine: cuisineWord(recipe.cuisine),
     dishPic: recipe.pic,
+    dishCredit: photoCredit(recipe.id),
     priceTotal: fmtSpan(rSpan.lo, rSpan.hi),
     priceSub: word('toBuyFor', 'to buy, for') + ' ' + recipe.servings + ' ' + word('servings', 'servings'),
     priceTotalFs: rIsSpan ? '27px' : '44px',
@@ -3067,6 +3100,9 @@ export function usePantry() {
        still wins. */
     stepPic: recipe.method[S.step]?.pic ? asset(recipe.method[S.step].pic!) : recipe.pic || null,
     stepPicIsDish: !recipe.method[S.step]?.pic && !!recipe.pic,
+    /* Only ever the dish's own photograph's credit — a per-step photo would
+       need its own, and none exists. */
+    stepCredit: recipe.method[S.step]?.pic ? null : photoCredit(recipe.id),
     stepTechnique: techniqueOf(recipe.method[S.step]?.text || ''),
     stepTip: recipe.method[S.step]?.tip || null,
     stepMins: recipe.method[S.step]?.m ? recipe.method[S.step].m + ' ' + word('minutes', 'min') : null,
@@ -3682,6 +3718,21 @@ export function usePantry() {
     /* ── Your data, in your hands ───────────────────────────────────────────
        Everything above lives in one key in one browser. Clear the browser and
        it is gone: there is no copy anywhere else unless you asked for one. */
+    /* ── Dish photographs ──
+       The full list, one row per photograph, because the thumbnails on
+       Browse, Plan and Stats are too small to carry a credit of their own.
+       Built only while Settings is open: 108 rows nobody else reads. */
+    picNote: U.picNote
+      .replace('{sa}', String(PHOTO_MIX.sa))
+      .replace('{by}', String(PHOTO_MIX.by))
+      .replace('{free}', String(PHOTO_MIX.free)),
+    photoCreditsTitle: xt(lg, 'photoCreditsTitle').replace('{n}', String(CREDITED_IDS.length)),
+    photoCredits:
+      screen === 'settings'
+        ? RECIPES.filter((r) => creditOf(r.id))
+            .map((r) => ({ key: r.id, dish: dish(r), ...photoCredit(r.id)! }))
+            .sort((a, b) => a.dish.localeCompare(b.dish, lg))
+        : [],
     exportData: () => exportBackup(readStore()),
     importData: (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files && e.target.files[0];

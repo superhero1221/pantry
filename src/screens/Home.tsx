@@ -1,6 +1,6 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
-import { DishPic, Kicker } from '../ui/bits';
+import { DishPic, Kicker, PhotoCredit } from '../ui/bits';
 import { ChevronRight, Flame, Fridge, Search } from '../ui/Icon';
 import type { Pantry } from '../state/usePantry';
 
@@ -52,8 +52,9 @@ export function Home({ v }: { v: Pantry }) {
         <span style={css('font-size:14.5px;color:#6a5c4c')}>{v.tonightMins}</span>
       </div>
 
-      <div style={css('margin-top:13px;border-radius:28px;overflow:hidden;height:162px;background:#fdf0e3;box-shadow:0 3px 10px rgba(46,43,37,.16)')}>
+      <div style={css('position:relative;margin-top:13px;border-radius:28px;overflow:hidden;height:162px;background:#fdf0e3;box-shadow:0 3px 10px rgba(46,43,37,.16)')}>
         <DishPic src={v.tonightPic} radius={0} style={{ display: 'block' }} />
+        {v.tonightCredit && <PhotoCredit credit={v.tonightCredit} />}
       </div>
 
       <div style={css('display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:13px')}>

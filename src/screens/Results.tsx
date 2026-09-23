@@ -1,6 +1,6 @@
 import { css } from '../lib/css';
 import { Btn } from '../ui/Btn';
-import { BackBtn, DishPic, Kicker } from '../ui/bits';
+import { BackBtn, DishPic, Kicker, PhotoCredit } from '../ui/bits';
 import { ChevronRight } from '../ui/Icon';
 import type { Pantry } from '../state/usePantry';
 
@@ -62,8 +62,9 @@ export function Results({ v }: { v: Pantry }) {
         </div>
       )}
 
-      <div style={css('margin:16px 22px 0;border-radius:28px;overflow:hidden;height:196px;background:#fdf0e3;box-shadow:0 3px 10px rgba(46,43,37,.16)')}>
+      <div style={css('position:relative;margin:16px 22px 0;border-radius:28px;overflow:hidden;height:196px;background:#fdf0e3;box-shadow:0 3px 10px rgba(46,43,37,.16)')}>
         <DishPic src={v.dishPic} radius={0} style={{ display: 'block', filter: 'saturate(1.06) contrast(1.02)' }} />
+        {v.dishCredit && <PhotoCredit credit={v.dishCredit} />}
       </div>
 
       <div style={css('margin:16px 22px 0;padding:20px;border-radius:28px;background:#ffe9d2')}>

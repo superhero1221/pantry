@@ -181,7 +181,11 @@ export const EXTRA: Record<string, Record<string, string>> = {
        CC BY, both of which require the notice to be visible where the data
        is — so `creditShort` renders on Locate and on Shop, and the full
        three sit in Settings. The names and the licence codes read the same
-       in all six languages: they are what the licence names. */
+       in all six languages: they are what the licence names.
+       The dish photographs are the same obligation, photo by photo: CC BY
+       and CC BY-SA want the author, the licence and a link, so `photoCredit`
+       sits on the photograph wherever one is shown large (Home, Results,
+       Cook) and Settings lists every one. */
     creditsLabel: 'Attribution',
     creditShort: 'Shops and prices: © OpenStreetMap contributors · Open Food Facts — ODbL',
     creditOsm:
@@ -190,6 +194,13 @@ export const EXTRA: Record<string, Record<string, string>> = {
       'Real prices and pack weights come from Open Prices and Open Food Facts, available under the Open Database Licence (ODbL).',
     creditOther:
       'The measured baseline is the WFP food price monitor, by way of HDX (CC BY). Exchange rates are the European Central Bank’s daily reference rates.',
+    photoCredit: 'Photo: {who} · {licence}',
+    photoCreditOpen: 'opens the original on Wikimedia Commons',
+    photoLicenceOpen: 'opens the licence terms',
+    photoCreditsTitle: 'Dish photographs ({n})',
+    photoCreditsIntro:
+      'The photographer’s name opens the original on Wikimedia Commons; the licence opens its terms. Dishes without a photograph have drawings made for Pantry.',
+    photoPublicDomain: 'Public domain',
 
     /* ── When a price will not go in ──
        Every one of these used to be silence: the panel closed, the fields

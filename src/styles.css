@@ -79,6 +79,12 @@ select {
   outline: 2px solid #e85d04;
   outline-offset: 2px;
 }
+/* The photo credit sits on a dark pill over a photograph, where the orange
+   ring can land on orange food. White on the pill is always visible. */
+.pg-credit a:focus-visible {
+  outline-color: #ffffff;
+  outline-offset: 1px;
+}
 ::selection {
   background: #ffe4cd;
 }
