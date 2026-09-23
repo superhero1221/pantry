@@ -35,7 +35,7 @@ import { asset } from '../lib/asset';
 import { CREDITED_IDS, creditOf } from '../lib/photo-credit';
 import { techniqueOf } from '../lib/technique';
 import { DERIVED, breaksDietBecause, meetsDiet } from '../lib/diets';
-import { fromLocal, toLocal } from '../lib/money';
+import { formatAmount, formatMoney, fromLocal, parseLocalAmount, toLocal, wholeUnits } from '../lib/money';
 import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
 import { orderBrowse } from './browse';
@@ -983,9 +983,10 @@ export function usePantry() {
       const v = toLocal(gbp, c, fx);
       // Whole lira and whole naira, pounds and euros to the penny: that is a
       // property of the currency, not of today's rate. The bundled figure
-      // decides the shape so a live rate can never change it.
-      if (c.fx >= 40) return c.sym + Math.round(v).toLocaleString();
-      return c.sym + v.toFixed(2);
+      // decides the shape so a live rate can never change it. formatMoney, not
+      // toLocaleString(): that followed the browser's locale, so naira printed
+      // ₦4.628 in a German browser and rupees Rs٦٣٤ in an Arabic one.
+      return formatMoney(v, c.sym, wholeUnits(c));
     },
     [c, fx],
   );
@@ -1036,7 +1037,9 @@ export function usePantry() {
   const maxLocal = MAX_BASE * c.idx * fx;
 
   const commitBudget = () => {
-    const v = parseFloat(S.budgetDraft);
+    // Read the way it was typed: 7,50 on a comma keyboard, 5,000 in Lagos, ٤٠
+    // in Arabic digits. parseFloat made those 7, 5 and nothing at all.
+    const v = parseLocalAmount(S.budgetDraft, wholeUnits(c));
     // Both ends, in the money it was typed in. `v > 0` alone let £999999999
     // through, which wraps the chip row onto its own line and stretches every
     // "under your budget" figure downstream, and let 0.001 through, which
@@ -2439,6 +2442,10 @@ export function usePantry() {
     budgetOtherOpen: S.budgetOtherOpen,
     budgetDraft: S.budgetDraft,
     symbol: c.sym,
+    /* An example in the shape this currency is typed in: 6.50 where there are
+       pennies, a round whole number where there are not. "6.50" beside the
+       naira sign invited six and a half naira. About a meal's worth either way. */
+    budgetPlaceholder: wholeUnits(c) ? formatAmount(Math.round(toLocal(6.5, c, fx) / 10) * 10, true) : '6.50',
     /* Typing is not an error state. Whatever the last Set said, the next
        keystroke clears it — the field states the range once and then shuts up
        rather than turning red while you are halfway through a number. */
@@ -3003,7 +3010,9 @@ export function usePantry() {
     onReportPack: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPack: e.target.value }),
     closeReport: () => setState({ reportFor: null }),
     submitReport: async () => {
-      const price = parseFloat(S.reportPrice);
+      // Decimal commas and Arabic digits read as typed, like the budget field.
+      // Not rounded: a shelf price can be ₺12.50 even where fmt prints whole lira.
+      const price = parseLocalAmount(S.reportPrice, false);
       // Whole grams. A pack is a thing on a shelf, not a measurement.
       const pack = Math.round(parseFloat(S.reportPack));
       // Read through the ref, like savePlan: setState is a request, so a second

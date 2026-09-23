@@ -253,7 +253,7 @@ export function Home({ v }: { v: Pantry }) {
                 value={v.budgetDraft}
                 onChange={v.onBudgetDraft}
                 onKeyDown={v.onBudgetKey}
-                placeholder="6.50"
+                placeholder={v.budgetPlaceholder}
                 inputMode="decimal"
                 aria-label={v.t.homeMoney}
                 aria-invalid={v.budgetErr}
