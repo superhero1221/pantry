@@ -29,11 +29,13 @@ const ROOT = resolve(new URL('../..', import.meta.url).pathname);
 export const APP_DIR = join(ROOT, 'node_modules/.cache/jev-app');
 const DEFAULT_CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 
-/** vite build into a private directory, so dist/ is never touched. */
-export function buildApp({ rebuild = true, say = console.log } = {}) {
-  if (!rebuild && existsSync(join(APP_DIR, 'index.html'))) return;
-  say('  building the app for the pick check (vite build -> node_modules/.cache/jev-app)');
-  const r = spawnSync(join(ROOT, 'node_modules/.bin/vite'), ['build', '--outDir', APP_DIR, '--emptyOutDir', '--logLevel', 'warn'], {
+/** vite build into a private directory, so dist/ is never touched. The smoke
+ *  test (scripts/smoke.mjs) builds into a directory of its own, so neither
+ *  tool's --no-build ever picks up the other's leftovers. */
+export function buildApp({ rebuild = true, say = console.log, dir = APP_DIR, why = 'the pick check' } = {}) {
+  if (!rebuild && existsSync(join(dir, 'index.html'))) return;
+  say(`  building the app for ${why} (vite build -> ${dir.slice(ROOT.length + 1)})`);
+  const r = spawnSync(join(ROOT, 'node_modules/.bin/vite'), ['build', '--outDir', dir, '--emptyOutDir', '--logLevel', 'warn'], {
     cwd: ROOT,
     encoding: 'utf8',
     env: { ...process.env, BASE_PATH: '/' },
@@ -47,8 +49,18 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json',
 };
 
-/** A static server with an index.html fallback. Local only. */
-export function serve(dir = APP_DIR) {
+/** Where public/_redirects says a miss is a 404 rather than the index shell. */
+const REAL_MISSES = /^\/(assets|pix)\//;
+
+/**
+ * A static server with an index.html fallback. Local only.
+ *
+ * `hostRules` makes a miss under /assets/ or /pix/ a 404, the way the real
+ * host does (public/_redirects). Without it a missing chunk or photo comes
+ * back as the index shell with a 200, and nothing downstream can tell — which
+ * is fine for reading a dish name and useless to a smoke test.
+ */
+export function serve(dir = APP_DIR, { hostRules = false } = {}) {
   return new Promise((ok) => {
     const srv = http.createServer(async (req, res) => {
       let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -60,6 +72,11 @@ export function serve(dir = APP_DIR) {
         res.writeHead(200, { 'content-type': TYPES[extname(p)] || 'application/octet-stream' });
         res.end(b);
       } catch {
+        if (hostRules && REAL_MISSES.test(p)) {
+          res.writeHead(404, { 'content-type': 'text/plain' });
+          res.end('not found');
+          return;
+        }
         res.writeHead(200, { 'content-type': 'text/html' });
         res.end(await readFile(join(dir, 'index.html')));
       }
@@ -73,7 +90,7 @@ export async function launch() {
   try {
     ({ chromium } = await import('playwright'));
   } catch {
-    throw new Error("the pick check needs Playwright ('playwright' is not installed here). Install it without saving: npm i --no-save playwright && npx playwright install chromium");
+    throw new Error("this needs Playwright ('playwright' is not installed here). Install it without saving: npm i --no-save playwright && npx playwright install chromium");
   }
   const exe = process.env.JEV_CHROMIUM || (existsSync(DEFAULT_CHROME) ? DEFAULT_CHROME : undefined);
   return chromium.launch(exe ? { executablePath: exe } : {});
@@ -87,9 +104,15 @@ export async function launch() {
  * (cuisine, minutes, price range, shops), and the diet-clash alert if one is
  * on screen.
  */
-export async function readOffers(browser, port, seed, { n = 5, anotherLabel }) {
-  const ctx = await browser.newContext({ serviceWorkers: 'block', locale: 'en-GB' });
-  try {
+/**
+ * A fresh browser context for one person: service workers blocked, every host
+ * but the local server aborted, and — when there is a seed — the profile in
+ * localStorage before the app's first script runs. No seed means a first-ever
+ * visit, empty storage and all. `viewport` and `locale` pass straight through.
+ */
+export async function openContext(browser, port, seed, { locale = 'en-GB', viewport } = {}) {
+  const ctx = await browser.newContext({ serviceWorkers: 'block', locale, ...(viewport ? { viewport } : {}) });
+  if (seed) {
     await ctx.addInitScript((s) => {
       try {
         if (!sessionStorage.getItem('jev.seeded')) {
@@ -98,11 +121,19 @@ export async function readOffers(browser, port, seed, { n = 5, anotherLabel }) {
           sessionStorage.setItem('jev.seeded', '1');
         }
       } catch {
-        /* nothing to do: the check below will notice */
+        /* nothing to do: the caller's own check will notice */
       }
     }, seed);
+  }
+  const origin = `http://127.0.0.1:${port}`;
+  await ctx.route((u) => !u.href.startsWith(origin), (r) => r.abort());
+  return ctx;
+}
+
+export async function readOffers(browser, port, seed, { n = 5, anotherLabel }) {
+  const ctx = await openContext(browser, port, seed);
+  try {
     const origin = `http://127.0.0.1:${port}`;
-    await ctx.route((u) => !u.href.startsWith(origin), (r) => r.abort());
     const page = await ctx.newPage();
     await page.goto(origin + '/');
     await page.waitForSelector('h1', { timeout: 15000 });

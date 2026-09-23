@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "standalone": "STANDALONE=1 vite build && node scripts/build-standalone.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

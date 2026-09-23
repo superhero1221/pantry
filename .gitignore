@@ -24,3 +24,6 @@ __pycache__/
 
 # Jev harness output (scripts/jev). Reports and raw API responses, never committed.
 jev-results/
+
+# Browser smoke test output (scripts/smoke.mjs): a summary and optional screenshots.
+smoke-results/
