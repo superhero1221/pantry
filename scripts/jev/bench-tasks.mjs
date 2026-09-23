@@ -84,9 +84,17 @@ const CLEAR = {
   halal: (n) => /\b(pork|bacon|ham|lard|chorizo|wine|beer|mirin)\b/i.test(n),
   kosher: (n) => /\b(pork|bacon|ham|prawns?|shrimp|squid|mussels|clams|crab|lobster)\b/i.test(n),
 };
-function clearlyBreaksDiet(r, d) {
+/**
+ * The app's cautious extras: coconut and tahini count as nuts under DEFS, but
+ * a judge shown only the word "Nut free" can fairly read them as fine, so a
+ * dish that breaks nut free ONLY through them is not a clear break.
+ */
+const CAUTIOUS_ONLY = { nut_free: /coconut|tahini/i };
+export function clearlyBreaksDiet(r, d) {
   if (meetsDiet(r, d)) return false;
-  if (breaksDietBecause(r, d).length) return true; // derived diets: the app names the ingredient
+  const named = breaksDietBecause(r, d).filter((n) => !CAUTIOUS_ONLY[d]?.test(n));
+  if (named.length) return true; // derived diets: the app names the ingredient
+  if (breaksDietBecause(r, d).length) return false; // only the cautious extras
   const items = r.items.filter((i) => !i.opt).map((i) => i.n);
   if (d === 'kosher' && items.some((n) => MEAT.test(n) && !/fish|cod|salmon|mackerel|tuna|anchov/i.test(n)) && items.some((n) => DAIRY.test(n))) return true;
   return !!CLEAR[d] && items.some((n) => CLEAR[d](n));
@@ -131,6 +139,21 @@ function dishOf(r, s) {
 }
 
 /**
+ * Could the compliant dish be "clearly unsuitable" for this person, which the
+ * best question's own "none" option allows? Then the gold would not be exact.
+ * So the one compliant candidate must be a proper dinner (not a side, snack or
+ * thin soup), fit the stated goal and not be far above the cooking level.
+ */
+export function properDinner(r, s) {
+  if (r.per.kcal < 450 || r.per.protein < 15) return false;
+  if (r.diff > Math.max(2, s.level + 1)) return false;
+  if (s.goal === 'muscle' && r.per.protein < 25) return false;
+  if (s.goal === 'gain' && r.per.kcal < 600) return false;
+  if (s.goal === 'lose' && r.per.kcal > 750) return false;
+  return true;
+}
+
+/**
  * Twenty scenarios. Every fifth has no compliant candidate at all (gold
  * "none"); the rest have exactly one. The first-listed dish ("apps_pick") is
  * the compliant one in about half, so pick_ok is balanced.
@@ -140,7 +163,7 @@ export function pickCalls(n = 20) {
   return people.map((s, i) => {
     const rand = prng(SEED + 1000 + i);
     const facts = RECIPES.map((r) => ({ r, f: pickFacts(r, s) }));
-    const good = facts.filter((x) => x.f.compliant && (!s.diets.length || !x.r.items.some((it) => AMBIGUOUS.test(it.n))));
+    const good = facts.filter((x) => x.f.compliant && properDinner(x.r, s) && (!s.diets.length || !x.r.items.some((it) => AMBIGUOUS.test(it.n))));
     const bad = facts.filter((x) => !x.f.compliant && x.f.clearlyBroken);
     if (bad.length < 5) throw new Error(`scenario ${s.id}: only ${bad.length} clearly non-compliant dishes`);
     const wantNone = i % 5 === 4 || !good.length;

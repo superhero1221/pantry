@@ -70,11 +70,15 @@ export const TRANSLATION_GOLD_OK = [
 /**
  * Five deliberately broken copies of real translations. Each replaces ONE
  * language's text in an otherwise real row; only that language is asked.
+ * Every break changes the MEANING, because the question only asks whether the
+ * text says the same thing as the English. (Wrong-language or left-in-English
+ * cases were dropped: "Show me dinner" in the Urdu field does say the same
+ * thing, so a literal judge could fairly answer yes.)
  */
 export const TRANSLATION_GOLD_BROKEN = [
   { id: 'pack:v.nudge', lang: 'fr', kind: 'wrong number', text: 'Les germes et la coriandre sont à utiliser sous 5 jours', why: 'English says 3 days' },
   { id: 'strings:locWhy', lang: 'es', kind: 'negation flipped', text: 'Los precios y las tiendas no cambian calle por calle. Nada sale de este dispositivo.', why: 'says prices and shops do NOT change street by street' },
   { id: 'strings:welcomeTag', lang: 'fr', kind: 'dropped clause', text: 'Dites-moi ce qui vous tente. Je décide pour vous.', why: 'drops "and what is in your pocket" (the budget)' },
-  { id: 'strings:tierTime', lang: 'pl', kind: 'wrong language', text: '¿Cuánto tiempo tienes de verdad?', why: 'Spanish in the Polish field' },
-  { id: 'strings:homeGo', lang: 'ur', kind: 'English left in', text: 'Show me dinner', why: 'untranslated English in the Urdu field' },
+  { id: 'strings:tierTime', lang: 'pl', kind: 'wrong word', text: 'Ile masz naprawdę pieniędzy?', why: '"how much MONEY do you really have?" where the English asks about time' },
+  { id: 'strings:homeGo', lang: 'ur', kind: 'wrong meal', text: 'ناشتہ دکھائیں', why: '"show breakfast" (ناشتہ) where the English says dinner (the real text has رات کا کھانا)' },
 ];

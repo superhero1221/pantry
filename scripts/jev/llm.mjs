@@ -92,8 +92,10 @@ export const DEFAULT_PREFS = [
 
 /**
  * Model families that always spend hidden "thinking" tokens, billed as
- * output. A small max_tokens can then be eaten before any JSON appears. They
- * are chosen only when a group has nothing else.
+ * output. A small max_tokens (50-220 here) can then be eaten before any JSON
+ * appears, so the default selection never picks one: a group with only
+ * thinking matches is reported as missing. Naming one in --models still works
+ * (allowThinking), and chatBody() then asks for low, hidden reasoning.
  */
 const ALWAYS_THINKS = /\/(o\d|gpt-5|gemini-2\.5|gemini-3)|thinking|deepseek-r1/i;
 /** Ids that are not a plain, paid, text chat model. */
@@ -112,13 +114,16 @@ export function globToRegExp(glob) {
  * @param {object}   o
  * @param {Array<{group:string, patterns:string[]}>} [o.prefs]  groups; one model per group
  * @param {{input:number, output:number}} o.workload  tokens this run would send / cap
- * @returns {{chosen: object[], considered: object[]}}  chosen rows carry
- *          `price`, `workloadUsd`, `group`, `thinks`
+ * @param {boolean} [o.allowThinking]  let a thinking model be chosen (for --models)
+ * @returns {{chosen: object[], considered: object[], missing: {group:string, why:string}[]}}
+ *          chosen rows carry `price`, `workloadUsd`, `group`, `thinks`;
+ *          `missing` names every group that yielded no model, and why
  */
-export function selectModels(listing, { prefs = DEFAULT_PREFS, workload }) {
+export function selectModels(listing, { prefs = DEFAULT_PREFS, workload, allowThinking = false }) {
   const rows = (listing || []).filter((m) => m && typeof m.id === 'string');
   const chosen = [];
   const considered = [];
+  const missing = [];
   for (const pref of prefs) {
     const res = pref.patterns.map(globToRegExp);
     const matches = rows
@@ -135,9 +140,15 @@ export function selectModels(listing, { prefs = DEFAULT_PREFS, workload }) {
       .filter((m) => !chosen.some((c) => c.id === m.id));
     matches.sort((a, b) => Number(a.thinks) - Number(b.thinks) || a.workloadUsd - b.workloadUsd || a.id.localeCompare(b.id));
     considered.push(...matches.map((m) => ({ id: m.id, group: pref.group, workloadUsd: m.workloadUsd, thinks: m.thinks })));
-    if (matches.length) chosen.push(matches[0]);
+    const usable = allowThinking ? matches : matches.filter((m) => !m.thinks);
+    if (usable.length) chosen.push(usable[0]);
+    else
+      missing.push({
+        group: pref.group,
+        why: matches.length ? `only thinking models matched (${matches.map((m) => m.id).join(', ')}); their hidden reasoning would eat the small max_tokens. Name one in --models to run it anyway` : `no listed, priced model matched ${pref.patterns.join(' | ')}`,
+      });
   }
-  return { chosen, considered };
+  return { chosen, considered, missing };
 }
 
 /** --models=a,b  -> one preference group per entry, so each entry yields one model. */
@@ -240,6 +251,9 @@ export function chatBody(model, state, questions, { maxTokens }) {
     max_tokens: maxTokens,
     usage: { include: true },
   };
+  // A thinking model only gets here when named in --models: keep its hidden
+  // reasoning short and out of the reply.
+  if (ALWAYS_THINKS.test(model.id) && params.includes('reasoning')) body.reasoning = { effort: 'low', exclude: true };
   if (params.includes('structured_outputs')) body.response_format = { type: 'json_schema', json_schema: { name: 'answers', strict: true, schema: answerSchema(questions) } };
   else if (params.includes('response_format')) body.response_format = { type: 'json_object' };
   return body;

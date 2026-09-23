@@ -47,9 +47,9 @@ export const CRAVINGS = [
   { text: 'coś szybkiego z kurczakiem', lang: 'pl', cuisine: 'none_or_unclear', yes: 'quick', unsure: 'high_protein' },
   { text: 'pierogi', lang: 'pl', cuisine: 'none_or_unclear', yes: '', unsure: 'comforting' },
   { text: 'کچھ مصالحے دار', lang: 'ur', cuisine: null, yes: 'spicy', unsure: '' },
-  { text: 'بریانی', lang: 'ur', cuisine: ['pakistani', 'indian'], yes: '', unsure: 'spicy,comforting' },
+  { text: 'بریانی', lang: 'ur', cuisine: ['pakistani', 'indian', 'south_indian'], yes: '', unsure: 'spicy,comforting' },
   { text: 'شيء خفيف', lang: 'ar', cuisine: 'none_or_unclear', yes: 'light', unsure: '' },
-  { text: 'طعام مغربي', lang: 'ar', cuisine: 'moroccan', yes: '', unsure: '' },
+  { text: 'طعام مغربي', lang: 'ar', cuisine: ['moroccan', 'north_african', 'tunisian'], yes: '', unsure: '' },
   { text: 'jollof', lang: 'en', cuisine: 'west_african', yes: '', unsure: 'spicy' },
   { text: 'full english vibes but for dinner', lang: 'en', cuisine: 'british', yes: '', unsure: 'comforting' },
   { text: 'wingstop mango habanero', lang: 'en', cuisine: 'american', yes: 'spicy', unsure: '' },
@@ -63,8 +63,12 @@ export const CRAVINGS = [
 //  - 'کچھ مصالحے دار' (Urdu: "something spicy/masala-y"): 'masala' leans South Asian but
 //    does not name a cuisine. Not scored.
 //  - 'pierogi': Polish, and the book has no Polish cuisine -> none_or_unclear.
-//  - 'بریانی' (biryani): the book files biryani under Pakistani; Indian is equally right.
-//  - 'طعام مغربي' is "Moroccan food" (مغربي = Maghrebi/Moroccan).
+//  - 'بریانی' (biryani): the book files biryani under Pakistani; Indian and South Indian
+//    (Hyderabadi, Chettinad...) are equally right.
+//  - 'طعام مغربي': مغربي is Moroccan in everyday use but also Maghrebi, so the book's
+//    North African and Tunisian cuisines are accepted too.
+//  - Pad Thai swap: crispy shallots, not sesame seeds, because the app's nut rule names
+//    tahini but says nothing about sesame seeds, which would make nut free ambiguous.
 
 /* ── 2. Price-report sanity check ────────────────────────────────────────── */
 
@@ -137,7 +141,7 @@ export const SWAPS = [
   { recipe: 'egg_fried_rice', out: 'Eggs', in: 'Firm tofu', gold: { vegan: true, gluten_free: false }, why: 'eggs were the only animal product; soy sauce remains' },
   { recipe: 'veg_curry', out: 'Coconut milk', in: 'Double cream', gold: { vegan: false, nut_free: true }, why: 'cream is dairy; coconut was the only nut' },
   { recipe: 'veg_curry', out: 'Coconut milk', in: 'Cashew cream', gold: { vegan: true, nut_free: false }, why: 'cashews are tree nuts' },
-  { recipe: 'pad_thai', out: 'Roasted peanuts', in: 'Toasted sesame seeds', gold: { nut_free: true, vegan: false }, why: 'peanuts were the only nut; prawns, eggs, fish sauce remain' },
+  { recipe: 'pad_thai', out: 'Roasted peanuts', in: 'Crispy fried shallots', gold: { nut_free: true, vegan: false }, why: 'peanuts were the only nut; prawns, eggs, fish sauce remain' },
   { recipe: 'pad_thai', out: 'Fish sauce', in: 'Soy sauce', gold: { gluten_free: false }, why: 'ordinary soy sauce has wheat' },
   { recipe: 'kedgeree', out: 'Butter', in: 'Olive oil', gold: { dairy_free: true, kosher: true }, why: 'butter was the only dairy; fish and eggs, no meat' },
   { recipe: 'spaghetti_puttanesca', out: 'Anchovies', in: 'Extra capers', gold: { vegetarian: true, vegan: true }, why: 'anchovies were the only animal product' },
@@ -168,7 +172,7 @@ export const CUPBOARD = [
   { text: 'Worcestershire sauce', gold: 'v:F vg:F df:T nf:T np:T', note: 'anchovies; UK malt vinegar makes gluten brand-dependent' },
   { text: 'Pesto', gold: 'v:F df:F nf:F np:T na:T gf:T', note: 'parmesan and pine nuts' },
   { text: 'naan bread', gold: 'gf:F np:T na:T', note: 'wheat; dairy varies by brand' },
-  { text: 'gummy bears', gold: 'v:F vg:F h:F nf:T', note: 'gelatine, normally pork' },
+  { text: 'gummy bears', gold: 'v:F vg:F nf:T', note: 'gelatine (pork, or beef in halal markets such as PK, AE, TR), so halal depends on the market and is not scored' },
   { text: 'Oyster sauce', gold: 'v:F vg:F k:F df:T np:T na:T nf:T', note: 'shellfish' },
   { text: 'Tahini', gold: 'nf:F v:T vg:T gf:T df:T np:T na:T h:T k:T', note: 'sesame paste; the app counts tahini as a nut' },
   { text: 'Marzipan', gold: 'nf:F vg:T gf:T df:T np:T', note: 'almonds' },
@@ -219,14 +223,14 @@ export const MOODS = [
   { text: 'exhausted, 20 minutes, want comfort', rule: { maxTotal: 20 } },
   { text: 'I have 15 minutes before a meeting', rule: { maxTotal: 15 } },
   { text: 'vegetarian tonight, not fussy', rule: { diets: ['vegetarian'] } },
-  { text: 'post-gym, need loads of protein', rule: { minProtein: 40 } },
+  { text: 'post-gym, need loads of protein, 40 g or more', rule: { minProtein: 40 } },
   { text: 'trying to eat light, under 500 calories', rule: { maxKcal: 500 } },
-  { text: 'want to spend the evening on something ambitious', rule: { minDiff: 3 } },
-  { text: 'vegan, and quick please', rule: { diets: ['vegan'], maxTotal: 30 } },
+  { text: 'want a real challenge tonight: difficulty 3 out of 4 or harder', rule: { minDiff: 3 } },
+  { text: 'vegan, and 30 minutes max please', rule: { diets: ['vegan'], maxTotal: 30 } },
   { text: 'no meat, no fish, under 30 minutes', rule: { diets: ['vegetarian'], maxTotal: 30 } },
-  { text: "I'm starving, want something big", rule: { minKcal: 800 } },
-  { text: 'gluten free and quick', rule: { diets: ['gluten_free'], maxTotal: 30 } },
-  { text: 'I can barely cook, keep it really simple', rule: { maxDiff: 1 } },
+  { text: "I'm starving, want something big, 800 calories or more", rule: { minKcal: 800 } },
+  { text: 'gluten free, and no more than 30 minutes', rule: { diets: ['gluten_free'], maxTotal: 30 } },
+  { text: 'I can barely cook: difficulty 1 only, please', rule: { maxDiff: 1 } },
   { text: 'feeling adventurous: Korean or Ethiopian?', rule: { cuisines: ['Korean', 'Ethiopian'] } },
   { text: 'halal please, nothing over 45 minutes', rule: { diets: ['halal'], maxTotal: 45 } },
   { text: 'dairy free, and I am tired', rule: { diets: ['dairy_free'] } },
@@ -249,9 +253,11 @@ export const URGENCY = [
   'high: blocks someone from using the app, or misleads many people',
   'critical: a safety risk (a diet or allergen error someone could eat) or a data/security problem',
 ];
-/** type null / urgency null = no single right answer, not scored. */
+/** type null / urgency null = no single right answer, not scored; an array of types = any of them is right. */
 export const FEEDBACK = [
-  { text: 'I ticked Nut free and it showed me a satay with peanuts in the ingredient list!! My son is allergic', type: 'wrong_recipe_info', urgency: 3 },
+  // Both diet-filter complaints could be a wrong recipe fact or a filter bug (nut free is
+  // derived in code, not tagged), so either type is accepted.
+  { text: 'I ticked Nut free and it showed me a satay with peanuts in the ingredient list!! My son is allergic', type: ['wrong_recipe_info', 'bug'], urgency: 3 },
   { text: 'App goes to a white screen when I tap Shop on my iPhone 12', type: 'bug', urgency: 2 },
   { text: 'Rice is not £12 at Aldi, it is more like £1.20 a kilo', type: 'wrong_price', urgency: null },
   { text: 'In Polish the first screen is fine but the recipe steps are all still in English', type: 'translation', urgency: null },
@@ -269,6 +275,6 @@ export const FEEDBACK = [
   { text: 'Would love a shopping list I can share with my partner', type: 'feature_request', urgency: 0 },
   { text: 'Prices in Turkey look like last year, the lira has moved a lot since', type: 'wrong_price', urgency: null },
   { text: 'Earn $5000/week from home!!! click here', type: 'abuse_spam', urgency: 0 },
-  { text: "The gluten free filter shows me a stir fry made with soy sauce — I'm coeliac", type: 'wrong_recipe_info', urgency: 3 },
+  { text: "The gluten free filter shows me a stir fry made with soy sauce — I'm coeliac", type: ['wrong_recipe_info', 'bug'], urgency: 3 },
   { text: 'I set my budget to 5 and the Home screen shows £50', type: 'bug', urgency: null },
 ];

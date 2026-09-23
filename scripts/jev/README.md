@@ -25,7 +25,7 @@ node scripts/jev/run.mjs all --mock --limit=5
 # For real. The key goes in the environment and nowhere else.
 export OPENROUTER_API_KEY=...        # never in a file under src/
 node scripts/jev/run.mjs diets --limit=3 --max-usd=0.02   # first: a tiny run
-node scripts/jev/run.mjs all --max-usd=0.25
+node scripts/jev/run.mjs all --max-usd=0.20
 
 # The harness's own tests (offline, not part of the app's vitest run)
 node --test scripts/jev/*.test.mjs
@@ -97,7 +97,7 @@ Two more scripts ask whether Jev is worth using at all. Neither needs a browser.
 
 - **`bench.mjs`: Jev vs a normal LLM.** The same states and questions go to Jev and to one or two cheap general models on OpenRouter's chat completions endpoint. The questions come from the checks' own builders, word for word. The models are chosen at run time from `GET /models`: by default the cheapest listed Anthropic Haiku and the cheapest OpenAI `-mini` / Google `-flash`. There are three tasks:
   - diets: 40 seeded recipes × 9 diets
-  - picks-style constraint check: 20 scenarios built from pure modules in `bench-tasks.mjs`, where the right answer is exact by construction
+  - picks-style constraint check: 20 scenarios built from pure modules in `bench-tasks.mjs`, where every candidate but the gold one clearly breaks a hard constraint (a coconut-only nut-free break is not counted as clear) and the gold one is a proper dinner for the person's goal and cooking level, so the right answer is exact by construction
   - translations: 60 seeded keys × 5 languages
 
   Both kinds of model are scored against the app's own diet labels and against hand-verified gold cases in `gold.mjs`: 25 diet cases, and 15 translation cases of which 5 are deliberately broken. The report also covers confident-and-wrong answers, median and p90 latency, tokens, cost, and cost per 1,000 questions. For Jev alone it measures consistency (diets asked twice) and choice order flips. Output goes to `bench.md` and `bench.json`. Flags: `--dry`, `--mock`, `--max-usd=0.30`, `--models=a,b`, `--only=diets|translations|picks`, `--out`.
@@ -109,7 +109,7 @@ Two more scripts ask whether Jev is worth using at all. Neither needs a browser.
   - mood-to-dish
   - feedback triage
 
-  Each job gets an accuracy, a confident-and-wrong count, latency, cost per 1,000 uses, a verdict, and a note on how it would plug in. Every job would run server-side, in a Supabase Edge Function. Output goes to `usecases.md` and `usecases.json`. Flags: `--dry`, `--mock`, `--max-usd=0.10`, `--only=<job>`, `--picks-facts=path`, `--out`.
+  Each job gets an accuracy, a confident-and-wrong count, latency, cost per 1,000 uses, a verdict, and a note on how it would plug in. Every job would run server-side, in a Supabase Edge Function. Output goes to `usecases.md` and `usecases.json`. Flags: `--dry`, `--mock`, `--max-usd=0.05`, `--only=<job>`, `--picks-facts=path`, `--out`.
 
 `llm.mjs` is the OpenRouter chat client (model selection, strict JSON schema, a tolerant reply parser, cost from `usage.cost` or listed prices, and a spend guard shared with Jev). `score.mjs` holds the scoring functions, which do no I/O. Their tests are in `bench.test.mjs`. `--mock` runs everything against fakes, including a fake OpenRouter that serves `/models`. It also lists two made-up dear models, so the "gold-only subset" and "skipped: over budget" paths run too.
 

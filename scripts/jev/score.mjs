@@ -38,17 +38,28 @@ export function scoreLevel(v, gold) {
   return { status: right ? 'right' : 'wrong', confidentWrong: Math.abs(v - gold) >= 2, absErr: Math.abs(v - gold) };
 }
 
+/**
+ * A question that was never asked because the spend guard stopped the run (or
+ * the model ran only its gold subset). Not an answer, so neither right nor
+ * wrong: it must not drag accuracy down to 0% for a job that never ran.
+ */
+export const NOT_RUN = Object.freeze({ status: 'not_run' });
+/** `s`, unless the call behind it was skipped: then NOT_RUN (n/a stays n/a). */
+export const unlessSkipped = (res, s) => (res?.skipped && s.status !== 'n/a' ? NOT_RUN : s);
+
 /** Sum up a list of {status, confidentWrong}. accuracy is over scored rows only. */
 export function tally(scores) {
-  const t = { right: 0, wrong: 0, error: 0, na: 0, confidentWrong: 0, n: scores.length };
+  const t = { right: 0, wrong: 0, error: 0, na: 0, notRun: 0, confidentWrong: 0, n: scores.length };
   for (const s of scores) {
     if (s.status === 'right') t.right++;
     else if (s.status === 'wrong') t.wrong++;
     else if (s.status === 'error') t.error++;
+    else if (s.status === 'not_run') t.notRun++;
     else t.na++;
     if (s.confidentWrong) t.confidentWrong++;
   }
   // Errors count against accuracy: an unreadable answer is not a right one.
+  // Questions never asked (not_run) do not.
   const scored = t.right + t.wrong + t.error;
   t.scored = scored;
   t.accuracy = scored ? t.right / scored : null;
@@ -109,12 +120,14 @@ export const per1000 = (usd, count) => (count ? (usd / count) * 1000 : null);
  * The verdict for a product job. Deliberately strict: a job that can be
  * confidently wrong about somebody's diet does not get "use it".
  */
-export function verdictFor({ accuracy, confidentWrong, scored }, { mock = false, useAt = 0.9, maybeAt = 0.75 } = {}) {
+export function verdictFor({ accuracy, confidentWrong, scored, notRun = 0 }, { mock = false, useAt = 0.9, maybeAt = 0.75 } = {}) {
   if (mock) return 'n/a (mock run — answers are fake)';
+  if (!scored && notRun) return 'not run (the spend guard stopped before this job)';
   if (!scored || accuracy == null) return "can't tell (nothing was scored)";
-  if (accuracy >= useAt && confidentWrong === 0) return 'use it';
-  if (accuracy >= maybeAt) return confidentWrong ? 'maybe — only with a human or a rule behind it' : 'maybe — as a suggestion, with a fallback';
-  return "don't";
+  const partial = notRun ? ` (partial: ${notRun} scored questions not run)` : '';
+  if (accuracy >= useAt && confidentWrong === 0) return 'use it' + partial;
+  if (accuracy >= maybeAt) return (confidentWrong ? 'maybe — only with a human or a rule behind it' : 'maybe — as a suggestion, with a fallback') + partial;
+  return "don't" + partial;
 }
 
 /** 'as good' within `tol` (absolute), else better / worse. */

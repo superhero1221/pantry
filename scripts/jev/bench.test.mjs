@@ -10,13 +10,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { DIETS, RECIPES, meetsDiet } from './app.mjs';
-import { dietCalls, pickCalls, pickFacts, translationCalls } from './bench-tasks.mjs';
+import { clearlyBreaksDiet, dietCalls, pickCalls, pickFacts, properDinner, translationCalls } from './bench-tasks.mjs';
 import { DIET_GOLD, TRANSLATION_GOLD_BROKEN, TRANSLATION_GOLD_OK } from './gold.mjs';
 import { choice, noul, score } from './lib.mjs';
 import { Budget, Llm, OFFLINE_MODELS, answerSchema, chatBody, contentOf, costFromUsage, globToRegExp, mockOpenRouterFetch, parseLlmAnswers, prefsFromFlag, priceOf, selectModels } from './llm.mjs';
-import { agreement, compareWord, flipRate, median, p90, per1000, quantile, scoreChoice, scoreLevel, scoreNoul, tally, verdictFor } from './score.mjs';
+import { NOT_RUN, agreement, compareWord, flipRate, median, p90, per1000, quantile, scoreChoice, scoreLevel, scoreNoul, tally, unlessSkipped, verdictFor } from './score.mjs';
 import { CUISINES, buildJobs, buildReport, defaultTop5, moodGold, scoreCall, slug, todayMatches, top5FromPicksFile } from './usecases.mjs';
-import { CRAVINGS, CUPBOARD, PRICE_REPORTS, SWAPS, parseDietGold } from './usecases-data.mjs';
+import { CRAVINGS, CUPBOARD, MOODS, PRICE_REPORTS, SWAPS, parseDietGold } from './usecases-data.mjs';
 
 const out = () => mkdtempSync(join(tmpdir(), 'jev-bench-'));
 const quiet = () => {};
@@ -161,13 +161,23 @@ test('selects the cheapest plain match per group from a /models listing', () => 
   );
   assert.ok(!considered.some((m) => m.id.includes(':free')), 'free variants are never chosen');
   assert.ok(!considered.some((m) => m.id === 'openrouter/auto'), 'the router (price -1) is never chosen');
-  // With the cheap ones gone, the dearer matches win, and a thinking model
-  // only when nothing else is left.
+  // With the cheap ones gone, the dearer matches win; a group with only
+  // thinking models left is reported missing, not silently filled.
   const fewer = OFFLINE_MODELS.filter((m) => !['anthropic/claude-3-haiku', 'google/gemini-2.0-flash-001', 'openai/gpt-4o-mini', 'openai/gpt-4.1-mini'].includes(m.id));
-  const again = selectModels(fewer, { workload }).chosen.map((m) => m.id);
-  assert.equal(again[0], 'anthropic/claude-3.5-haiku');
-  assert.ok(['openai/gpt-5-mini', 'google/gemini-2.5-flash'].includes(again[1]));
-  assert.equal(selectModels(fewer, { workload }).chosen[1].thinks, true);
+  const again = selectModels(fewer, { workload });
+  assert.deepEqual(again.chosen.map((m) => m.id), ['anthropic/claude-3.5-haiku']);
+  assert.equal(again.missing.length, 1);
+  assert.equal(again.missing[0].group, 'openai-or-google');
+  assert.match(again.missing[0].why, /only thinking models/);
+  const allowed = selectModels(fewer, { workload, allowThinking: true }).chosen;
+  assert.ok(['openai/gpt-5-mini', 'google/gemini-2.5-flash'].includes(allowed[1].id));
+  assert.equal(allowed[1].thinks, true);
+  assert.deepEqual(chatBody(allowed[1], {}, {}, { maxTokens: 50 }).reasoning, { effort: 'low', exclude: true });
+  assert.equal(chatBody(OFFLINE_MODELS[4], {}, {}, { maxTokens: 50 }).reasoning, undefined);
+  // No Haiku listed: the Anthropic group is named as missing.
+  const noHaiku = selectModels(OFFLINE_MODELS.filter((m) => !m.id.startsWith('anthropic/')), { workload });
+  assert.deepEqual(noHaiku.chosen.map((m) => m.id), ['google/gemini-2.0-flash-001']);
+  assert.deepEqual(noHaiku.missing.map((m) => m.group), ['anthropic']);
   // --models: one model per entry, exact ids and globs.
   const flagged = selectModels(OFFLINE_MODELS, { prefs: prefsFromFlag('openai/gpt-4.1-mini,anthropic/*sonnet*'), workload }).chosen.map((m) => m.id);
   assert.deepEqual(flagged, ['openai/gpt-4.1-mini', 'anthropic/claude-sonnet-4.5']);
@@ -264,7 +274,18 @@ test('bench tasks: the diet sample holds every gold recipe; picks gold is exact'
     assert.equal(c.meta.gold.pick_ok, compliant[0] === ids[0]);
     assert.deepEqual(Object.keys(c.questions.best_a.criteria).slice(0, 5), ids);
     assert.deepEqual(Object.keys(c.questions.best_b.criteria).slice(0, 5), [...ids].reverse());
+    // Exact: every other candidate CLEARLY breaks a hard constraint, and the
+    // gold dish is a proper dinner for this person (so "none" is not defensible).
+    for (const id of ids.filter((x) => x !== c.meta.gold.best)) assert.ok(pickFacts(RECIPES.find((r) => r.id === id), s).clearlyBroken, `${c.id}: ${id} is not clearly broken`);
+    if (c.meta.gold.best !== 'none') assert.ok(properDinner(RECIPES.find((r) => r.id === c.meta.gold.best), s), `${c.id}: gold is not a proper dinner`);
   }
+  // Coconut (the app's cautious nut rule) alone is not a clear nut-free break:
+  // a judge shown only "Nut free" can fairly accept it.
+  const rp = RECIPES.find((r) => r.id === 'rice_and_peas');
+  assert.equal(meetsDiet(rp, 'nut_free'), false);
+  assert.equal(clearlyBreaksDiet(rp, 'nut_free'), false);
+  assert.equal(clearlyBreaksDiet(RECIPES.find((r) => r.id === 'pad_thai'), 'nut_free'), true, 'peanuts are a clear break');
+  assert.equal(properDinner(RECIPES.find((r) => r.id === 'kelewele'), { level: 4, goal: '' }), false, 'a side is not a dinner');
   assert.ok(p.some((c) => c.meta.gold.pick_ok) && p.some((c) => !c.meta.gold.pick_ok), 'pick_ok gold is not all one side');
   assert.ok(p.some((c) => c.meta.gold.best === 'none') && p.some((c) => c.meta.gold.best !== 'none'));
 });
@@ -280,7 +301,7 @@ test('translation gold: keys exist, the ten are in the sample, the five are real
     assert.equal(b.state[g.lang], g.text);
     assert.deepEqual(Object.keys(b.questions), [`${g.lang}_faithful`]);
   }
-  assert.deepEqual(new Set(TRANSLATION_GOLD_BROKEN.map((g) => g.kind)), new Set(['wrong number', 'negation flipped', 'dropped clause', 'wrong language', 'English left in']));
+  assert.deepEqual(new Set(TRANSLATION_GOLD_BROKEN.map((g) => g.kind)), new Set(['wrong number', 'negation flipped', 'dropped clause', 'wrong word', 'wrong meal']));
 });
 
 /* ── Use-case data ───────────────────────────────────────────────────────── */
@@ -338,4 +359,36 @@ test('swap cases name real ingredients, and moods and cravings behave', () => {
   const s = scoreCall(c, { answers: { a: { ok: true, value: 0.02 }, b: { ok: true, value: 'x', confidence: 0.99 } } });
   assert.equal(s[0].confidentWrong, true);
   assert.equal(s[1].status, 'n/a');
+  // A call the spend guard skipped is not run, not wrong.
+  const sk = scoreCall(c, { skipped: true, reason: 'spend guard' });
+  assert.deepEqual(sk.map((x) => x.status), ['not_run', 'n/a']);
+});
+
+test('moods: diets are three-valued, so a cautious tag cannot make a false unique answer', () => {
+  const five = defaultTop5();
+  // veg_curry and omelette have no halal tag but break nothing in DEFS.halal:
+  // several dishes may pass, so the case is n/a, not "shakshuka".
+  const halal = moodGold({ diets: ['halal'], maxTotal: 45 }, five);
+  assert.equal(halal.gold, null);
+  assert.ok(halal.unsure.includes('veg_curry'));
+  // Every mood states its limits: no builder-chosen "quick" or "ambitious".
+  for (const m of MOODS) {
+    if (m.rule.maxTotal != null) assert.match(m.text, /\d+ minutes/, m.text);
+    if (m.rule.minDiff != null || m.rule.maxDiff != null) assert.match(m.text, /difficulty \d/, m.text);
+    if (m.rule.minProtein != null) assert.match(m.text, /\d+ g/, m.text);
+    if (m.rule.minKcal != null || m.rule.maxKcal != null) assert.match(m.text, /\d+ calories/, m.text);
+  }
+});
+
+test('not-run questions never count against accuracy, and say so in the verdict', () => {
+  assert.equal(unlessSkipped({ skipped: true }, { status: 'error' }), NOT_RUN);
+  assert.equal(unlessSkipped({ skipped: true }, { status: 'n/a' }).status, 'n/a');
+  assert.equal(unlessSkipped({ ok: true }, { status: 'wrong' }).status, 'wrong');
+  const none = tally([NOT_RUN, NOT_RUN]);
+  assert.equal(none.scored, 0);
+  assert.equal(none.notRun, 2);
+  assert.match(verdictFor(none), /^not run/);
+  const part = tally([{ status: 'right' }, { status: 'right' }, NOT_RUN]);
+  assert.equal(part.accuracy, 1);
+  assert.equal(verdictFor(part), 'use it (partial: 1 scored questions not run)');
 });

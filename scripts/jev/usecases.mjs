@@ -5,7 +5,7 @@
  * dangerous confident-and-wrong answers, latency and cost per 1,000 uses,
  * with a verdict and a note on how it would plug in.
  *
- *   node scripts/jev/usecases.mjs [--dry] [--mock] [--max-usd=0.10]
+ *   node scripts/jev/usecases.mjs [--dry] [--mock] [--max-usd=0.05]
  *        [--only=cravings|prices|swaps|cupboard|moods|feedback]
  *        [--picks-facts=jev-results/picks-facts.json] [--out=jev-results]
  *
@@ -21,9 +21,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { COUNTRIES, DIETS, RECIPES, meetsDiet, toLocal } from './app.mjs';
+import { clearlyBreaksDiet } from './bench-tasks.mjs';
 import { DEFS, stateOf } from './check-diets.mjs';
 import { Jev, MODEL, MOCK_BANNER, choice, esc, estimateTokens, fmtUsd, mask, noul, score, usd } from './lib.mjs';
-import { median, msStr, p90, pctStr, per1000, scoreChoice, scoreLevel, scoreNoul, tally, usdStr, verdictFor } from './score.mjs';
+import { median, msStr, p90, pctStr, per1000, scoreChoice, scoreLevel, scoreNoul, tally, unlessSkipped, usdStr, verdictFor } from './score.mjs';
 import { CRAVINGS, CUPBOARD, FEEDBACK, FEEDBACK_TYPES, INTENTS, MOODS, PRICE_ERROR_TYPES, PRICE_REPORTS, SWAPS, URGENCY, parseDietGold } from './usecases-data.mjs';
 
 const { canonical, gramsOf } = await import('../../src/lib/nutrition.js');
@@ -139,20 +140,31 @@ export function top5FromPicksFile(path) {
   return { recipes: rs.slice(0, 5), scenario: row.id };
 }
 
-/** Apply a mood rule to the candidates: one passes -> it; none -> 'none'; several -> null (n/a). */
+/**
+ * Apply a mood rule to the candidates: one passes -> it; none -> 'none';
+ * several -> null (n/a).
+ *
+ * Diets are three-valued. The app's tags are cautious (an untagged dish is not
+ * necessarily unsuitable: veg_curry has no halal tag but nothing in it breaks
+ * DEFS.halal), so a dish passes a diet only when meetsDiet() says so, fails it
+ * only when it clearly breaks it (clearlyBreaksDiet, shared with the bench),
+ * and is otherwise UNSURE. Any unsure dish that meets every other limit makes
+ * the case n/a: it could be a second right answer, or the only one.
+ */
 export function moodGold(rule, recipes) {
-  const pass = recipes.filter(
-    (r) =>
-      (rule.maxTotal == null || r.total <= rule.maxTotal) &&
-      (rule.minProtein == null || r.per.protein >= rule.minProtein) &&
-      (rule.maxKcal == null || r.per.kcal <= rule.maxKcal) &&
-      (rule.minKcal == null || r.per.kcal >= rule.minKcal) &&
-      (rule.minDiff == null || r.diff >= rule.minDiff) &&
-      (rule.maxDiff == null || r.diff <= rule.maxDiff) &&
-      (!rule.cuisines || rule.cuisines.includes(r.cuisine)) &&
-      (!rule.diets || rule.diets.every((d) => meetsDiet(r, d))),
-  );
-  return { gold: pass.length === 1 ? pass[0].id : pass.length === 0 ? 'none' : null, passing: pass.map((r) => r.id) };
+  const other = (r) =>
+    (rule.maxTotal == null || r.total <= rule.maxTotal) &&
+    (rule.minProtein == null || r.per.protein >= rule.minProtein) &&
+    (rule.maxKcal == null || r.per.kcal <= rule.maxKcal) &&
+    (rule.minKcal == null || r.per.kcal >= rule.minKcal) &&
+    (rule.minDiff == null || r.diff >= rule.minDiff) &&
+    (rule.maxDiff == null || r.diff <= rule.maxDiff) &&
+    (!rule.cuisines || rule.cuisines.includes(r.cuisine));
+  const diets = rule.diets || [];
+  const pass = recipes.filter((r) => other(r) && diets.every((d) => meetsDiet(r, d)));
+  const unsure = recipes.filter((r) => other(r) && !pass.includes(r) && !diets.some((d) => clearlyBreaksDiet(r, d)));
+  const gold = unsure.length ? null : pass.length === 1 ? pass[0].id : pass.length === 0 ? 'none' : null;
+  return { gold, passing: pass.map((r) => r.id), unsure: unsure.map((r) => r.id) };
 }
 
 /* ── The six jobs as Jev calls ───────────────────────────────────────────── */
@@ -253,9 +265,9 @@ function moodCalls(recipes) {
       id: `mood-${String(i + 1).padStart(2, '0')}`,
       label: x.text,
       state: { how_they_feel: x.text, what_home_is_offering: Object.fromEntries(recipes.map((r) => [r.id, facts(r)])) },
-      questions: { pick: choice('Which one of these dishes best fits how this person feels and what they said tonight? Treat anything they state as a limit (time, diet, cuisine, calories) as a hard limit. Answer none if no dish meets their limits.', criteria) },
+      questions: { pick: choice('Which one of these dishes best fits how this person feels and what they said tonight? Treat anything they state as a limit (time, diet, cuisine, calories, protein, difficulty) as a hard limit. Answer none if no dish meets their limits.', criteria) },
       gold: { pick: g.gold },
-      meta: { passing: g.passing },
+      meta: { passing: g.passing, unsure: g.unsure },
     };
   });
 }
@@ -295,7 +307,7 @@ export function scoreCall(c, res) {
     const gold = c.gold[q];
     const a = res?.answers?.[q];
     const v = a?.ok ? a.value : null;
-    const s = spec.type === 'noul' ? scoreNoul(v, gold) : spec.type === 'choice' ? scoreChoice(v, gold, a?.confidence) : scoreLevel(v, gold);
+    const s = unlessSkipped(res, spec.type === 'noul' ? scoreNoul(v, gold) : spec.type === 'choice' ? scoreChoice(v, gold, a?.confidence) : scoreLevel(v, gold));
     out.push({ question: q, gold, answer: v, confidence: a?.confidence ?? null, ...s });
   }
   return out;
@@ -328,12 +340,12 @@ async function main() {
     return a ? a.slice(n.length + 3) : d;
   };
   if (flag('help')) {
-    console.log(`usage: node scripts/jev/usecases.mjs [--dry] [--mock] [--max-usd=0.10] [--only=${JOBS.join('|')}] [--picks-facts=path] [--out=jev-results] [--concurrency=4]`);
+    console.log(`usage: node scripts/jev/usecases.mjs [--dry] [--mock] [--max-usd=0.05] [--only=${JOBS.join('|')}] [--picks-facts=path] [--out=jev-results] [--concurrency=4]`);
     return;
   }
   const dry = flag('dry');
   const mock = flag('mock');
-  const maxUsd = Number(opt('max-usd', '0.10'));
+  const maxUsd = Number(opt('max-usd', '0.05'));
   const only = opt('only');
   const outDir = resolve(opt('out', 'jev-results'));
   const concurrency = Number(opt('concurrency', '4'));
@@ -407,7 +419,7 @@ async function main() {
     };
     if (j === 'cravings') report[j].today_finds_nothing = calls.filter((c) => c.meta.today === 0).length;
     if (j === 'moods') report[j].source = moodSource;
-    console.log(`  accuracy ${pctStr(t.accuracy)} (${t.right}/${t.scored}), confident & wrong ${t.confidentWrong}, n/a ${t.na}, median ${msStr(report[j].latency.median)}, per 1,000 uses ${usdStr(report[j].per_1000_uses_usd)} -> ${report[j].verdict}`);
+    console.log(`  accuracy ${pctStr(t.accuracy)} (${t.right}/${t.scored})${t.notRun ? `, NOT RUN ${t.notRun}` : ''}, confident & wrong ${t.confidentWrong}, n/a ${t.na}, median ${msStr(report[j].latency.median)}, per 1,000 uses ${usdStr(report[j].per_1000_uses_usd)} -> ${report[j].verdict}`);
   }
 
   /* Report */
@@ -424,7 +436,7 @@ async function main() {
   md.push('| job | calls | accuracy | confident & wrong | n/a | median / p90 | user would feel | per 1,000 uses | verdict |');
   md.push('|---|---|---|---|---|---|---|---|---|');
   for (const [j, r] of Object.entries(report))
-    md.push(`| ${j} | ${r.calls} | ${pctStr(r.gold.accuracy)} (${r.gold.right}/${r.gold.scored}) | ${r.gold.confidentWrong} | ${r.gold.na} | ${msStr(r.latency.median)} / ${msStr(r.latency.p90)} | ${r.latency.median == null ? 'n/a' : '~' + msStr(r.latency.median + EDGE_MS)} | ${usdStr(r.per_1000_uses_usd)} | **${r.verdict}** |`);
+    md.push(`| ${j} | ${r.calls} | ${pctStr(r.gold.accuracy)} (${r.gold.right}/${r.gold.scored})${r.gold.notRun ? `; ${r.gold.notRun} not run` : ''} | ${r.gold.confidentWrong} | ${r.gold.na} | ${msStr(r.latency.median)} / ${msStr(r.latency.p90)} | ${r.latency.median == null ? 'n/a' : '~' + msStr(r.latency.median + EDGE_MS)} | ${usdStr(r.per_1000_uses_usd)} | **${r.verdict}** |`);
   md.push('');
   for (const [j, r] of Object.entries(report)) {
     md.push(`## ${j}\n`);

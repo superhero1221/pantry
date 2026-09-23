@@ -39,7 +39,7 @@ import { DIETS, OTHER } from './app.mjs';
 import { DIET_GOLD, TRANSLATION_GOLD_BROKEN, TRANSLATION_GOLD_OK } from './gold.mjs';
 import { Jev, MODEL, MOCK_BANNER, esc, estimateTokens, fmtUsd, mask, mockFetch, usd } from './lib.mjs';
 import { Budget, Llm, MOCK_EXTRA_PREFS, OFFLINE_MODELS, chatBody, dearestPlausible, estimateChatTokens, fetchModels, mockOpenRouterFetch, perMillion, prefsFromFlag, priceOf, selectModels } from './llm.mjs';
-import { agreement, compareWord, flipRate, median, msStr, p90, pctStr, per1000, scoreChoice, scoreNoul, tally, times, usdStr } from './score.mjs';
+import { agreement, compareWord, flipRate, median, msStr, p90, pctStr, per1000, scoreChoice, scoreNoul, tally, times, unlessSkipped, usdStr } from './score.mjs';
 
 /* ── Flags ───────────────────────────────────────────────────────────────── */
 
@@ -135,7 +135,8 @@ if (dry) {
     writeFileSync(join(dir, `bench-${t}-jev.json`), JSON.stringify({ model: MODEL, state: T[t][0].state, questions: T[t][0].questions }, null, 2));
     writeFileSync(join(dir, `bench-${t}-llm.json`), JSON.stringify(chatBody(OFFLINE_MODELS[4], llmCall(T[t][0]).state, llmCall(T[t][0]).questions, { maxTokens: T[t][0].maxTokens }), null, 2));
   }
-  const { chosen, considered } = selectModels(OFFLINE_MODELS, { prefs, workload: plainWorkload });
+  const { chosen, considered, missing } = selectModels(OFFLINE_MODELS, { prefs, workload: plainWorkload, allowThinking: !!opt('models') });
+  for (const g of missing) console.log(`  WARNING: no model for group "${g.group}": ${g.why}`);
   const dear = dearestPlausible(OFFLINE_MODELS, { prefs, workload: plainWorkload });
   console.log(`\n  Jev: ${jevPlan.length} calls (diets twice), ~${jevTokens.toLocaleString()} input tokens est. -> ~${fmtUsd(jevEstUsd)}`);
   console.log(`  LLM workload per model: ${llmPlan.length} calls, ~${plainWorkload.input.toLocaleString()} input tokens est. + up to ${plainWorkload.output.toLocaleString()} output tokens (max_tokens caps)`);
@@ -192,25 +193,31 @@ async function runTimed(calls, fn, label) {
   return out;
 }
 
-/** In mock, the second diets pass goes through a fetch that nudges a few
- *  answers across 0.5, so the consistency code has flips to count. */
-function jitteredMock() {
-  const base = mockFetch({ failAt: {} });
+/**
+ * In mock, ONE Jev with one spend guard, as live. Its fake fetch nudges a few
+ * answers across 0.5 whenever it sees a request body it has already answered
+ * (the second diets pass), so the consistency code has flips to count.
+ */
+function repeatJitterMock() {
+  const base = mockFetch();
+  const answered = new Set();
   let n = 0;
   return async (url, init) => {
     const res = await base(url, init);
+    if (res.status !== 200) return res;
     const json = await res.json();
-    for (const a of Object.values(json.answers || {})) if (a.type === 'noul' && ++n % 11 === 0) a.noul = +(1 - a.noul).toFixed(3);
+    const sig = String(init.body);
+    if (answered.has(sig)) for (const a of Object.values(json.answers || {})) if (a.type === 'noul' && ++n % 11 === 0) a.noul = +(1 - a.noul).toFixed(3);
+    answered.add(sig);
     return new Response(JSON.stringify(json), { status: 200, headers: { 'content-type': 'application/json' } });
   };
 }
 
 const budget = new Budget(maxUsd);
-const jev = new Jev({ apiKey: key, mock, maxUsd, concurrency, outDir });
-const jev2 = mock ? new Jev({ apiKey: key, mock, maxUsd, concurrency, outDir, fetchImpl: jitteredMock() }) : jev;
+const jev = new Jev({ apiKey: key, mock, maxUsd, concurrency, outDir, ...(mock ? { fetchImpl: repeatJitterMock() } : {}) });
 console.log(`\n[jev] ${jevPlan.length} calls, est. ~${fmtUsd(jevEstUsd)}`);
-const jevRes = await runTimed(jevPlan, (c) => (c.pass === 2 ? jev2 : jev).decide(c.state, c.questions, { id: `${c.task}:${c.id}${c.pass ? '#' + c.pass : ''}` }), 'jev');
-const jevSpent = jev.spentUsd + (jev2 !== jev ? jev2.spentUsd : 0);
+const jevRes = await runTimed(jevPlan, (c) => jev.decide(c.state, c.questions, { id: `${c.task}:${c.id}${c.pass ? '#' + c.pass : ''}` }), 'jev');
+const jevSpent = jev.spentUsd;
 budget.commit(jevSpent);
 console.log(`  jev spent ${fmtUsd(jevSpent)}${mock ? ' (mock)' : ''}; ${fmtUsd(budget.left())} left for the LLMs`);
 
@@ -228,7 +235,8 @@ try {
 // --mock also asks for two made-up dear models, so the gold-only and skip
 // paths run on every mock (unless --models narrows the choice).
 const livePrefs = mock && !opt('models') ? [...prefs, ...MOCK_EXTRA_PREFS] : prefs;
-const selection = listing ? selectModels(listing, { prefs: livePrefs, workload: plainWorkload }) : { chosen: [], considered: [] };
+const selection = listing ? selectModels(listing, { prefs: livePrefs, workload: plainWorkload, allowThinking: !!opt('models') }) : { chosen: [], considered: [], missing: [] };
+for (const g of selection.missing) console.log(`  WARNING: no model for group "${g.group}": ${g.why}`);
 // No point paying for the comparison when Jev itself did not answer: the
 // usual cause is an envelope findAnswers() cannot read (see JEV-RUN.md step 3).
 const jevAnswered = jevRes.filter((r) => r && r.ok).length;
@@ -243,7 +251,7 @@ const llmRuns = [];
 // Cheapest first, so a dear model can never crowd out a cheap one.
 const ordered = selection.chosen.map((m) => ({ m, w: worstUsd(m) })).sort((a, b) => a.w - b.w);
 for (const { m, w } of ordered) {
-  console.log(`\n[${m.id}] ${perMillion(m.price.input)} in / ${perMillion(m.price.output)} out; worst case for ${llmPlan.length} calls ~${fmtUsd(w)}${m.thinks ? ' (a thinking model: nothing cheaper matched)' : ''}`);
+  console.log(`\n[${m.id}] ${perMillion(m.price.input)} in / ${perMillion(m.price.output)} out; worst case for ${llmPlan.length} calls ~${fmtUsd(w)}${m.thinks ? ' (a THINKING model, named in --models: reasoning set to low and hidden; replies may still come back empty)' : ''}`);
   let plan = llmPlan;
   let subset = null;
   if (w > budget.left()) {
@@ -301,7 +309,7 @@ function measure(name, kind, byTask, extra = {}) {
     const g = DIET_GOLD.map((x) => {
       const i = T.diets.findIndex((c) => c.id === x.recipe);
       const p = i >= 0 ? val(byTask.diets[i], x.diet) : null;
-      const s = scoreNoul(p, x.gold);
+      const s = unlessSkipped(byTask.diets[i], scoreNoul(p, x.gold));
       goldRows.push({ task: 'diets', case: `${x.recipe} / ${x.diet}`, gold: x.gold, answer: p, ...s, why: x.why });
       return s;
     });
@@ -321,11 +329,11 @@ function measure(name, kind, byTask, extra = {}) {
     T.picks.forEach((c, i) => {
       const r = byTask.picks[i];
       const p = val(r, 'pick_ok');
-      const s1 = scoreNoul(p, c.meta.gold.pick_ok);
+      const s1 = unlessSkipped(r, scoreNoul(p, c.meta.gold.pick_ok));
       ok_.push(s1);
       goldRows.push({ task: 'picks', case: `${c.id} pick_ok`, gold: c.meta.gold.pick_ok, answer: p, ...s1 });
       const lab = val(r, 'best_a');
-      const s2 = scoreChoice(lab, c.meta.gold.best, conf(r, 'best_a'));
+      const s2 = unlessSkipped(r, scoreChoice(lab, c.meta.gold.best, conf(r, 'best_a')));
       best.push(s2);
       goldRows.push({ task: 'picks', case: `${c.id} best`, gold: c.meta.gold.best, answer: lab, ...s2 });
       const labB = val(r, 'best_b');
@@ -342,13 +350,13 @@ function measure(name, kind, byTask, extra = {}) {
     for (const x of TRANSLATION_GOLD_OK) {
       const i = T.translations.findIndex((c) => c.id === x.id);
       const p = i >= 0 ? val(byTask.translations[i], `${x.lang}_faithful`) : null;
-      const s = scoreNoul(p, true);
+      const s = unlessSkipped(byTask.translations[i], scoreNoul(p, true));
       g.push(s);
       goldRows.push({ task: 'translations', case: `${x.id} ${x.lang} (faithful)`, gold: true, answer: p, ...s, why: x.why });
     }
     TRANSLATION_GOLD_BROKEN.forEach((x, i) => {
       const p = val(byTask.broken?.[i], `${x.lang}_faithful`);
-      const s = scoreNoul(p, false);
+      const s = unlessSkipped(byTask.broken?.[i], scoreNoul(p, false));
       g.push(s);
       goldRows.push({ task: 'translations', case: `${x.id} ${x.lang} (${x.kind})`, gold: false, answer: p, ...s, why: x.why });
     });
@@ -418,7 +426,7 @@ md.push(
     '**Confident and wrong** means a noul below 0.1 or above 0.9 on the wrong side, or a choice with confidence above 0.9 that is wrong — the answers you would act on without checking.\n',
 );
 md.push(`Tasks: ${TASKS.map((t) => `${t} ${T[t].length} calls / ${nq(T[t])} questions`).join('; ')}. Jev also answered the diets sample a second time (consistency) and each picks choice with the options reversed (order flips).`);
-if (T.picks.length) md.push('Picks scenarios are built from pure app modules (the check\'s own people, the cookbook, meetsDiet, toLocal), not from the browser: in most, exactly one of the five candidates keeps every hard constraint; in the rest, none does. See `bench-tasks.mjs`.');
+if (T.picks.length) md.push('Picks scenarios are built from pure app modules (the check\'s own people, the cookbook, meetsDiet, toLocal), not from the browser: in most, exactly one of the five candidates keeps every hard constraint and is a proper dinner for the person\'s goal and level, while the other four clearly break one; in the rest, all five clearly break one. See `bench-tasks.mjs`.');
 md.push('');
 md.push('## Models\n');
 md.push('| system | price | cost figure |');
@@ -427,7 +435,7 @@ md.push(`| ${J.name} | ${J.price} | ${J.cost_sources.join(', ') || 'n/a'} |`);
 for (const s of L) md.push(`| ${s.name} | ${s.price} | ${s.cost_sources.join(', ') || 'n/a'}${s.subset ? `; **${s.subset}**` : ''} |`);
 for (const r of llmRuns.filter((x) => x.skipped)) md.push(`| ${r.model.id} | ${perMillion(r.model.price.input)} in / ${perMillion(r.model.price.output)} out | **skipped**: ${r.skipped} |`);
 if (listingError) md.push(`\nNo LLM ran: ${esc(listingError)}.`);
-if (!selection.chosen.length && listing) md.push(`\nNo listed model matched --models (${prefs.map((p) => p.patterns.join('|')).join(', ')}).`);
+for (const g of selection.missing) md.push(`\n**No model for group "${esc(g.group)}"**: ${esc(g.why)}.`);
 md.push('');
 
 md.push('## Headline\n');
@@ -435,13 +443,13 @@ md.push('| system | gold accuracy | confident & wrong | agrees with app (diets) 
 md.push('|---|---|---|---|---|---|---|---|');
 for (const s of systems) {
   const aa = s.per_task.diets?.app_agreement;
-  md.push(`| ${s.name} | ${pctStr(s.gold.accuracy)} (${s.gold.right}/${s.gold.scored}) | ${s.gold.confidentWrong} | ${aa ? `${pctStr(aa.rate)} (${aa.agree}/${aa.n})` : 'n/a'} | ${msStr(s.latency.median)} / ${msStr(s.latency.p90)} | ${s.tokens.input.toLocaleString()} / ${s.tokens.output.toLocaleString()} | ${usdStr(s.cost_usd)} | ${usdStr(s.per_1000_questions_usd)} |`);
+  md.push(`| ${s.name} | ${pctStr(s.gold.accuracy)} (${s.gold.right}/${s.gold.scored})${s.gold.notRun ? `; ${s.gold.notRun} not run` : ''} | ${s.gold.confidentWrong} | ${aa ? `${pctStr(aa.rate)} (${aa.agree}/${aa.n})` : 'n/a'} | ${msStr(s.latency.median)} / ${msStr(s.latency.p90)} | ${s.tokens.input.toLocaleString()} / ${s.tokens.output.toLocaleString()} | ${usdStr(s.cost_usd)} | ${usdStr(s.per_1000_questions_usd)} |`);
 }
 md.push('');
 md.push('## By task\n');
 md.push('| system | diets gold | picks: pick_ok | picks: best dish | translations gold | translation flags (< 0.5) | agrees with Jev |');
 md.push('|---|---|---|---|---|---|---|');
-const tl = (t) => (t ? `${pctStr(t.accuracy)} (${t.right}/${t.scored})` : 'n/a');
+const tl = (t) => (t ? `${pctStr(t.accuracy)} (${t.right}/${t.scored})${t.notRun ? `; ${t.notRun} not run` : ''}` : 'n/a');
 for (const s of systems) {
   const p = s.per_task;
   md.push(`| ${s.name} | ${tl(p.diets?.gold)} | ${tl(p.picks?.pick_ok)} | ${tl(p.picks?.best)} | ${tl(p.translations?.gold)} | ${p.translations ? `${p.translations.flagged}/${p.translations.judged}` : 'n/a'} | ${s.agreement_with_jev ? pctStr(s.agreement_with_jev.rate) : '—'} |`);
@@ -496,6 +504,7 @@ writeFileSync(
       spent_usd: budget.spent,
       tasks: Object.fromEntries(TASKS.map((t) => [t, { calls: T[t].length, questions: nq(T[t]) }])),
       models_considered: selection.considered,
+      groups_missing: selection.missing,
       skipped_models: llmRuns.filter((r) => r.skipped).map((r) => ({ id: r.model.id, reason: r.skipped })),
       systems,
     },

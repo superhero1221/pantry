@@ -7,21 +7,22 @@ The key has a **$1 hard cap for everything**. Every command below has its own ha
 | step | estimated (dry run) | hard cap |
 |---|---|---|
 | tiny live test (diets, 3 recipes) | ~$0.0003 | $0.02 |
-| the three checks (diets 153 + picks 40 + translations 724 calls) | ~$0.065 | $0.25 |
+| the three checks (diets 153 + picks 40 + translations 724 calls) | ~$0.065 | $0.20 |
 | `bench.mjs` (Jev 165 calls + 2 LLMs × 125 calls) | ~$0.12 likely; ~$0.28 if only the dearest small models are listed | $0.30 |
-| `usecases.mjs` (Jev, 150 calls) | ~$0.009 | $0.10 |
-| **total** | **~$0.19 likely; ~$0.35 at the ceiling** | **$0.67** |
+| `usecases.mjs` (Jev, 150 calls) | ~$0.009 | $0.05 |
+| optional: moods again, on the real app's top five | ~$0.0005 | $0.02 |
+| **total** | **~$0.19 likely; ~$0.35 at the ceiling** | **$0.59** |
 
-**Estimated total cost: about $0.19 (at most ~$0.35 by the dry-run ceiling, never more than the $0.67 sum of the hard caps). That is well under the $1 cap.**
+**Estimated total cost: about $0.19 (at most ~$0.35 by the dry-run ceiling, never more than the $0.59 sum of the hard caps, optional step included). That is well under the $1 cap.**
 
 Run the steps in order. Stop if a step says STOPPING or exits non-zero, and read the message before you go on.
 
 ## 0. Get the branch
 
 ```sh
-git fetch origin jev-bench
-git checkout jev-bench
-git log --oneline -1          # the jev-bench commit
+git fetch origin jev-bench            # in a single-branch clone the tip lands only in FETCH_HEAD
+git checkout -B jev-bench FETCH_HEAD
+git log --oneline -1                  # the jev-bench commit
 ```
 
 ## 1. Install
@@ -63,7 +64,7 @@ If the run stops with **401/403**, the key was refused, or the network refused t
 ## 4. The three checks
 
 ```sh
-node scripts/jev/run.mjs all --max-usd=0.25
+node scripts/jev/run.mjs all --max-usd=0.20
 ```
 
 This writes `diets.md`, `picks.md`, `translations.md` (+ `.json`) and `summary.json` to `jev-results/`. The picks check builds the app into `node_modules/.cache/jev-app` and drives it with Playwright.
@@ -75,7 +76,7 @@ node scripts/jev/bench.mjs --dry                 # free: re-check the plan and t
 node scripts/jev/bench.mjs --max-usd=0.30
 ```
 
-It lists OpenRouter's models (`GET /api/v1/models`), picks the cheapest listed `anthropic/claude-*haiku*` and the cheapest `openai/gpt-*-mini` / `google/gemini-*-flash*`, and prints both with their prices. It runs the cheaper model first. A model whose worst case for the whole plan does not fit in what is left of the budget falls back to the **gold-only subset** (56 calls). If even that does not fit, the model is **skipped**. The report says which happened. To choose models yourself: `--models=anthropic/claude-3.5-haiku,openai/gpt-4o-mini` (exact ids or `*` globs, one model per entry).
+It lists OpenRouter's models (`GET /api/v1/models`), picks the cheapest listed `anthropic/claude-*haiku*` and the cheapest `openai/gpt-*-mini` / `google/gemini-*-flash*`, and prints both with their prices. It runs the cheaper model first. A model whose worst case for the whole plan does not fit in what is left of the budget falls back to the **gold-only subset** (56 calls). If even that does not fit, the model is **skipped**. The report says which happened. If a group has no usable match (no Haiku listed, say, or only "thinking" models such as gpt-5-mini, whose hidden reasoning would eat the small `max_tokens`), the run prints `WARNING: no model for group ...` and the report names the group; only the other LLM runs. To choose models yourself: `--models=anthropic/claude-3.5-haiku,openai/gpt-4o-mini` (exact ids or `*` globs, one model per entry).
 
 Then read `jev-results/raw-first-llm-*.json` (the first raw reply per model). If a model's answers are all errors in `bench.md`, its replies were not JSON the parser could read (`parseLlmAnswers()` in `llm.mjs`). The rest of the report is still valid.
 
@@ -85,7 +86,7 @@ Output: `jev-results/bench.md` (tables and verdict) and `bench.json`.
 
 ```sh
 node scripts/jev/usecases.mjs --dry
-node scripts/jev/usecases.mjs --max-usd=0.10
+node scripts/jev/usecases.mjs --max-usd=0.05
 # optional: judge moods against the real app's top five from step 4 instead of the approximation
 # node scripts/jev/usecases.mjs --only=moods --max-usd=0.02 --picks-facts=jev-results/picks.json --out=jev-results/moods-real
 ```
@@ -127,6 +128,6 @@ Never push to `implement-pantry-design`.
 
 ## What each step spends, and why it cannot run away
 
-- Every client reserves a call's worst case **before** sending it. For Jev that is the estimated input tokens at $0.042/M (output is free). For an LLM it is estimated input at the listed input price plus `max_tokens` at the output price. A call that would take the total past `--max-usd` is not sent. The run stops cleanly and still writes its report.
+- Every client reserves a call's worst case **before** sending it. For Jev that is the estimated input tokens at $0.042/M (output is free). For an LLM it is estimated input at the listed input price plus `max_tokens` at the output price. A call that would take the total past `--max-usd` is not sent. The run stops cleanly and still writes its report. Questions that were never asked are counted as **not run**, never as wrong: a job the guard stopped before gets the verdict "not run", and a partly run one says how many were not run.
 - After the first real response, estimates scale up to the worst tokens-per-estimate ratio seen, so an underestimate corrects itself after one call.
 - 429/5xx are retried with backoff. 401/402/403/404 stop the run: every later call would fail the same way.
