@@ -21,3 +21,6 @@ pantry-commits.bundle
 
 # Python bytecode from the mascot scripts
 __pycache__/
+
+# Jev harness output (scripts/jev). Reports and raw API responses, never committed.
+jev-results/

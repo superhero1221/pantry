@@ -1,0 +1,89 @@
+# Ask TypeSafe's Jev for a second opinion on the diets, the dish picks and the
+# translations — see scripts/jev/README.md.
+#
+# This exists because the machine the harness was written on cannot reach
+# openrouter.ai; its network policy allows the npm registry and GitHub and
+# nothing else. A GitHub runner has ordinary internet access.
+#
+# Manual only. It spends real money from the OPENROUTER_API_KEY secret (a key
+# with a $1 hard cap), so it never runs on a push. Add the secret under
+# Settings -> Secrets and variables -> Actions, then Actions -> "Jev second
+# opinions" -> Run workflow. Start with a dry run, then a small limit.
+#
+# It commits nothing. The reports come back as a downloadable artifact.
+name: Jev second opinions
+
+on:
+  workflow_dispatch:
+    inputs:
+      check:
+        description: 'Which check'
+        type: choice
+        options: [all, diets, picks, translations]
+        default: all
+      max_usd:
+        description: 'Spend guard for the whole run, in dollars'
+        required: false
+        default: '0.25'
+      limit:
+        description: 'Only the first N calls of each check (blank = all of them)'
+        required: false
+        default: ''
+      mode:
+        description: 'dry = count and estimate only, mock = offline fake, live = real calls'
+        type: choice
+        options: [dry, mock, live]
+        default: dry
+
+permissions:
+  contents: read
+
+jobs:
+  jev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 22.18+ strips TypeScript types natively, which is how the harness
+          # imports the app's own modules without a build step.
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Playwright is not in package.json — the pick check is the only thing
+      # that needs it, so it is installed here, unsaved, at the version the
+      # harness was written against.
+      - name: Install Playwright for the pick check
+        if: ${{ inputs.check == 'all' || inputs.check == 'picks' }}
+        run: |
+          npm install --no-save playwright@1.62.1
+          npx playwright install --with-deps chromium
+
+      # Inputs go through the environment, not straight into the script, so
+      # nothing typed into the Run workflow form is ever executed as shell.
+      - name: Run the harness
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CHECK: ${{ inputs.check }}
+          MODE: ${{ inputs.mode }}
+          MAX_USD: ${{ inputs.max_usd }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          args=("$CHECK" "--max-usd=$MAX_USD" "--out=jev-results")
+          [ "$MODE" = dry ] && args+=(--dry)
+          [ "$MODE" = mock ] && args+=(--mock)
+          [ -n "$LIMIT" ] && args+=("--limit=$LIMIT")
+          node scripts/jev/run.mjs "${args[@]}"
+
+      # Uploaded even when the run stopped early — a spend-guard or credit stop
+      # still writes every report, with the unanswered calls marked skipped.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jev-results-${{ inputs.check }}-${{ inputs.mode }}
+          path: jev-results/
+          if-no-files-found: warn
+          retention-days: 30
