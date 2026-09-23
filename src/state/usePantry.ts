@@ -1673,14 +1673,24 @@ export function usePantry() {
   /* Defined here rather than beside dietOn below, because the clash lines
      under it are the first thing that needs the translated diet names. */
   const dietWords = i18n.diets(lg);
-  const dietBroken = S.diets.filter((d) => !meetsDiet(recipe, d));
-  const dietClashDiets = dietBroken.map((d) => dietWords[d] || d);
-  /** The ingredients responsible, where the answer is derived from the list
-   *  rather than from a tag — a tagged diet knows it is broken but not by
-   *  what, so it names the diet alone. */
-  const dietClashItems = Array.from(
-    new Set(dietBroken.flatMap((d) => breaksDietBecause(recipe, d)).map((n) => foodName(n))),
-  );
+  /** Which of your diets a dish breaks, and — where the ingredient list is
+   *  what decided it — by what. A tagged diet knows it is broken but not by
+   *  what, so it names the diet alone.
+   *
+   *  Asked per dish, because two screens show two different dishes: Results
+   *  shows `recipe` (the one you opened) and Home shows `offer` (tonight's
+   *  pick). It used to be asked of `recipe` alone, so Home warned a vegan that
+   *  the Chana Masala on the card broke Vegan, because the dish it had checked
+   *  was a Pad Thai nobody could see. */
+  const clashOf = (r: Recipe) => {
+    const broken = S.diets.filter((d) => !meetsDiet(r, d));
+    const diets = broken.map((d) => dietWords[d] || d);
+    const items = Array.from(new Set(broken.flatMap((d) => breaksDietBecause(r, d)).map((n) => foodName(n))));
+    return {
+      line: diets.length ? fill(xt(lg, 'dietClash'), { d: diets.join(', ') }) : '',
+      why: items.length ? fill(xt(lg, 'dietClashWhy'), { i: items.join(', ') }) : '',
+    };
+  };
 
   /** What one line costs, in the pounds-and-pence base the cookbook is written
    *  in, taking the best source available for it:
@@ -1733,6 +1743,11 @@ export function usePantry() {
     return s;
   };
   const hs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(HH[k] || fb, vals);
+  /* Down here, not beside clashOf, because clashOf calls fill(), and a const
+     arrow cannot be called above its own line. Up there it threw for anyone
+     with a diet set — the only people who ever reach the fill() call. */
+  const recipeClash = clashOf(recipe);
+  const offerClash = clashOf(offer);
 
   /** Two prices as one string, each converted exactly once.
    *
@@ -2605,14 +2620,14 @@ export function usePantry() {
        the screens render nothing at all rather than an all-clear. An all-clear
        is a claim, and this app cannot make it: it reads an ingredient list, it
        cannot see inside a jar, and `dietClashNote` says exactly that. */
-    dietClash: dietClashDiets.length
-      ? fill(xt(lg, 'dietClash'), { d: dietClashDiets.join(', ') })
-      : '',
+    dietClash: recipeClash.line,
     /** "…because of the mature cheddar." Only where the ingredient list is what
      *  decided it; a tagged diet knows it is broken but not by what. */
-    dietClashWhy: dietClashItems.length
-      ? fill(xt(lg, 'dietClashWhy'), { i: dietClashItems.join(', ') })
-      : '',
+    dietClashWhy: recipeClash.why,
+    /** The same two lines for tonight's pick on Home, which is `offer`, not
+     *  `recipe`. */
+    offerClash: offerClash.line,
+    offerClashWhy: offerClash.why,
     dietClashNote: xt(lg, 'dietClashNote'),
     /* Two per-serving keys, deliberately.
        `pricePerSpan` is the headline beside priceTotal. `pricePer` stays a

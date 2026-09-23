@@ -82,17 +82,17 @@ export function Home({ v }: { v: Pantry }) {
           the dish in the first place. Ranking pushes a clashing dish down but
           cannot remove it — the offer list is a fixed length — so on the day
           it surfaces anyway, it says so here rather than one tap later. */}
-      {v.dietClash && (
+      {v.offerClash && (
         <div
           role="alert"
           style={css('margin-top:10px;padding:13px 15px;border-radius:22px;background:#ffe4cd;border:2px solid #a83f06')}
         >
           <div dir="auto" style={css('font-size:14.5px;font-weight:700;color:#571f02;line-height:1.35')}>
-            {v.dietClash}
+            {v.offerClash}
           </div>
-          {v.dietClashWhy && (
+          {v.offerClashWhy && (
             <p dir="auto" style={css('margin:5px 0 0;font-size:13px;line-height:1.45;color:#7d2f04')}>
-              {v.dietClashWhy}
+              {v.offerClashWhy}
             </p>
           )}
         </div>
