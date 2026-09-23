@@ -52,7 +52,10 @@ export function Passport({ v }: { v: Pantry }) {
             <span style={css(`flex:none;width:22px;text-align:center;font-family:'Caprasimo',serif;font-size:17px;color:${p.rankFg}`)}>
               {p.rank}
             </span>
+            {/* The stamp is decoration — the name is on the line beside it, so a
+                screen reader would only spell out "L K" before reading it. */}
             <span
+              aria-hidden="true"
               style={css(`flex:none;width:40px;height:40px;border-radius:50%;background:${p.chipBg};color:${p.chipFg};display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;font-size:14px`)}
             >
               {p.code}

@@ -40,6 +40,7 @@ import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
 import { xt } from '../data/extra-copy';
 import { pickForm } from '../lib/plural';
+import { EN_COUNTRY, countryLabel } from '../lib/region';
 import { loadPack, needsPack, ready as packReady } from '../data/lang-pack';
 import { exportBackup, readBackup, readStore, STORE_KEY } from '../lib/backup';
 import {
@@ -575,14 +576,6 @@ const streakFrom = (history: LocalCook[]): number => {
     t -= 864e5;
   }
   return n;
-};
-
-/** English names for every country the cookbook covers — the last resort after
- *  the translated maps, so a real cook from Mexico never renders as "MX". */
-const COUNTRY_NAMES: Record<string, string> = {
-  TH: 'Thailand', US: 'United States', CN: 'China', FR: 'France', IN: 'India',
-  GB: 'United Kingdom', MA: 'Morocco', MX: 'Mexico', VN: 'Vietnam',
-  NG: 'Nigeria', IT: 'Italy',
 };
 
 /* ── The address bar ───────────────────────────────────────────────────────
@@ -1875,6 +1868,8 @@ export function usePantry() {
   };
   const vs = (k: string, fb: string, vals?: Record<string, string | number>) => fill(V[k] || fb, vals);
   const countryName = P.cn[cc] || c.name;
+  /** "pounds", "libras", "الجنيه الإسترليني" — the money, as a word in a sentence. */
+  const curWord = xt(lg, 'cur' + c.iso);
   /** "over your 30" — what a time past the budget is called, wherever it shows. */
   const overBy = fill(xt(lg, 'timeOver'), { m: S.maxTime });
 
@@ -1946,7 +1941,7 @@ export function usePantry() {
       ).map((g) => ({
         code: g.code,
         dish: g.best.name,
-        country: COUNTRY_NAMES[g.code] || g.code,
+        country: EN_COUNTRY[g.code] || g.code,
         times: g.times,
         price: g.best.spend / g.best.servings,
       }))
@@ -2334,12 +2329,17 @@ export function usePantry() {
     located: !S.locating,
     countryCode: cc,
     cityName: c.city,
-    countryLine: c.name + ' · ' + c.cur.charAt(0).toUpperCase() + c.cur.slice(1) + ' ' + c.sym,
-    currencyName: c.cur,
+    /* Both halves were COUNTRIES' English fields, so an Arabic setup screen read
+       "United Arab Emirates · Dirhams AED" and "كل سعر بـdirhams". The currency
+       word is a hand-written key per ISO code (cur*), not Intl's currency name:
+       the templates need a particular grammatical form in pl and ar, and a
+       device's ICU data cannot be trusted to supply it. */
+    countryLine: countryLabel(lg, cc, PC) + ' · ' + cap(curWord) + ' ' + c.sym,
+    currencyName: curWord,
     /* The one line the design's translation sweep never reached: it was written
        into the screen as English with a value interpolated, so it had no key to
        translate and rendered in English in all six languages. */
-    priceHomeLine: fill(xt(lg, 'priceHome'), { cur: c.cur }),
+    priceHomeLine: fill(xt(lg, 'priceHome'), { cur: curWord }),
     countryChips: Object.keys(COUNTRIES).map((k) => ({
       key: k,
       label: COUNTRIES[k].city,
@@ -3330,7 +3330,9 @@ export function usePantry() {
         rank: i + 1,
         code: p.code,
         dish: dish(RECIPES.filter((r) => r.name === p.dish)[0] || { name: p.dish }),
-        meta: (PC[p.code] || p.country) + ' · ' + px(xt(lg, 'cookedNTimes'), p.times),
+        /* In the reader's language for all 37 countries, not just the seven
+           the design pack translated — past those this used to print "LK". */
+        meta: (countryLabel(lg, p.code, PC) || p.country) + ' · ' + px(xt(lg, 'cookedNTimes'), p.times),
         price: fmt(p.price),
         bg: i === 0 ? '#fff4ea' : '#ffffff',
         rankFg: i === 0 ? '#e85d04' : '#96866f',
@@ -3358,7 +3360,9 @@ export function usePantry() {
       const per = (r: Recipe) => (r.items.reduce((s, i) => s + i.s, 0) * 0.82) / r.servings;
       const cheapest = missing.reduce((a, r) => (per(r) < per(a) ? r : a));
       return px(xt(lg, 'passportNudgeReal'), new Set(missing.map((r) => r.code)).size, {
-        c: P.cn[cheapest.code] || COUNTRIES[cheapest.code]?.name || COUNTRY_NAMES[cheapest.code] || cheapest.code,
+        // P.cn first: it carries the sentence forms ('les États-Unis') for the
+        // eight price countries; everything else is the browser's own name.
+        c: countryLabel(lg, cheapest.code, P.cn),
         d: dish(cheapest),
         a: fmt(per(cheapest)),
       });

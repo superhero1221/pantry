@@ -283,6 +283,16 @@ export const EXTRA: Record<string, Record<string, string>> = {
     slideS5: "Four quick questions so I know what to put in front of you. Skip any of them and I will still work.",
     slideGo: "Let's go",
     priceHome: "Every price from here is in {cur}, at shops that actually exist near you. Not right?",
+    /* The currency as a word in a sentence, per ISO code. Written by hand, not
+       taken from Intl: priceHome needs a particular form of it in pl and ar. */
+    curGBP: "pounds",
+    curUSD: "dollars",
+    curINR: "rupees",
+    curNGN: "naira",
+    curPKR: "rupees",
+    curEUR: "euros",
+    curAED: "dirhams",
+    curTRY: "lira",
     ownMark: "Pantry™ and the character are trade marks. The recipes, the writing, the artwork and the code belong to the Pantry authors. The data, the photographs and the typefaces belong to the sources named above and keep their own licences.",
     privTitle: "Privacy",
     privIntro: "Pantry runs on your phone. Most of what you do here never leaves it. This page says exactly what does, when it goes, and who sees it — no more than that, and no less.",

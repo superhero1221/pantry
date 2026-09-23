@@ -63,12 +63,13 @@ export function Locate({ v }: { v: Pantry }) {
     >
       <div style={css('animation:pgUp .4s ease-out both')}>
         <div style={css('padding:20px;border-radius:28px;background:#ffe9d2;display:flex;gap:14px;align-items:center')}>
-          <div style={css("flex:none;width:52px;height:52px;border-radius:50%;background:#e85d04;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:19px")}>
+          {/* A monogram, not a label: the country is named in full beside it. */}
+          <div aria-hidden="true" style={css("flex:none;width:52px;height:52px;border-radius:50%;background:#e85d04;display:flex;align-items:center;justify-content:center;font-family:'Caprasimo',serif;color:#fff;font-size:19px")}>
             {v.countryCode}
           </div>
           <div style={css('min-width:0')}>
             <div style={css('font-size:19px;font-weight:700;line-height:1.2')}>{v.cityName}</div>
-            <div style={css('font-size:13.5px;color:#6a5c4c;margin-top:3px')}>{v.countryLine}</div>
+            <div dir="auto" style={css('font-size:13.5px;color:#6a5c4c;margin-top:3px')}>{v.countryLine}</div>
           </div>
         </div>
 

@@ -408,7 +408,7 @@ export const extra: Record<string, string> = {
     /* ── Getting around without a mouse ── */
     stepBack: 'Étape précédente',
     passportNudgeReal:
-      "one:{n} pays d’ici dont vous n’avez jamais rien cuisiné : {c} — {d} revient à {a} la portion.|other:{n} pays d’ici dont vous n’avez jamais rien cuisiné. Le moins cher qui vous manque est {c} : {d} revient à {a} la portion.",
+      "one:{n} pays d’ici dont vous n’avez jamais rien cuisiné : {c} — {d} revient à {a} la portion.|other:{n} pays d’ici dont vous n’avez jamais rien cuisiné. Le moins cher qui vous manque : {c} — {d} revient à {a} la portion.",
     streakCleanReal: 'Rien à la poubelle ce soir — l\'assiette est revenue vide.',
     locStart: 'Où cuisinez-vous ?',
     storeModelled: 'prix typiques de ce type de magasin ici',
@@ -510,6 +510,14 @@ export const extra: Record<string, string> = {
     slideS5: "Quatre questions rapides pour savoir quoi vous proposer. Passez-en autant que vous voulez, je fonctionnerai quand même.",
     slideGo: "Allons-y",
     priceHome: "À partir d'ici, chaque prix est en {cur}, dans des magasins qui existent vraiment près de chez vous. Pas le bon endroit ?",
+    curGBP: "livres sterling",
+    curUSD: "dollars",
+    curINR: "roupies",
+    curNGN: "nairas",
+    curPKR: "roupies",
+    curEUR: "euros",
+    curAED: "dirhams",
+    curTRY: "livres turques",
     ownMark: "Pantry™ et le personnage sont des marques déposées. Les recettes, les textes, les illustrations et le code appartiennent aux auteurs de Pantry. Les données, les photographies et les polices appartiennent aux sources citées ci-dessus et conservent leurs propres licences.",
     privTitle: "Confidentialité",
     privIntro: "Pantry tourne sur votre téléphone. Presque tout ce que vous y faites n’en sort jamais. Cette page dit exactement ce qui en sort, quand, et qui le voit — ni plus, ni moins.",
