@@ -126,9 +126,9 @@ export function Locate({ v }: { v: Pantry }) {
           </div>
         )}
 
-        <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center')}>
+        <div role="group" aria-label={v.t.setWhere} style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center')}>
           {v.countryChips.map((c) => (
-            <Btn key={c.key} onClick={c.pick} css={c.style}>
+            <Btn key={c.key} onClick={c.pick} aria-pressed={c.on} css={c.style}>
               {c.label}
             </Btn>
           ))}

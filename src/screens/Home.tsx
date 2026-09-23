@@ -227,7 +227,7 @@ export function Home({ v }: { v: Pantry }) {
             />
           </div>
 
-          <div className="pg-x" style={css('display:flex;gap:8px;margin:12px -18px 0;padding:2px 18px')}>
+          <div role="group" aria-label={v.t.homeWhat} className="pg-x" style={css('display:flex;gap:8px;margin:12px -18px 0;padding:2px 18px')}>
             {v.cravings.map((c) => (
               <Btn key={c.key} onClick={c.pick} aria-pressed={c.on} css={c.style}>
                 {c.label}

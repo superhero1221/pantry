@@ -3,7 +3,11 @@ import { Btn } from '../ui/Btn';
 import { DishPic, Kicker } from '../ui/bits';
 import type { Pantry } from '../state/usePantry';
 
-const FIELD = 'display:flex;flex-direction:column;gap:8px;flex:1;min-width:0';
+/* Each field is at least as wide as its three chips (3 × 56 + 2 × 6). Side by
+   side they needed 380px of a 316px column on a 360px phone, so "7" days sat
+   on top of "1" person and "4" ran off the screen; now Feeding wraps under
+   Days when both will not fit, and they share a row on anything wider. */
+const FIELD = 'display:flex;flex-direction:column;gap:8px;flex:1 1 180px;min-width:180px';
 
 export function Plan({ v }: { v: Pantry }) {
   const x = v.xt;
@@ -20,22 +24,22 @@ export function Plan({ v }: { v: Pantry }) {
         {x('planSub')}
       </p>
 
-      <div style={css('display:flex;gap:12px;margin-top:18px')}>
+      <div style={css('display:flex;flex-wrap:wrap;gap:16px;margin-top:18px')}>
         <div style={css(FIELD)}>
-          <Kicker>{x('planDays')}</Kicker>
-          <div style={css('display:flex;gap:6px')}>
+          <Kicker id="pg-days-k">{x('planDays')}</Kicker>
+          <div role="group" aria-labelledby="pg-days-k" style={css('display:flex;gap:6px')}>
             {v.planDayChips.map((d) => (
-              <Btn key={d.key} onClick={d.pick} css={d.style}>
+              <Btn key={d.key} onClick={d.pick} aria-pressed={d.on} css={d.style}>
                 {d.label}
               </Btn>
             ))}
           </div>
         </div>
         <div style={css(FIELD)}>
-          <Kicker>{x('planServings')}</Kicker>
-          <div style={css('display:flex;gap:6px')}>
+          <Kicker id="pg-serv-k">{x('planServings')}</Kicker>
+          <div role="group" aria-labelledby="pg-serv-k" style={css('display:flex;gap:6px')}>
             {v.planServingChips.map((n) => (
-              <Btn key={n.key} onClick={n.pick} css={n.style}>
+              <Btn key={n.key} onClick={n.pick} aria-pressed={n.on} css={n.style}>
                 {n.label}
               </Btn>
             ))}
@@ -43,10 +47,10 @@ export function Plan({ v }: { v: Pantry }) {
         </div>
       </div>
 
-      <Kicker style={{ marginTop: 16 }}>{x('planMeals')}</Kicker>
-      <div style={css('display:flex;gap:6px;margin-top:8px')}>
+      <Kicker id="pg-meals-k" style={{ marginTop: 16 }}>{x('planMeals')}</Kicker>
+      <div role="group" aria-labelledby="pg-meals-k" style={css('display:flex;gap:6px;margin-top:8px')}>
         {v.planMealChips.map((m) => (
-          <Btn key={m.key} onClick={m.pick} css={m.style}>
+          <Btn key={m.key} onClick={m.pick} aria-pressed={m.on} css={m.style}>
             {m.label}
           </Btn>
         ))}

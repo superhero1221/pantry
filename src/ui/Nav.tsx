@@ -10,8 +10,9 @@ export function Nav({ v }: { v: Pantry }) {
           <Btn
             key={n.key}
             onClick={n.go}
-            css={`flex:1;padding:7px 0 5px;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:4px;color:${n.fg}`}
-            hover="background:#fdf0e3"
+            aria-current={n.on ? 'page' : undefined}
+            css={n.style}
+            hover={n.hover}
           >
             <svg
               width="23"

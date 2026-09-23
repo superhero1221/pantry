@@ -19,6 +19,7 @@ export function Shop({ v }: { v: Pantry }) {
         <BackBtn label={v.t.back} onClick={v.back} />
       </div>
       <h1
+        id="pg-shop-h"
         dir="auto"
         style={css("font-family:'Caprasimo',serif;font-weight:400;font-size:32px;line-height:1.04;margin:8px 0 0;letter-spacing:-.4px")}
       >
@@ -28,9 +29,13 @@ export function Shop({ v }: { v: Pantry }) {
         {v.shopSubLine}
       </p>
 
-      <div style={css('display:flex;flex-direction:column;gap:9px;margin-top:16px')}>
+      {/* One shop prices the whole basket, so the chosen card says so three
+          ways: aria-pressed for a screen reader, and a tick beside the name
+          inside a darker ring for everybody else — the tick is the same one
+          the Level rows use, and survives greyscale where a peach fill does not. */}
+      <div role="group" aria-labelledby="pg-shop-h" style={css('display:flex;flex-direction:column;gap:9px;margin-top:16px')}>
         {v.stores.map((s) => (
-          <Btn key={s.key} onClick={s.pick} css={s.style}>
+          <Btn key={s.key} onClick={s.pick} aria-pressed={s.on} css={s.style}>
             <span style={css('flex:1;min-width:0;text-align:start')}>
               {/* flex-wrap, and the pill does not shrink.
                   "Sainsbury's Local" plus a CONVENIENCE pill has a min-content
@@ -39,6 +44,7 @@ export function Shop({ v }: { v: Pantry }) {
                   painted the pill underneath the price. It only showed up once
                   the price became a band and took the width back. */}
               <span style={css('display:flex;flex-wrap:wrap;align-items:center;gap:5px 7px')}>
+                {s.on && <Check size={16} stroke="#c04a03" width={3} style={{ flex: 'none' }} />}
                 <span style={css('font-size:15.5px;font-weight:700;min-width:0')}>{s.name}</span>
                 <span
                   style={css(`flex:none;padding:3px 8px;border-radius:999px;background:${s.tagBg};color:${s.tagFg};font-size:10.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase`)}

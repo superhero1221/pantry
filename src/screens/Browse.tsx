@@ -16,9 +16,9 @@ export function Browse({ v }: { v: Pantry }) {
         {v.browseSub}
       </p>
 
-      <div className="pg-x" style={css('display:flex;gap:8px;margin:14px -22px 0;padding:2px 22px')}>
+      <div role="group" aria-label={v.wholeMenuTitle} className="pg-x" style={css('display:flex;gap:8px;margin:14px -22px 0;padding:2px 22px')}>
         {v.browseCats.map((b) => (
-          <Btn key={b.key} onClick={b.pick} css={b.style}>
+          <Btn key={b.key} onClick={b.pick} aria-pressed={b.on} css={b.style}>
             {b.label}
           </Btn>
         ))}

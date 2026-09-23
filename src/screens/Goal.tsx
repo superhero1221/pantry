@@ -41,9 +41,9 @@ export function Goal({ v }: { v: Pantry }) {
     >
       {/* Centred, so a row of two and a row of one read as a considered shape
           rather than as a list that ran out. */}
-      <div style={css('display:flex;flex-wrap:wrap;gap:9px;justify-content:center')}>
+      <div role="group" aria-label={v.goalTitle} style={css('display:flex;flex-wrap:wrap;gap:9px;justify-content:center')}>
         {v.goalChips.map((g) => (
-          <Btn key={g.key} onClick={g.pick} css={g.style}>
+          <Btn key={g.key} onClick={g.pick} aria-pressed={g.on} css={g.style}>
             {g.label}
           </Btn>
         ))}

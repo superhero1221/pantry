@@ -38,8 +38,8 @@ export function Settings({ v }: { v: Pantry }) {
         <ChevronRight size={18} stroke="#96866f" style={{ flex: 'none' }} />
       </Btn>
 
-      <Kicker style={{ marginTop: 24 }}>{v.t.setDiet}</Kicker>
-      <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
+      <Kicker id="pg-diet-k" style={{ marginTop: 24 }}>{v.t.setDiet}</Kicker>
+      <div role="group" aria-labelledby="pg-diet-k" style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
         {v.dietChips.map((d) => (
           <Btn key={d.key} onClick={d.toggle} aria-pressed={d.on} css={d.style}>
             {d.label}
@@ -64,9 +64,10 @@ export function Settings({ v }: { v: Pantry }) {
         </Btn>
       </div>
 
-      <Kicker style={{ marginTop: 24 }}>{v.t.setLang}</Kicker>
+      <Kicker id="pg-lang-k" style={{ marginTop: 24 }}>{v.t.setLang}</Kicker>
       <Btn
         onClick={v.toggleLang}
+        aria-expanded={v.langOpen}
         css="width:100%;margin-top:10px;padding:16px 18px;border-radius:26px;background:#ffffff;display:flex;gap:12px;align-items:center;text-align:start"
         hover="background:#fdf0e3"
       >
@@ -76,9 +77,9 @@ export function Settings({ v }: { v: Pantry }) {
       </Btn>
       {v.langOpen && (
         <>
-          <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;animation:pgUp .26s ease-out both')}>
+          <div role="group" aria-labelledby="pg-lang-k" style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;animation:pgUp .26s ease-out both')}>
             {v.langOptions.map((l) => (
-              <Btn key={l.key} onClick={l.pick} css={l.style} lang={l.key}>
+              <Btn key={l.key} onClick={l.pick} aria-pressed={l.on} css={l.style} lang={l.key}>
                 {l.native}
               </Btn>
             ))}
@@ -89,7 +90,7 @@ export function Settings({ v }: { v: Pantry }) {
         </>
       )}
 
-      <Kicker style={{ marginTop: 24 }}>{v.t.setWhere}</Kicker>
+      <Kicker id="pg-where-k" style={{ marginTop: 24 }}>{v.t.setWhere}</Kicker>
       <Btn
         onClick={v.useLocation}
         css="width:100%;margin-top:10px;padding:16px 18px;border-radius:26px;background:#fff4ea;display:flex;gap:12px;align-items:center;text-align:start"
@@ -101,9 +102,9 @@ export function Settings({ v }: { v: Pantry }) {
           <span style={css('display:block;font-size:12.5px;color:#a83f06;margin-top:3px')}>{v.liveWhereLine}</span>
         </span>
       </Btn>
-      <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
+      <div role="group" aria-labelledby="pg-where-k" style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:10px')}>
         {v.countryChips.map((c) => (
-          <Btn key={c.key} onClick={c.pick} css={c.style}>
+          <Btn key={c.key} onClick={c.pick} aria-pressed={c.on} css={c.style}>
             {c.label}
           </Btn>
         ))}

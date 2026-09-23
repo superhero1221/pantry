@@ -537,7 +537,9 @@ const LEVEL_ROW =
   'display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-height:64px;' +
   'padding:13px 16px;border-radius:22px;text-align:start;color:#1b1714;' +
   'transition:background .15s,box-shadow .15s;';
-const LEVEL_ON = 'background:#ffe4cd;box-shadow:inset 0 0 0 2px #e85d04;';
+/* #c04a03, the ring PILL_ON uses: #e85d04 on this fill is 2.87:1, under the
+   3:1 a state indicator needs. */
+const LEVEL_ON = 'background:#ffe4cd;box-shadow:inset 0 0 0 2px #c04a03;';
 const LEVEL_OFF = 'background:#ffffff;box-shadow:inset 0 0 0 1px rgba(32,30,29,.06);';
 
 /** Days since a cook. Real rows age with the calendar; seeded sample rows keep
@@ -2184,13 +2186,21 @@ export function usePantry() {
     ),
     goalNote: word('goalNote', 'Whatever you pick, nothing gets hidden. I reorder the list and tell you why.'),
     goalSkip: word('goalSkip', 'No goal for now'),
-    goalChips: GOALS.map((g) => ({
-      key: g,
-      label: P.goals[g] || g,
-      style: (S.profile.goal === g ? PILL_ON : PILL_OFF) + 'font-size:15px;padding:14px 19px;',
-      pick: () =>
-        setState({ profile: { ...S.profile, ...(g === 'none' ? { goal: '' } : { goal: g }) } }),
-    })),
+    goalChips: GOALS.map((g) => {
+      /* "No goal" is stored as '' (the pick below), so comparing it against
+         'none' meant the one chip that answers the question never lit. An
+         untouched profile has no goal key at all, so '' only ever means you
+         tapped it. */
+      const on = g === 'none' ? S.profile.goal === '' : S.profile.goal === g;
+      return {
+        key: g,
+        label: P.goals[g] || g,
+        on,
+        style: (on ? PILL_ON : PILL_OFF) + 'font-size:15px;padding:14px 19px;',
+        pick: () =>
+          setState({ profile: { ...S.profile, ...(g === 'none' ? { goal: '' } : { goal: g }) } }),
+      };
+    }),
     toTier: () => go('tier'),
     /** "Step 2 of 4" for the dot row, which was a picture with nothing to read. */
     dotsLabel: (at: number) => fill(xt(lg, 'stepOf'), { n: at + 1, of: 4 }),
@@ -2343,6 +2353,7 @@ export function usePantry() {
     countryChips: Object.keys(COUNTRIES).map((k) => ({
       key: k,
       label: COUNTRIES[k].city,
+      on: cc === k,
       style: (cc === k ? PILL_ON : PILL_OFF) + 'flex:none;font-size:13.5px;padding:9px 14px;',
       pick: () => setState({ country: k }),
     })),
@@ -2848,13 +2859,16 @@ export function usePantry() {
           t <= base + 0.001
             ? T.shopCheapest
             : fill(xt(lg, 'pctDearer'), { n: Math.round((t / base - 1) * 100) }),
-        tagBg: on ? '#e85d04' : '#fdf0e3',
-        tagFg: on ? '#fff' : '#847462',
+        on,
+        /* 10.5px capitals, so these need 4.5:1: white on #e85d04 was 3.50
+           and #847462 on the peach 4.03. */
+        tagBg: on ? '#a83f06' : '#fdf0e3',
+        tagFg: on ? '#fff' : '#6a5c4c',
         priceFg: on ? '#a83f06' : '#6a5c4c',
         style:
           'display:flex;gap:12px;align-items:center;padding:15px 17px;border-radius:26px;width:100%;transition:background .15s,box-shadow .15s;background:' +
           (on ? '#fff4ea' : '#ffffff') +
-          (on ? ';box-shadow:inset 0 0 0 2px #e85d04' : ';box-shadow:inset 0 0 0 1px rgba(32,30,29,.07)'),
+          (on ? ';box-shadow:inset 0 0 0 2px #c04a03' : ';box-shadow:inset 0 0 0 1px rgba(32,30,29,.07)'),
         pick: () => setState({ store: s.id }),
       };
     }),
@@ -3451,6 +3465,7 @@ export function usePantry() {
     browseCats: BROWSE_CATS.map((b) => ({
       key: b.k,
       label: word(b.w, b.label),
+      on: S.browseCat === b.k,
       style: (S.browseCat === b.k ? PILL_ON : PILL_OFF) + 'flex:none;font-size:13.5px;padding:9px 15px;',
       pick: () => setState({ browseCat: b.k }),
     })),
@@ -3487,18 +3502,21 @@ export function usePantry() {
     planDayChips: [3, 5, 7].map((d) => ({
       key: String(d),
       label: String(d),
+      on: S.planDays === d,
       style: (S.planDays === d ? PILL_ON : PILL_OFF) + 'flex:none;min-width:56px;justify-content:center;text-align:center;',
       pick: () => setState({ planDays: d, plan: [], planSaved: false }),
     })),
     planMealChips: [1, 2].map((m) => ({
       key: String(m),
       label: String(m),
+      on: S.planMeals === m,
       style: (S.planMeals === m ? PILL_ON : PILL_OFF) + 'flex:none;min-width:56px;justify-content:center;text-align:center;',
       pick: () => setState({ planMeals: m, plan: [], planSaved: false }),
     })),
     planServingChips: [1, 2, 4].map((n) => ({
       key: String(n),
       label: String(n),
+      on: S.planServings === n,
       style: (S.planServings === n ? PILL_ON : PILL_OFF) + 'flex:none;min-width:56px;justify-content:center;text-align:center;',
       pick: () => setState({ planServings: n, planSaved: false }),
     })),
@@ -3817,6 +3835,7 @@ export function usePantry() {
     langOptions: i18n.LANGS.map((l) => ({
       key: l.code,
       native: l.native,
+      on: lg === l.code,
       style: (lg === l.code ? PILL_ON : PILL_OFF) + 'flex:none;font-size:14.5px;padding:11px 18px;',
       // Both the interface and the ingredient names are fetched now, and both
       // are waited for, so the screen changes language once rather than in two
@@ -3894,13 +3913,27 @@ export function usePantry() {
     signIn: auth.signIn,
     signOut: auth.signOut,
 
-    nav: navItems.map((n) => ({
-      key: n.id,
-      label: T[n.t] || n.label,
-      fg: screen === n.id ? '#e85d04' : '#96866f',
-      d: n.d,
-      go: () => go(n.id),
-    })),
+    /* The current tab was orange and the others beige-grey, which are the
+       same grey in greyscale (2.97:1 and 3.00:1 on the bar, both under AA for
+       a 10.5px label). It now sits in a white pill inside PILL_ON's ring, so
+       its shape says where you are, and every label clears 4.5:1. */
+    nav: navItems.map((n) => {
+      const on = screen === n.id;
+      return {
+        key: n.id,
+        label: T[n.t] || n.label,
+        on,
+        fg: on ? '#c04a03' : '#6a5c4c',
+        style:
+          'flex:1;padding:7px 0 5px;border-radius:18px;display:flex;flex-direction:column;align-items:center;gap:4px;' +
+          (on
+            ? 'background:#ffffff;color:#a83f06;box-shadow:inset 0 0 0 2px #c04a03,0 2px 10px rgba(232,93,4,.16)'
+            : 'color:#6a5c4c'),
+        hover: on ? '' : 'background:#fdf0e3',
+        d: n.d,
+        go: () => go(n.id),
+      };
+    }),
   };
 }
 

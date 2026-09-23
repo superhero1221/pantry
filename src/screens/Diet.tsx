@@ -29,7 +29,7 @@ export function Diet({ v }: { v: Pantry }) {
         </Btn>
       }
     >
-      <div style={css('display:flex;flex-wrap:wrap;gap:9px;justify-content:center')}>
+      <div role="group" aria-label={v.t.dietTitle} style={css('display:flex;flex-wrap:wrap;gap:9px;justify-content:center')}>
         {v.dietChips.map((d) => (
           <Btn key={d.key} onClick={d.toggle} aria-pressed={d.on} css={d.style}>
             {d.label}
