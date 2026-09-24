@@ -2,6 +2,8 @@
 
 Three checks that ask TypeSafe's **Jev** decision model (`typesafe/jev-1.13` on OpenRouter) for a second opinion on Pantry. Each one compares Jev's answers with the app's own logic and writes a report for a person to read. None of them changes the app.
 
+That is the offline, report-writing half. For Jev asked live from inside the app (the craving box, the Kitchen item check, the price-report confirm step) through a Supabase function, see [docs/JEV-IN-APP.md](../../docs/JEV-IN-APP.md).
+
 | check | what the app says | what Jev is asked | calls (full run) |
 |---|---|---|---|
 | `diets` | `meetsDiet(recipe, diet)` for 153 recipes × 9 diets | one yes/no per diet, worded to mean what the app means by that diet | 153 |

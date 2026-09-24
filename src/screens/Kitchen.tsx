@@ -81,6 +81,56 @@ export function Kitchen({ v }: { v: Pantry }) {
         ))}
       </div>
 
+      {/* Check one thing you typed against your diets (VITE_JEV builds, and
+          only when a diet is set — null otherwise, so nothing renders). */}
+      {v.jevCheck && (
+        <div style={css('margin-top:22px;padding:17px 18px;border-radius:26px;background:#ffffff')}>
+          <Kicker color="#4f9021">{v.jevCheck.title}</Kicker>
+          <p dir="auto" style={css('margin:7px 0 0;font-size:12.5px;line-height:1.5;color:#6a5c4c;text-wrap:pretty')}>
+            {v.jevCheck.body}
+          </p>
+          <div style={css('display:flex;gap:8px;margin-top:11px')}>
+            <input
+              value={v.jevCheck.value}
+              onChange={v.jevCheck.onInput}
+              onKeyDown={v.jevCheck.onKey}
+              placeholder={v.jevCheck.placeholder}
+              aria-label={v.jevCheck.title}
+              maxLength={200}
+              dir="auto"
+              style={css('flex:1;min-width:0;height:46px;border-radius:999px;border:2px solid #efdcc8;background:#fff;padding-inline:16px;font-size:14.5px;font-weight:500;color:#1b1714')}
+            />
+            <Btn
+              onClick={v.jevCheck.run}
+              disabled={v.jevCheck.busy}
+              css={
+                'flex:none;height:46px;padding:0 18px;border-radius:999px;background:#3d7213;color:#fff;font-size:14px;font-weight:700' +
+                (v.jevCheck.busy ? ';opacity:.62' : '')
+              }
+              hover="background:#2c5410"
+            >
+              {v.jevCheck.btn}
+            </Btn>
+          </div>
+          {v.jevCheck.lines.length > 0 && (
+            <div role="status" style={css('display:flex;flex-direction:column;gap:6px;margin-top:10px')}>
+              {v.jevCheck.lines.map((l) => (
+                <p
+                  key={l.key}
+                  dir="auto"
+                  style={css(
+                    'margin:0;padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.45;text-wrap:pretty;' +
+                      (l.warn ? 'background:#ffe4cd;color:#7d2f04;font-weight:600' : 'background:#e2f8c6;color:#2c5410'),
+                  )}
+                >
+                  {l.text}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* "Scan a receipt" used to sit here and ping a toast admitting it was
           a sketch. A button that confesses when pressed is still a button
           that does nothing — gone until there is a scanner behind it. */}

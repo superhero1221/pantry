@@ -227,6 +227,29 @@ export function Home({ v }: { v: Pantry }) {
             />
           </div>
 
+          {/* What Jev read from a note the cookbook's own matcher could not
+              (VITE_JEV builds only — null everywhere else, so nothing here
+              renders). The chips below already show what moved; this says
+              why, and takes it all back in one tap. */}
+          {v.jevChip && (
+            <div
+              role="status"
+              style={css('margin-top:10px;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border-radius:999px;background:#e2f8c6;animation:pgUp .25s ease-out both')}
+            >
+              <span dir={v.dir} style={css('flex:1;min-width:0;font-size:13px;line-height:1.35;color:#2c5410')}>
+                <span style={css('font-weight:600;opacity:.8')}>{v.jevChip.readAs}</span>{' '}
+                <span style={css('font-weight:700')}>{v.jevChip.label}</span>
+              </span>
+              <Btn
+                onClick={v.jevChip.undo}
+                css="flex:none;height:34px;padding:0 14px;border-radius:999px;background:#fff;color:#2c5410;font-size:13px;font-weight:700"
+                hover="background:#cdf0a4"
+              >
+                {v.jevChip.undoLabel}
+              </Btn>
+            </div>
+          )}
+
           <div role="group" aria-label={v.t.homeWhat} className="pg-x" style={css('display:flex;gap:8px;margin:12px -18px 0;padding:2px 18px')}>
             {v.cravings.map((c) => (
               <Btn key={c.key} onClick={c.pick} aria-pressed={c.on} css={c.style}>

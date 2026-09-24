@@ -57,6 +57,28 @@ jobs:
       - name: Build
         run: npx vite build
 
+      # The Jev edge function is Deno, which neither tsc nor vitest reads as
+      # Deno does. Its logic is tested by vitest (src/lib/jev-function.test.ts);
+      # this checks that the Deno entry point itself still type-checks. The
+      # `deno` npm package carries the binary, so no extra setup action.
+      - name: Typecheck the jev-decide edge function (Deno)
+        run: npx -y deno check supabase/functions/jev-decide/index.ts
+
+      # The built bundle must never carry an OpenRouter key or call OpenRouter
+      # directly: the key lives in the function's secrets only. Built here with
+      # the Jev flag on against a dummy project, because that is the build
+      # that contains the client.
+      - name: No OpenRouter key or host in a Jev build
+        env:
+          VITE_JEV: '1'
+          VITE_SUPABASE_URL: https://ci-dummy.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-dummy-anon
+        run: |
+          npx vite build --outDir dist-jev --emptyOutDir
+          if grep -rlE 'sk-or|openrouter\.ai' dist-jev dist; then
+            echo "::error::an OpenRouter key or host reached the bundle"; exit 1
+          fi
+
       # The standalone single-file build inlines the bundle, the stylesheet,
       # 108 photographs and six font faces into one document. It breaks in
       # ways the normal build does not, and it is the artefact handed over by

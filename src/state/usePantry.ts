@@ -38,6 +38,10 @@ import { DERIVED, breaksDietBecause, meetsDiet } from '../lib/diets';
 import { formatAmount, formatMoney, fromLocal, parseLocalAmount, toLocal, wholeUnits } from '../lib/money';
 import { clampLevel, levelFromCards, type Level } from '../lib/skill';
 import { canonical } from '../lib/nutrition';
+import { decide, jevEnabled } from '../lib/jev';
+import { cravingPlan, leanScore, type Lean } from '../lib/jev-craving';
+import { appItemCautions, itemCautions, type Caution } from '../lib/jev-diet';
+import { priceCheck, type PriceCheck } from '../lib/jev-price';
 import { orderBrowse } from './browse';
 import { xt } from '../data/extra-copy';
 import { pickForm } from '../lib/plural';
@@ -227,6 +231,24 @@ export interface PantryState {
   foodReady: boolean;
   /** Never read for its value — see the memos below. */
   packAt: string;
+  /* ── Jev second opinions. Only ever non-empty in a VITE_JEV=1 build, and
+     never persisted: each describes one moment, not the profile. ── */
+  /** A craving Jev read and the app applied, with everything it changed, so
+   *  one tap on Undo puts it all back. */
+  jevCraving: {
+    typed: string;
+    intents: string[];
+    cuisine: string | null;
+    lean: Lean;
+    prev: { maxTime: number; budget: number; timeSet: boolean; budgetSet: boolean };
+  } | null;
+  /** The Kitchen's "check an item" field. */
+  jevItemDraft: string;
+  jevItemBusy: boolean;
+  /** The last item checked: the app's own cautions, plus any Jev added. */
+  jevItem: { name: string; cautions: Caution[]; asked: boolean } | null;
+  /** A price report held back for one "are you sure?". */
+  reportCheck: { price: number; pack: number; modelled: number; check: PriceCheck } | null;
 }
 
 const INITIAL: PantryState = {
@@ -296,6 +318,11 @@ const INITIAL: PantryState = {
   fx: null,
   foodReady: false,
   packAt: '',
+  jevCraving: null,
+  jevItemDraft: '',
+  jevItemBusy: false,
+  jevItem: null,
+  reportCheck: null,
 };
 
 /* ── What survives a reload ────────────────────────────────────────────────
@@ -529,6 +556,21 @@ const keyOf = (name: string) => canonical(name.split(',')[0].trim());
 /** The budget presets the design ships, in GBP: the chip row on Home, and the
  *  set that a typed-in amount is measured against. */
 const BUDGETS = [3, 5, 6, 8, 12];
+/** Every cuisine the cookbook has, by its own name — what a craving can narrow to. */
+const CUISINE_NAMES = Array.from(new Set(RECIPES.map((r) => r.cuisine)));
+/** The chip's word for each craving intent Jev can read. */
+const JEV_INTENT_WORD: Record<string, string> = {
+  quick: 'jevQuick',
+  cheap: 'jevCheap',
+  comforting: 'jevComforting',
+  light: 'jevLight',
+  high_protein: 'jevHighProtein',
+  spicy: 'jevSpicy',
+  vegetarian_leaning: 'jevMeatFree',
+};
+/** 947 -> '950', 12.3 -> '12', 2.46 -> '2.5': "about" deserves no more digits. */
+const ratioWord = (r: number) =>
+  r >= 10 ? String(Number(r.toPrecision(2))) : String(Math.round(r * 10) / 10);
 
 /** Fallback shops whose name is a description, by id → the extra key that
  *  translates it. Every other name is a brand and stays as the brand writes it. */
@@ -1245,6 +1287,10 @@ export function usePantry() {
   const ranked = useCallback((): Recipe[] => {
     const q = S.query.toLowerCase().trim();
     const lvl = skillLevel();
+    const lean = S.jevCraving ? S.jevCraving.lean : null;
+    // A cuisine Jev put in the box was not typed by anyone, so it does not
+    // earn the by-name pass over the time budget: "quick Italian" means quick.
+    const jevWord = !!S.jevCraving && !!S.jevCraving.cuisine && q === S.jevCraving.cuisine.toLowerCase();
     const scored = RECIPES.map((r) => {
       let s = 0;
       // Asked for by name. The one thing allowed to pull a dish past the time
@@ -1255,7 +1301,7 @@ export function usePantry() {
         const hay = (r.name + ' ' + r.cuisine + ' ' + (r.copycat || '') + ' ' + r.local).toLowerCase();
         if (hay.indexOf(q) >= 0) {
           s -= 100;
-          named = true;
+          named = !jevWord;
         }
         q.split(/\s+/).forEach((w) => {
           if (w.length > 2 && hay.indexOf(w) >= 0) s -= 30;
@@ -1303,6 +1349,10 @@ export function usePantry() {
       if (pr.goal === 'recomp') s -= (r.per.protein / r.per.kcal) * 420;
       if (pr.goal === 'cheap') s += (toBuy(r, 0.82) / r.servings) * 12;
       if (pr.goal === 'energy') s -= Math.min(28, r.per.carb * 0.3);
+      // A craving Jev read (VITE_JEV builds only; null everywhere else). A
+      // nudge inside the score, so it reorders within the diet and time
+      // partitions below and can never lift anything across them.
+      if (lean) s += leanScore(r, lean, toBuy(r, 0.82) / r.servings);
       return { r, s, named, breaksDiet };
     });
     // Two promises, hardest first. A diet you have set is absolute — nothing
@@ -1316,7 +1366,7 @@ export function usePantry() {
     scored.sort((a, b) => rank(a) - rank(b) || a.s - b.s);
     return scored.map((x) => x.r);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [S.query, S.budget, S.maxTime, S.diets, S.profile, S.level, toBuy]);
+  }, [S.query, S.budget, S.maxTime, S.diets, S.profile, S.level, S.jevCraving, toBuy]);
 
   /** The dishes that actually answer what was typed, in the same order.
    *
@@ -1688,6 +1738,55 @@ export function usePantry() {
    *  was asked for, and the app has to be the one to say so. */
   const offerMissed = !!S.query.trim() && hits.length === 0;
 
+  /* ── A craving the cookbook's own matcher could not read ─────────────────
+     VITE_JEV builds only; everywhere else this effect returns on its first
+     line and nothing below it exists.
+     Asked only when the cookbook's own matcher has no dish, cuisine or
+     copycat that matches the whole phrase. Typed "pasta" or "pad thai"? The
+     app already knows it and Jev is never asked. "Something cosy and quick"
+     only matches word by word — every dish with "and" in its name — which is
+     the matcher guessing, and exactly where a reading helps. The answer is
+     applied through the fields that already exist — the query narrows to a
+     cuisine, the time and money chips move — and the chip under the box says
+     what was read, with one tap to put it all back. Anything slow, failed or
+     unsure: nothing happens, and the screen shows what it shows today. */
+  const jevSkip = useRef('');
+  useEffect(() => {
+    if (!jevEnabled || S.screen !== 'home') return;
+    const typed = S.query.trim();
+    if (typed.length < 3 || typed === jevSkip.current) return;
+    const q = typed.toLowerCase();
+    const known =
+      COPYCAT_HINTS.some((h) => q.indexOf(h) >= 0) ||
+      RECIPES.some((r) => (r.name + ' ' + r.cuisine + ' ' + (r.copycat || '') + ' ' + r.local).toLowerCase().indexOf(q) >= 0);
+    if (known) return;
+    const lang = S.lang || 'en';
+    const t = window.setTimeout(() => {
+      decide('craving', typed, lang).then((a) => {
+        const cur = ref.current;
+        // Typed on since, or left: this answer is to a question nobody is
+        // asking any more.
+        if (cur.query.trim() !== typed || cur.screen !== 'home') return;
+        const plan = cravingPlan(a, { maxTime: cur.maxTime, budget: cur.budget }, CUISINE_NAMES, BUDGETS);
+        if (!plan) return;
+        setState({
+          query: plan.set.query,
+          reroll: 0,
+          ...(plan.set.maxTime !== undefined ? { maxTime: plan.set.maxTime, timeSet: true } : {}),
+          ...(plan.set.budget !== undefined ? { budget: plan.set.budget, budgetSet: true } : {}),
+          jevCraving: {
+            typed: cur.query,
+            intents: plan.intents,
+            cuisine: plan.cuisine,
+            lean: plan.lean,
+            prev: { maxTime: cur.maxTime, budget: cur.budget, timeSet: cur.timeSet, budgetSet: cur.budgetSet },
+          },
+        });
+      });
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [S.query, S.screen, S.lang, setState]);
+
   /* Computed once each rather than at every key that needs them: spanOf walks
      the store list and calls toBuy per shop, and the two of them were being
      recomputed six times inside one object literal. */
@@ -2031,6 +2130,110 @@ export function usePantry() {
     },
     { id: 'settings' as const, t: 'navYou', label: 'You', d: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0' },
   ];
+
+  /** Checks one typed cupboard item against your diets. The app's own
+   *  cautions are worked out first and survive whatever comes back. */
+  const checkItem = async () => {
+    const cur = ref.current;
+    const name = cur.jevItemDraft.replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!name || cur.jevItemBusy) return;
+    const diets = cur.diets.slice();
+    const app = appItemCautions(name, diets);
+    setState({ jevItemBusy: true, jevItem: null });
+    const a = await decide('pantry_item', name, cur.lang || 'en');
+    setState({ jevItemBusy: false, jevItem: { name, cautions: itemCautions(app, a, diets), asked: a !== null } });
+  };
+
+  /** Sends the open price report. `skipCheck` after the reader has answered
+   *  the one "are you sure?"; `price` when they took the suggested figure. */
+  const sendReport = async (opts: { skipCheck?: boolean; price?: number }) => {
+    // Decimal commas and Arabic digits read as typed, like the budget field.
+    // Not rounded: a shelf price can be ₺12.50 even where fmt prints whole lira.
+    const price = opts.price ?? parseLocalAmount(S.reportPrice, false);
+    // Whole grams. A pack is a thing on a shelf, not a measurement.
+    const pack = Math.round(parseFloat(S.reportPack));
+    // Read through the ref, like savePlan: setState is a request, so a second
+    // tap arriving before the next render would see reportBusy still false
+    // and send the same price twice.
+    if (!auth.userId || !S.reportFor || ref.current.reportBusy) return;
+    // The same bounds the table enforces, checked here so that the ordinary
+    // mistake — a stray zero, grams typed as kilos — comes back as a
+    // sentence rather than as a rejected insert. `> 0` alone let 999999
+    // through, which is one row that owns the median for everybody.
+    if (!(price > 0 && price <= 10000 && pack >= 1 && pack <= 50000)) {
+      ping(xt(lg, 'priceOutOfRange'));
+      return;
+    }
+    setState({ reportBusy: true, reportCheck: null });
+    /* One "are you sure?", VITE_JEV builds only. Jev reads the price against
+       what the app models for this pack here; if it calls it implausible, or
+       names a slip with confidence, the reader is asked — with what they
+       typed still in the field and a button that sends it as it is. Never a
+       refusal: a price the app has never seen can be the true one. No answer
+       (off, slow, failed) sends it exactly as before. */
+    if (jevEnabled && !opts.skipCheck) {
+      const item = recipe.items.find((i) => refOf(i.n) === S.reportFor);
+      const g = item ? gramsOf(item.g) : null;
+      if (item && g) {
+        const modelled = toLocal((item.s * mult * pack) / g, c, fx);
+        const a = await decide(
+          'price_report',
+          { item: item.n, amount: price, currency: c.iso, country: cc, pack_grams: pack, modelled: +modelled.toPrecision(6) },
+          lg,
+        );
+        const check = priceCheck(a, price, modelled, pack);
+        if (check.ask) {
+          setState({ reportBusy: false, reportCheck: { price, pack, modelled, check } });
+          return;
+        }
+      }
+    }
+    /* Prices are entered in the local currency, and stored in it — the
+       median function never mixes currencies because it groups by country.
+       `c.iso`, not `c.cur`. `cur` is the English word for the money —
+       'pounds', 'naira' — and price_reports has
+       `check (currency ~ '^[A-Z]{3}$')`, so every report ever submitted was
+       rejected by the database, in every country. The failure mapper below
+       only names 23505 and 54000, so 23514 fell through to "no signal, try
+       again" and the whole thing looked like a flaky connection.
+       The shop is the one in effect rather than `S.store`, which is 'gb1'
+       after any reload and matches nothing outside Britain — so the two
+       fields most useful for grouping a report arrived null. */
+    const res = await reportPrice({
+      userId: auth.userId,
+      ref: S.reportFor,
+      price,
+      currency: c.iso,
+      packGrams: pack,
+      storeName: store.name,
+      storeTier: store.tier,
+      country: cc,
+    });
+    setState({ reportBusy: false, reportFor: null, reportPrice: '', reportPack: '' });
+    if (res.ok) {
+      ping(xt(lg, 'priceThanks'));
+      const fresh = await priceMedians(
+        recipe.items.map((i) => refOf(i.n)),
+        cc,
+      );
+      setState({ medians: fresh });
+    } else {
+      // A refusal that closes the panel in silence reads as success, which
+      // is the app telling someone their price went in when it did not.
+      // The two the table raises deliberately carry their own SQLSTATE;
+      // anything else is a network or a policy problem and says so.
+      ping(
+        xt(
+          lg,
+          res.code === '23505'
+            ? 'priceAlready'
+            : res.code === '54000'
+              ? 'priceTooMany'
+              : 'priceFailed',
+        ),
+      );
+    }
+  };
 
   return {
     state: S,
@@ -2403,7 +2606,29 @@ export function usePantry() {
     streak: px(xt(lg, 'streakShort'), streakDays),
     showStreak: streakDays > 0,
     query: S.query,
-    onQuery: (e: ChangeEvent<HTMLInputElement>) => setState({ query: e.target.value }),
+    /* Typing again after Jev read a craving keeps what it set (the chips show
+       it) and drops the chip: the note it described is no longer the note. */
+    onQuery: (e: ChangeEvent<HTMLInputElement>) =>
+      setState(S.jevCraving ? { query: e.target.value, jevCraving: null } : { query: e.target.value }),
+    /* What Jev read from the craving box, as one line with an undo. Null in
+       every build without VITE_JEV, and in those builds nothing renders. */
+    jevChip: S.jevCraving
+      ? {
+          label: S.jevCraving.intents
+            .map((k) => xt(lg, JEV_INTENT_WORD[k] || k))
+            .concat(S.jevCraving.cuisine ? [cuisineWord(S.jevCraving.cuisine)] : [])
+            .join(' · '),
+          readAs: xt(lg, 'jevReadAs'),
+          undoLabel: xt(lg, 'jevUndo'),
+          undo: () => {
+            const j = ref.current.jevCraving;
+            if (!j) return;
+            // Put the words back and do not ask about them again this visit.
+            jevSkip.current = j.typed.trim();
+            setState({ query: j.typed, reroll: 0, jevCraving: null, ...j.prev });
+          },
+        }
+      : null,
     cravings: (P.cravings || CRAVINGS).map((label) => ({
       key: label,
       label,
@@ -2942,6 +3167,7 @@ export function usePantry() {
             reportFor: key,
             reportPrice: '',
             reportPack: grams ? String(grams) : '',
+            reportCheck: null,
           }),
         tick: owned ? '✓' : '',
         boxBg: owned ? '#7cc24a' : '#fdf0e3',
@@ -3047,72 +3273,49 @@ export function usePantry() {
     canReport: cloudEnabled && !!auth.userId,
     onReportPrice: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPrice: e.target.value }),
     onReportPack: (e: ChangeEvent<HTMLInputElement>) => setState({ reportPack: e.target.value }),
-    closeReport: () => setState({ reportFor: null }),
-    submitReport: async () => {
-      // Decimal commas and Arabic digits read as typed, like the budget field.
-      // Not rounded: a shelf price can be ₺12.50 even where fmt prints whole lira.
-      const price = parseLocalAmount(S.reportPrice, false);
-      // Whole grams. A pack is a thing on a shelf, not a measurement.
-      const pack = Math.round(parseFloat(S.reportPack));
-      // Read through the ref, like savePlan: setState is a request, so a second
-      // tap arriving before the next render would see reportBusy still false
-      // and send the same price twice.
-      if (!auth.userId || !S.reportFor || ref.current.reportBusy) return;
-      // The same bounds the table enforces, checked here so that the ordinary
-      // mistake — a stray zero, grams typed as kilos — comes back as a
-      // sentence rather than as a rejected insert. `> 0` alone let 999999
-      // through, which is one row that owns the median for everybody.
-      if (!(price > 0 && price <= 10000 && pack >= 1 && pack <= 50000)) {
-        ping(xt(lg, 'priceOutOfRange'));
-        return;
-      }
-      setState({ reportBusy: true });
-      /* Prices are entered in the local currency, and stored in it — the
-         median function never mixes currencies because it groups by country.
-         `c.iso`, not `c.cur`. `cur` is the English word for the money —
-         'pounds', 'naira' — and price_reports has
-         `check (currency ~ '^[A-Z]{3}$')`, so every report ever submitted was
-         rejected by the database, in every country. The failure mapper below
-         only names 23505 and 54000, so 23514 fell through to "no signal, try
-         again" and the whole thing looked like a flaky connection.
-         The shop is the one in effect rather than `S.store`, which is 'gb1'
-         after any reload and matches nothing outside Britain — so the two
-         fields most useful for grouping a report arrived null. */
-      const res = await reportPrice({
-        userId: auth.userId,
-        ref: S.reportFor,
-        price,
-        currency: c.iso,
-        packGrams: pack,
-        storeName: store.name,
-        storeTier: store.tier,
-        country: cc,
-      });
-      setState({ reportBusy: false, reportFor: null, reportPrice: '', reportPack: '' });
-      if (res.ok) {
-        ping(xt(lg, 'priceThanks'));
-        const fresh = await priceMedians(
-          recipe.items.map((i) => refOf(i.n)),
-          cc,
-        );
-        setState({ medians: fresh });
-      } else {
-        // A refusal that closes the panel in silence reads as success, which
-        // is the app telling someone their price went in when it did not.
-        // The two the table raises deliberately carry their own SQLSTATE;
-        // anything else is a network or a policy problem and says so.
-        ping(
-          xt(
-            lg,
-            res.code === '23505'
-              ? 'priceAlready'
-              : res.code === '54000'
-                ? 'priceTooMany'
-                : 'priceFailed',
-          ),
-        );
-      }
-    },
+    closeReport: () => setState({ reportFor: null, reportCheck: null }),
+    /* The one "are you sure?" before a price goes in (VITE_JEV builds only).
+       What was typed stays in the field; every way out of this is the
+       reader's choice, including sending it exactly as typed. */
+    reportCheck: S.reportCheck
+      ? (() => {
+          const k = S.reportCheck;
+          const r = k.check.ratio;
+          const vals = { m: formatMoney(k.modelled, c.sym, wholeUnits(c)), g: k.pack };
+          const sugg = k.check.suggestion;
+          const shown = sugg === null ? '' : formatMoney(sugg, c.sym, false);
+          const hintKey =
+            k.check.error === 'wrong_currency'
+              ? 'jevHintCurrency'
+              : k.check.error === 'per_kg_vs_pack'
+                ? 'jevHintPerKg'
+                : k.check.error === 'wrong_item'
+                  ? 'jevHintItem'
+                  : null;
+          return {
+            line:
+              r >= 2
+                ? fill(xt(lg, 'jevPriceHigh'), { ...vals, r: ratioWord(r) })
+                : r <= 0.5
+                  ? fill(xt(lg, 'jevPriceLow'), { ...vals, r: ratioWord(1 / r) })
+                  : fill(xt(lg, 'jevPriceOdd'), vals),
+            mean: sugg === null ? null : fill(xt(lg, 'jevPriceMean'), { p: shown }),
+            hint: sugg === null && hintKey ? xt(lg, hintKey) : null,
+            useLabel: sugg === null ? null : fill(xt(lg, 'jevPriceUse'), { p: shown }),
+            use: () => {
+              if (sugg === null) return;
+              const p = Math.round(sugg * 100) / 100;
+              setState({ reportPrice: String(p) });
+              sendReport({ skipCheck: true, price: p });
+            },
+            keepLabel: xt(lg, 'jevPriceKeep'),
+            keep: () => sendReport({ skipCheck: true }),
+            editLabel: xt(lg, 'jevPriceEdit'),
+            edit: () => setState({ reportCheck: null }),
+          };
+        })()
+      : null,
+    submitReport: () => sendReport({}),
     /* What this basket is made of, counted — not what country you are in.
      *
      * This used to branch on `c.tier === 'local'` and tell readers in India,
@@ -3753,6 +3956,41 @@ export function usePantry() {
 
     /* ── Settings ───────────────────────────────────────────────────────── */
     kitchenSub: X.kitchenSub,
+    /* "Check an item": VITE_JEV builds only, and only for someone who keeps a
+       diet — it is a diet check and nothing else. The app's own rules answer
+       first and always stand; Jev can add a "check the label" line for a diet
+       they did not flag, and cannot take one away (lib/jev-diet.ts). */
+    jevCheck:
+      jevEnabled && S.diets.length > 0
+        ? {
+            title: xt(lg, 'jevCheckTitle'),
+            body: xt(lg, 'jevCheckBody'),
+            placeholder: xt(lg, 'jevCheckPlaceholder'),
+            btn: S.jevItemBusy ? xt(lg, 'jevChecking') : xt(lg, 'jevCheckBtn'),
+            busy: S.jevItemBusy,
+            value: S.jevItemDraft,
+            onInput: (e: ChangeEvent<HTMLInputElement>) => setState({ jevItemDraft: e.target.value, jevItem: null }),
+            onKey: (e: ReactKeyboardEvent<HTMLInputElement>) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                checkItem();
+              }
+            },
+            run: checkItem,
+            lines: S.jevItem
+              ? S.jevItem.cautions.length
+                ? S.jevItem.cautions.map((k) => ({
+                    key: k.from + k.diet,
+                    text: fill(xt(lg, k.from === 'app' ? 'jevCautionApp' : 'jevCautionJev'), {
+                      d: dietWords[k.diet] || k.diet,
+                      i: S.jevItem!.name,
+                    }),
+                    warn: true,
+                  }))
+                : [{ key: 'none', text: xt(lg, S.jevItem.asked ? 'jevNoClash' : 'jevNoCheck'), warn: false }]
+              : [],
+          }
+        : null,
     nudgesLabel: X.nudges,
     insteadLabel: X.insteadOf,
     twoOthersLabel: X.twoOthers,

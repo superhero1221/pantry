@@ -266,7 +266,47 @@ export function Shop({ v }: { v: Pantry }) {
               </span>
             </label>
           </div>
-          <div style={css('display:flex;gap:9px;margin-top:14px')}>
+          {/* One "are you sure?" (VITE_JEV builds only; null otherwise). The
+              typed price stays in the field and "send it" sends it unchanged:
+              this asks, it never refuses. */}
+          {v.reportCheck && (
+            <div role="alert" style={css('margin-top:14px;padding:14px 15px;border-radius:22px;background:#fff;border:2px solid #a83f06')}>
+              <p dir="auto" style={css('margin:0;font-size:14px;line-height:1.45;font-weight:700;color:#571f02;text-wrap:pretty')}>
+                {v.reportCheck.line}
+              </p>
+              {(v.reportCheck.mean || v.reportCheck.hint) && (
+                <p dir="auto" style={css('margin:5px 0 0;font-size:13px;line-height:1.45;color:#7d2f04;text-wrap:pretty')}>
+                  {v.reportCheck.mean || v.reportCheck.hint}
+                </p>
+              )}
+              <div style={css('display:flex;flex-wrap:wrap;gap:8px;margin-top:12px')}>
+                {v.reportCheck.useLabel && (
+                  <Btn
+                    onClick={v.reportCheck.use}
+                    css="height:42px;padding:0 16px;border-radius:999px;background:#a83f06;color:#fff;font-size:13.5px;font-weight:700"
+                    hover="background:#c04a03"
+                  >
+                    {v.reportCheck.useLabel}
+                  </Btn>
+                )}
+                <Btn
+                  onClick={v.reportCheck.keep}
+                  css="height:42px;padding:0 16px;border-radius:999px;background:#ffe4cd;color:#a83f06;font-size:13.5px;font-weight:700"
+                  hover="background:#ffc79b"
+                >
+                  {v.reportCheck.keepLabel}
+                </Btn>
+                <Btn
+                  onClick={v.reportCheck.edit}
+                  css="height:42px;padding:0 16px;border-radius:999px;background:#efdcc8;color:#3b3229;font-size:13.5px;font-weight:700"
+                  hover="background:#cbb79f"
+                >
+                  {v.reportCheck.editLabel}
+                </Btn>
+              </div>
+            </div>
+          )}
+          <div style={css((v.reportCheck ? 'display:none' : 'display:flex') + ';gap:9px;margin-top:14px')}>
             <Btn
               onClick={v.submitReport}
               disabled={v.reportBusy}
